@@ -20,7 +20,7 @@ import { AdminProducts } from '@/components/admin/AdminProducts';
 import { AdminMissions } from '@/components/admin/AdminMissions';
 import { AdminChats } from '@/components/admin/AdminChats';
 
-// List of admin emails (in production, this should come from database)
+// Fallback admin emails (main check uses Firestore role)
 const ADMIN_EMAILS = ['rudysilvaads@gmail.com'];
 
 export default function AdminPanel() {
@@ -28,7 +28,15 @@ export default function AdminPanel() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('stats');
 
-  const isAdmin = user && ADMIN_EMAILS.includes(user.email || '');
+  // Check both email list AND Firestore role
+  const isAdmin = user && (
+    ADMIN_EMAILS.includes(user.email || '') || 
+    (userProfile as any)?.isAdmin || 
+    (userProfile as any)?.role === 'admin'
+  );
+  
+  const isModerator = (userProfile as any)?.isModerator || (userProfile as any)?.role === 'moderator';
+  const hasAccess = isAdmin || isModerator;
 
   useEffect(() => {
     if (!loading && !user) {
@@ -47,7 +55,7 @@ export default function AdminPanel() {
     );
   }
 
-  if (!isAdmin) {
+  if (!hasAccess) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <Card variant="gradient" className="w-full max-w-md text-center">
@@ -84,14 +92,16 @@ export default function AdminPanel() {
               <div>
                 <h1 className="text-2xl font-bold flex items-center gap-2">
                   <Crown className="h-6 w-6 text-primary" />
-                  Painel Admin
+                  Painel {isAdmin ? 'Admin' : 'Moderador'}
                 </h1>
                 <p className="text-sm text-muted-foreground">
                   Gerencie sua plataforma
                 </p>
               </div>
             </div>
-            <Badge variant="gold">Administrador</Badge>
+            <Badge variant={isAdmin ? 'gold' : 'secondary'}>
+              {isAdmin ? 'Administrador' : 'Moderador'}
+            </Badge>
           </div>
         </div>
       </header>

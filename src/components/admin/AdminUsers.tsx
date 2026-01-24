@@ -12,6 +12,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Label } from '@/components/ui/label';
 import { 
   Users, 
@@ -23,11 +30,15 @@ import {
   Minus,
   Loader2,
   Shield,
-  ShieldOff
+  ShieldCheck,
+  UserCog,
+  ChevronDown
 } from 'lucide-react';
 import { collection, getDocs, doc, updateDoc, deleteDoc, increment } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { toast } from 'sonner';
+
+type UserRole = 'user' | 'moderator' | 'admin';
 
 interface User {
   id: string;
@@ -40,9 +51,23 @@ interface User {
   level: number;
   rank: string;
   streakDays: number;
+  role?: UserRole;
   isAdmin?: boolean;
+  isModerator?: boolean;
   createdAt: any;
 }
+
+const getRoleFromUser = (user: User): UserRole => {
+  if (user.isAdmin || user.role === 'admin') return 'admin';
+  if (user.isModerator || user.role === 'moderator') return 'moderator';
+  return 'user';
+};
+
+const roleConfig: Record<UserRole, { label: string; icon: React.ElementType; color: string }> = {
+  admin: { label: 'Admin', icon: Shield, color: 'text-destructive' },
+  moderator: { label: 'Moderador', icon: ShieldCheck, color: 'text-primary' },
+  user: { label: 'Usuário', icon: UserCog, color: 'text-muted-foreground' },
+};
 
 export function AdminUsers() {
   const [users, setUsers] = useState<User[]>([]);
@@ -121,26 +146,31 @@ export function AdminUsers() {
     }
   };
 
-  const handleToggleAdmin = async (user: User) => {
-    const newStatus = !user.isAdmin;
-    const action = newStatus ? 'promover a admin' : 'remover de admin';
+  const handleChangeRole = async (user: User, newRole: UserRole) => {
+    const currentRole = getRoleFromUser(user);
+    if (currentRole === newRole) return;
     
-    if (!confirm(`Tem certeza que deseja ${action} ${user.displayName}?`)) return;
+    const roleLabels: Record<UserRole, string> = {
+      admin: 'Admin',
+      moderator: 'Moderador',
+      user: 'Usuário'
+    };
+    
+    if (!confirm(`Alterar ${user.displayName} de ${roleLabels[currentRole]} para ${roleLabels[newRole]}?`)) return;
     
     try {
       const userRef = doc(db, 'users', user.id);
       await updateDoc(userRef, {
-        isAdmin: newStatus,
+        role: newRole,
+        isAdmin: newRole === 'admin',
+        isModerator: newRole === 'moderator',
       });
       
-      toast.success(newStatus 
-        ? `${user.displayName} agora é admin!` 
-        : `${user.displayName} não é mais admin`
-      );
+      toast.success(`${user.displayName} agora é ${roleLabels[newRole]}!`);
       fetchUsers();
     } catch (error) {
-      console.error('Error updating admin status:', error);
-      toast.error('Erro ao atualizar status de admin');
+      console.error('Error updating role:', error);
+      toast.error('Erro ao atualizar cargo');
     }
   };
 
@@ -214,12 +244,20 @@ export function AdminUsers() {
                       <Badge variant={getBadgeVariant(user.rank) as any} className="text-[10px]">
                         {user.rank?.toUpperCase() || 'BRONZE'}
                       </Badge>
-                      {user.isAdmin && (
-                        <Badge variant="destructive" className="text-[10px]">
-                          <Shield className="h-3 w-3 mr-1" />
-                          ADMIN
-                        </Badge>
-                      )}
+                      {(() => {
+                        const role = getRoleFromUser(user);
+                        const config = roleConfig[role];
+                        if (role === 'user') return null;
+                        return (
+                          <Badge 
+                            variant={role === 'admin' ? 'destructive' : 'secondary'} 
+                            className="text-[10px]"
+                          >
+                            <config.icon className="h-3 w-3 mr-1" />
+                            {config.label.toUpperCase()}
+                          </Badge>
+                        );
+                      })()}
                     </div>
                     <p className="text-sm text-muted-foreground truncate">{user.email}</p>
                     <div className="flex items-center gap-4 mt-1 text-xs text-muted-foreground">
@@ -235,18 +273,48 @@ export function AdminUsers() {
                   </div>
                   
                   <div className="flex items-center gap-2">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleToggleAdmin(user)}
-                      title={user.isAdmin ? 'Remover admin' : 'Tornar admin'}
-                    >
-                      {user.isAdmin ? (
-                        <ShieldOff className="h-4 w-4 text-destructive" />
-                      ) : (
-                        <Shield className="h-4 w-4 text-muted-foreground" />
-                      )}
-                    </Button>
+                    {/* Role Dropdown */}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="sm" className="gap-1">
+                          {(() => {
+                            const role = getRoleFromUser(user);
+                            const config = roleConfig[role];
+                            return (
+                              <>
+                                <config.icon className={`h-4 w-4 ${config.color}`} />
+                                <ChevronDown className="h-3 w-3" />
+                              </>
+                            );
+                          })()}
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem 
+                          onClick={() => handleChangeRole(user, 'user')}
+                          className={getRoleFromUser(user) === 'user' ? 'bg-accent' : ''}
+                        >
+                          <UserCog className="h-4 w-4 mr-2 text-muted-foreground" />
+                          Usuário
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          onClick={() => handleChangeRole(user, 'moderator')}
+                          className={getRoleFromUser(user) === 'moderator' ? 'bg-accent' : ''}
+                        >
+                          <ShieldCheck className="h-4 w-4 mr-2 text-primary" />
+                          Moderador
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem 
+                          onClick={() => handleChangeRole(user, 'admin')}
+                          className={getRoleFromUser(user) === 'admin' ? 'bg-accent' : ''}
+                        >
+                          <Shield className="h-4 w-4 mr-2 text-destructive" />
+                          Admin
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                    
                     <Button
                       variant="ghost"
                       size="icon"
