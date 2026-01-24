@@ -632,4 +632,223 @@
     transform: scale(1.05);
     filter: drop-shadow(0 0 12px hsl(var(--primary) / 0.5));
   }
+
+  /* ========================================
+     FRAME STYLES FOR AVATARS
+     ======================================== */
+
+  /* Slow pulse animation */
+  .animate-pulse-slow {
+    animation: pulse-slow 3s ease-in-out infinite;
+  }
+
+  @keyframes pulse-slow {
+    0%, 100% { opacity: 0.8; }
+    50% { opacity: 1; }
+  }
+
+  /* Frame rotation animations */
+  .frame-rotate-slow {
+    animation: frame-rotate 8s linear infinite;
+  }
+
+  .frame-rotate {
+    animation: frame-rotate 4s linear infinite;
+  }
+
+  @keyframes frame-rotate {
+    0% { filter: hue-rotate(0deg); }
+    100% { filter: hue-rotate(360deg); }
+  }
+
+  /* Frame flicker for fire effect */
+  .frame-flicker {
+    animation: frame-flicker 0.5s ease-in-out infinite alternate;
+  }
+
+  @keyframes frame-flicker {
+    0% { opacity: 0.9; filter: brightness(1); }
+    100% { opacity: 1; filter: brightness(1.2); }
+  }
+
+  /* Frame sparkle effect */
+  .frame-sparkle {
+    animation: frame-sparkle 2s ease-in-out infinite;
+  }
+
+  @keyframes frame-sparkle {
+    0%, 100% { filter: brightness(1) saturate(1); }
+    50% { filter: brightness(1.3) saturate(1.2); }
+  }
+
+  /* Legendary frame animation */
+  .frame-legendary-anim {
+    animation: legendary-frame 3s ease-in-out infinite;
+  }
+
+  @keyframes legendary-frame {
+    0%, 100% { 
+      filter: brightness(1) saturate(1);
+      transform: scale(1);
+    }
+    50% { 
+      filter: brightness(1.2) saturate(1.3);
+      transform: scale(1.02);
+    }
+  }
+
+  /* Metallic frames */
+  .frame-gold {
+    border: 4px solid transparent;
+    background: 
+      linear-gradient(hsl(var(--background)), hsl(var(--background))) padding-box,
+      linear-gradient(135deg, hsl(45, 100%, 60%) 0%, hsl(38, 95%, 45%) 50%, hsl(45, 100%, 65%) 100%) border-box;
+  }
+
+  .frame-silver {
+    border: 4px solid transparent;
+    background: 
+      linear-gradient(hsl(var(--background)), hsl(var(--background))) padding-box,
+      linear-gradient(135deg, hsl(220, 20%, 80%) 0%, hsl(220, 15%, 55%) 50%, hsl(220, 25%, 85%) 100%) border-box;
+  }
+
+  .frame-bronze {
+    border: 4px solid transparent;
+    background: 
+      linear-gradient(hsl(var(--background)), hsl(var(--background))) padding-box,
+      linear-gradient(135deg, hsl(25, 70%, 55%) 0%, hsl(20, 65%, 40%) 50%, hsl(30, 75%, 60%) 100%) border-box;
+  }
+
+  /* Neon frames */
+  .frame-neon-blue {
+    border: 3px solid hsl(199, 95%, 55%);
+    box-shadow: 
+      0 0 10px hsl(199, 95%, 55%, 0.5),
+      inset 0 0 10px hsl(199, 95%, 55%, 0.2);
+  }
+
+  .frame-neon-purple {
+    border: 3px solid hsl(262, 90%, 60%);
+    box-shadow: 
+      0 0 10px hsl(262, 90%, 60%, 0.5),
+      inset 0 0 10px hsl(262, 90%, 60%, 0.2);
+  }
+
+  .frame-neon-green {
+    border: 3px solid hsl(142, 76%, 45%);
+    box-shadow: 
+      0 0 10px hsl(142, 76%, 45%, 0.5),
+      inset 0 0 10px hsl(142, 76%, 45%, 0.2);
+  }
+
+  /* Gradient frames */
+  .frame-gradient-sunset {
+    border: 4px solid transparent;
+    background: 
+      linear-gradient(hsl(var(--background)), hsl(var(--background))) padding-box,
+      linear-gradient(135deg, hsl(0, 85%, 55%) 0%, hsl(30, 95%, 55%) 50%, hsl(45, 100%, 55%) 100%) border-box;
+  }
+
+  .frame-gradient-ocean {
+    border: 4px solid transparent;
+    background: 
+      linear-gradient(hsl(var(--background)), hsl(var(--background))) padding-box,
+      linear-gradient(135deg, hsl(180, 70%, 45%) 0%, hsl(199, 90%, 50%) 50%, hsl(220, 85%, 55%) 100%) border-box;
+  }
+
+  /* Exclusive frames */
+  .frame-rainbow {
+    border: 4px solid transparent;
+    background: 
+      linear-gradient(hsl(var(--background)), hsl(var(--background))) padding-box,
+      conic-gradient(
+        from 0deg,
+        hsl(0, 85%, 55%),
+        hsl(45, 95%, 55%),
+        hsl(120, 70%, 50%),
+        hsl(180, 80%, 50%),
+        hsl(220, 85%, 55%),
+        hsl(280, 80%, 55%),
+        hsl(0, 85%, 55%)
+      ) border-box;
+  }
+
+  .frame-fire {
+    border: 4px solid transparent;
+    background: 
+      linear-gradient(hsl(var(--background)), hsl(var(--background))) padding-box,
+      linear-gradient(180deg, hsl(45, 100%, 55%) 0%, hsl(25, 95%, 50%) 40%, hsl(0, 90%, 45%) 100%) border-box;
+  }
+
+  .frame-ice {
+    border: 4px solid transparent;
+    background: 
+      linear-gradient(hsl(var(--background)), hsl(var(--background))) padding-box,
+      linear-gradient(180deg, hsl(180, 100%, 90%) 0%, hsl(199, 95%, 70%) 50%, hsl(210, 100%, 60%) 100%) border-box;
+  }
+
+  .frame-diamond {
+    border: 4px solid transparent;
+    background: 
+      linear-gradient(hsl(var(--background)), hsl(var(--background))) padding-box,
+      linear-gradient(135deg, 
+        hsl(180, 100%, 90%) 0%, 
+        hsl(199, 100%, 80%) 25%, 
+        hsl(220, 100%, 85%) 50%, 
+        hsl(199, 100%, 80%) 75%, 
+        hsl(180, 100%, 90%) 100%
+      ) border-box;
+  }
+
+  .frame-legendary {
+    border: 5px solid transparent;
+    background: 
+      linear-gradient(hsl(var(--background)), hsl(var(--background))) padding-box,
+      conic-gradient(
+        from 0deg,
+        hsl(45, 100%, 60%),
+        hsl(38, 100%, 50%),
+        hsl(280, 85%, 55%),
+        hsl(199, 95%, 55%),
+        hsl(142, 76%, 45%),
+        hsl(45, 100%, 60%)
+      ) border-box;
+    position: relative;
+  }
+
+  .frame-legendary::before {
+    content: '';
+    position: absolute;
+    inset: -8px;
+    border-radius: inherit;
+    background: conic-gradient(
+      from 180deg,
+      transparent 0%,
+      hsl(45, 100%, 60%, 0.4) 25%,
+      transparent 50%,
+      hsl(280, 85%, 55%, 0.4) 75%,
+      transparent 100%
+    );
+    animation: legendary-outer-glow 3s linear infinite;
+    z-index: -1;
+    filter: blur(6px);
+    border-radius: 50%;
+  }
+
+  @keyframes legendary-outer-glow {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  /* Frame wrapper for consistent sizing */
+  .avatar-frame-wrapper {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .avatar-frame-wrapper .avatar-with-frame {
+    border-radius: 50%;
+  }
 }
