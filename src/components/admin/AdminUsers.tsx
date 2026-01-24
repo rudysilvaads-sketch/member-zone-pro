@@ -21,7 +21,9 @@ import {
   Crown,
   Plus,
   Minus,
-  Loader2
+  Loader2,
+  Shield,
+  ShieldOff
 } from 'lucide-react';
 import { collection, getDocs, doc, updateDoc, deleteDoc, increment } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -38,6 +40,7 @@ interface User {
   level: number;
   rank: string;
   streakDays: number;
+  isAdmin?: boolean;
   createdAt: any;
 }
 
@@ -118,6 +121,29 @@ export function AdminUsers() {
     }
   };
 
+  const handleToggleAdmin = async (user: User) => {
+    const newStatus = !user.isAdmin;
+    const action = newStatus ? 'promover a admin' : 'remover de admin';
+    
+    if (!confirm(`Tem certeza que deseja ${action} ${user.displayName}?`)) return;
+    
+    try {
+      const userRef = doc(db, 'users', user.id);
+      await updateDoc(userRef, {
+        isAdmin: newStatus,
+      });
+      
+      toast.success(newStatus 
+        ? `${user.displayName} agora é admin!` 
+        : `${user.displayName} não é mais admin`
+      );
+      fetchUsers();
+    } catch (error) {
+      console.error('Error updating admin status:', error);
+      toast.error('Erro ao atualizar status de admin');
+    }
+  };
+
   const getBadgeVariant = (rank: string) => {
     switch (rank?.toLowerCase()) {
       case 'diamond': return 'diamond';
@@ -188,6 +214,12 @@ export function AdminUsers() {
                       <Badge variant={getBadgeVariant(user.rank) as any} className="text-[10px]">
                         {user.rank?.toUpperCase() || 'BRONZE'}
                       </Badge>
+                      {user.isAdmin && (
+                        <Badge variant="destructive" className="text-[10px]">
+                          <Shield className="h-3 w-3 mr-1" />
+                          ADMIN
+                        </Badge>
+                      )}
                     </div>
                     <p className="text-sm text-muted-foreground truncate">{user.email}</p>
                     <div className="flex items-center gap-4 mt-1 text-xs text-muted-foreground">
@@ -203,6 +235,18 @@ export function AdminUsers() {
                   </div>
                   
                   <div className="flex items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleToggleAdmin(user)}
+                      title={user.isAdmin ? 'Remover admin' : 'Tornar admin'}
+                    >
+                      {user.isAdmin ? (
+                        <ShieldOff className="h-4 w-4 text-destructive" />
+                      ) : (
+                        <Shield className="h-4 w-4 text-muted-foreground" />
+                      )}
+                    </Button>
                     <Button
                       variant="ghost"
                       size="icon"
