@@ -6,7 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { Search, Lock, CheckCircle, Coins, Package, Sparkles, Crown, Gem, ShoppingBag, User, Gift, BookOpen, Box, Play, Wrench } from "lucide-react";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import { Search, Lock, CheckCircle, Coins, Package, Sparkles, Crown, Gem, ShoppingBag, User, Gift, BookOpen, Box, Play, Wrench, Star, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getProducts, purchaseProduct, getUserPurchases, Product, Purchase, ProductCategory } from "@/lib/firebaseServices";
 import { useAuth } from "@/contexts/AuthContext";
@@ -277,6 +278,49 @@ const Products = () => {
             </div>
           </div>
 
+          {/* Featured Products Carousel */}
+          {!loading && products.filter(p => p.featured).length > 0 && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Star className="h-5 w-5 text-primary fill-primary" />
+                  <h2 className="text-lg font-bold">
+                    <span className="text-primary">PRODUTOS</span> EM DESTAQUE
+                  </h2>
+                </div>
+                <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
+                  Ver todos <ChevronRight className="h-4 w-4 ml-1" />
+                </Button>
+              </div>
+              
+              <div className="relative px-12">
+                <Carousel
+                  opts={{
+                    align: "start",
+                    loop: true,
+                  }}
+                  className="w-full"
+                >
+                  <CarouselContent className="-ml-4">
+                    {products.filter(p => p.featured).map((product) => (
+                      <CarouselItem key={product.id} className="pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5">
+                        <FeaturedProductCard
+                          product={product}
+                          canPurchase={canPurchase(product)}
+                          isPurchased={isPurchased(product.id)}
+                          onSelect={() => setSelectedProduct(product)}
+                          formatName={formatProductName}
+                        />
+                      </CarouselItem>
+                    ))}
+                  </CarouselContent>
+                  <CarouselPrevious className="left-0" />
+                  <CarouselNext className="right-0" />
+                </Carousel>
+              </div>
+            </div>
+          )}
+
           {/* Filters Row */}
           <div className="flex flex-wrap items-center gap-3">
             {/* Search */}
@@ -448,6 +492,87 @@ const Products = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+    </div>
+  );
+};
+
+interface FeaturedProductCardProps {
+  product: Product;
+  canPurchase: { allowed: boolean; reason?: string };
+  isPurchased: boolean;
+  onSelect: () => void;
+  formatName: (name: string) => React.ReactNode;
+}
+
+const FeaturedProductCard = ({ product, canPurchase, isPurchased, onSelect, formatName }: FeaturedProductCardProps) => {
+  const isUnavailable = !product.available;
+  
+  return (
+    <div 
+      className="group cursor-pointer"
+      onClick={onSelect}
+    >
+      {/* Image Container */}
+      <div className="relative aspect-[4/3] rounded-xl overflow-hidden bg-secondary/50 mb-3 ring-2 ring-primary/20 group-hover:ring-primary/50 transition-all duration-300">
+        <img 
+          src={product.image} 
+          alt={product.name}
+          className={cn(
+            "w-full h-full object-cover transition-all duration-300",
+            "group-hover:scale-110",
+            (isUnavailable || (!canPurchase.allowed && !isPurchased)) && "opacity-60"
+          )}
+        />
+        
+        {/* Gradient Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent" />
+        
+        {/* Featured Badge */}
+        <div className="absolute top-2 left-2">
+          <Badge className="bg-primary text-primary-foreground text-[10px] px-2 py-0.5 h-5 shadow-lg">
+            <Star className="h-2.5 w-2.5 mr-1 fill-current" />
+            DESTAQUE
+          </Badge>
+        </div>
+        
+        {/* Status Badge */}
+        <div className="absolute top-2 right-2">
+          {isPurchased && (
+            <Badge className="bg-primary text-primary-foreground text-[10px] px-1.5 py-0.5 h-5">
+              <CheckCircle className="h-2.5 w-2.5 mr-0.5" />
+              LIBERADO
+            </Badge>
+          )}
+        </div>
+
+        {/* Bottom Info Overlay */}
+        <div className="absolute bottom-0 left-0 right-0 p-3">
+          <h3 className="text-sm font-bold leading-tight line-clamp-2 text-foreground drop-shadow-lg">
+            {formatName(product.name)}
+          </h3>
+          <div className="flex items-center justify-between mt-2">
+            <span className="text-primary text-sm font-bold">
+              {isPurchased ? 'Acessar' : `${product.price.toLocaleString()} pts`}
+            </span>
+            {product.requiredRank && (
+              <Badge variant="secondary" className="text-[10px] px-1.5 py-0.5 h-5 bg-background/50 backdrop-blur-sm">
+                <Crown className="h-2.5 w-2.5 mr-0.5" />
+                {product.requiredRank.toUpperCase()}
+              </Badge>
+            )}
+          </div>
+        </div>
+
+        {/* Unavailable Overlay */}
+        {isUnavailable && (
+          <div className="absolute inset-0 bg-background/60 backdrop-blur-[2px] flex items-center justify-center">
+            <Badge variant="secondary" className="text-xs px-2 py-1">
+              <Wrench className="h-3 w-3 mr-1" />
+              Manutenção
+            </Badge>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
