@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Header } from "@/components/layout/Header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { 
   Users, MessageSquare, Heart, TrendingUp, UserPlus, Send, Clock, 
-  MoreHorizontal, Trash2, Loader2 
+  MoreHorizontal, Trash2, Loader2, ImagePlus, X
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -30,7 +30,8 @@ import {
   deletePost,
   addComment,
   getComments,
-  deleteComment
+  deleteComment,
+  uploadPostImage
 } from "@/lib/firebaseServices";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -56,6 +57,12 @@ const Community = () => {
   const [newComment, setNewComment] = useState("");
   const [loadingComments, setLoadingComments] = useState(false);
   const [postingComment, setPostingComment] = useState(false);
+  
+  // Image upload state
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const fetchPosts = useCallback(async () => {
     try {
@@ -84,15 +91,70 @@ const Community = () => {
     fetchData();
   }, []);
 
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    // Validate file size (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Imagem muito grande. Máximo 5MB.');
+      return;
+    }
+    
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error('Tipo de arquivo não suportado. Use JPG, PNG, GIF ou WebP.');
+      return;
+    }
+    
+    setSelectedImage(file);
+    
+    // Create preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImagePreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const removeImage = () => {
+    setSelectedImage(null);
+    setImagePreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   const handleCreatePost = async () => {
-    if (!newPost.trim() || !userProfile) return;
+    if ((!newPost.trim() && !selectedImage) || !userProfile) return;
     
     setPosting(true);
     try {
-      const result = await createPost(userProfile, newPost);
+      let imageUrl: string | null = null;
+      let imagePath: string | null = null;
+      
+      // Upload image if selected
+      if (selectedImage) {
+        setUploadingImage(true);
+        const uploadResult = await uploadPostImage(userProfile.uid, selectedImage);
+        setUploadingImage(false);
+        
+        if (!uploadResult.success) {
+          toast.error(uploadResult.error || 'Erro ao fazer upload da imagem');
+          setPosting(false);
+          return;
+        }
+        
+        imageUrl = uploadResult.url || null;
+        imagePath = uploadResult.path || null;
+      }
+      
+      const result = await createPost(userProfile, newPost, imageUrl, imagePath);
       if (result.success) {
         toast.success('Post publicado!');
         setNewPost("");
+        removeImage();
         await fetchPosts();
       } else {
         toast.error(result.error || 'Erro ao publicar');
@@ -101,6 +163,7 @@ const Community = () => {
       toast.error('Erro ao publicar post');
     } finally {
       setPosting(false);
+      setUploadingImage(false);
     }
   };
 
@@ -240,20 +303,63 @@ const Community = () => {
                         className="resize-none min-h-[80px]"
                         maxLength={500}
                       />
+                      
+                      {/* Image Preview */}
+                      {imagePreview && (
+                        <div className="relative inline-block">
+                          <img 
+                            src={imagePreview} 
+                            alt="Preview" 
+                            className="max-h-48 rounded-lg object-cover"
+                          />
+                          <Button
+                            variant="destructive"
+                            size="icon"
+                            className="absolute -top-2 -right-2 h-6 w-6 rounded-full"
+                            onClick={removeImage}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      )}
+                      
                       <div className="flex justify-between items-center">
-                        <span className="text-xs text-muted-foreground">
-                          {newPost.length}/500
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept="image/jpeg,image/png,image/gif,image/webp"
+                            onChange={handleImageSelect}
+                            className="hidden"
+                          />
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => fileInputRef.current?.click()}
+                            disabled={posting}
+                          >
+                            <ImagePlus className="h-4 w-4 mr-2" />
+                            Imagem
+                          </Button>
+                          <span className="text-xs text-muted-foreground">
+                            {newPost.length}/500
+                          </span>
+                        </div>
                         <Button 
                           onClick={handleCreatePost} 
-                          disabled={!newPost.trim() || posting}
+                          disabled={(!newPost.trim() && !selectedImage) || posting}
                         >
                           {posting ? (
-                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            <>
+                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                              {uploadingImage ? 'Enviando imagem...' : 'Publicando...'}
+                            </>
                           ) : (
-                            <Send className="h-4 w-4 mr-2" />
+                            <>
+                              <Send className="h-4 w-4 mr-2" />
+                              Publicar
+                            </>
                           )}
-                          Publicar
                         </Button>
                       </div>
                     </div>
@@ -418,9 +524,16 @@ const Community = () => {
                       {selectedPost.authorName?.charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
-                  <div>
+                  <div className="flex-1">
                     <p className="font-semibold">{selectedPost.authorName}</p>
                     <p className="text-sm text-foreground mt-1">{selectedPost.content}</p>
+                    {selectedPost.imageUrl && (
+                      <img 
+                        src={selectedPost.imageUrl} 
+                        alt="Post" 
+                        className="mt-2 max-h-40 rounded-lg object-cover"
+                      />
+                    )}
                   </div>
                 </div>
               </div>
@@ -497,8 +610,16 @@ const Community = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Image Lightbox */}
+      <ImageLightbox />
     </div>
   );
+};
+
+// Image Lightbox Component (for viewing full images)
+const ImageLightbox = () => {
+  return null; // Placeholder for future implementation
 };
 
 // PostCard Component
@@ -515,82 +636,110 @@ const PostCard = ({ post, currentUserId, onLike, onDelete, onOpenComments, forma
   const rankStyle = rankConfig[post.authorRank] || rankConfig.bronze;
   const isLiked = post.likes?.includes(currentUserId || '');
   const isAuthor = post.authorId === currentUserId;
+  const [imageExpanded, setImageExpanded] = useState(false);
 
   return (
-    <Card>
-      <CardContent className="p-4">
-        <div className="flex gap-4">
-          <Avatar className="h-12 w-12">
-            <AvatarImage src={post.authorAvatar || undefined} />
-            <AvatarFallback className={rankStyle.bg}>
-              {post.authorName?.charAt(0).toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
-          <div className="flex-1">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-semibold">{post.authorName}</span>
-                <Badge className={cn("text-xs", rankStyle.bg, rankStyle.color)}>
-                  {post.authorRank?.charAt(0).toUpperCase() + post.authorRank?.slice(1)}
-                </Badge>
-                <span className="text-xs text-muted-foreground">
-                  Nível {post.authorLevel}
-                </span>
-                <span className="text-xs text-muted-foreground flex items-center gap-1">
-                  <Clock className="h-3 w-3" />
-                  {formatTimeAgo(post.createdAt)}
-                </span>
+    <>
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex gap-4">
+            <Avatar className="h-12 w-12">
+              <AvatarImage src={post.authorAvatar || undefined} />
+              <AvatarFallback className={rankStyle.bg}>
+                {post.authorName?.charAt(0).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex-1">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-semibold">{post.authorName}</span>
+                  <Badge className={cn("text-xs", rankStyle.bg, rankStyle.color)}>
+                    {post.authorRank?.charAt(0).toUpperCase() + post.authorRank?.slice(1)}
+                  </Badge>
+                  <span className="text-xs text-muted-foreground">
+                    Nível {post.authorLevel}
+                  </span>
+                  <span className="text-xs text-muted-foreground flex items-center gap-1">
+                    <Clock className="h-3 w-3" />
+                    {formatTimeAgo(post.createdAt)}
+                  </span>
+                </div>
+                
+                {isAuthor && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem 
+                        className="text-destructive focus:text-destructive"
+                        onClick={onDelete}
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Excluir post
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
               </div>
               
-              {isAuthor && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem 
-                      className="text-destructive focus:text-destructive"
-                      onClick={onDelete}
-                    >
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Excluir post
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+              {post.content && (
+                <p className="mt-2 text-foreground whitespace-pre-wrap">{post.content}</p>
               )}
-            </div>
-            
-            <p className="mt-2 text-foreground whitespace-pre-wrap">{post.content}</p>
-            
-            <div className="flex items-center gap-6 mt-4">
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className={cn(
-                  "text-muted-foreground",
-                  isLiked && "text-red-500 hover:text-red-600"
-                )}
-                onClick={onLike}
-              >
-                <Heart className={cn("h-4 w-4 mr-1", isLiked && "fill-current")} />
-                {post.likes?.length || 0}
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="text-muted-foreground"
-                onClick={onOpenComments}
-              >
-                <MessageSquare className="h-4 w-4 mr-1" />
-                {post.commentsCount || 0}
-              </Button>
+              
+              {/* Post Image */}
+              {post.imageUrl && (
+                <div className="mt-3">
+                  <img 
+                    src={post.imageUrl} 
+                    alt="Post" 
+                    className="max-h-80 w-full object-cover rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
+                    onClick={() => setImageExpanded(true)}
+                  />
+                </div>
+              )}
+              
+              <div className="flex items-center gap-6 mt-4">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className={cn(
+                    "text-muted-foreground",
+                    isLiked && "text-red-500 hover:text-red-600"
+                  )}
+                  onClick={onLike}
+                >
+                  <Heart className={cn("h-4 w-4 mr-1", isLiked && "fill-current")} />
+                  {post.likes?.length || 0}
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="text-muted-foreground"
+                  onClick={onOpenComments}
+                >
+                  <MessageSquare className="h-4 w-4 mr-1" />
+                  {post.commentsCount || 0}
+                </Button>
+              </div>
             </div>
           </div>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+
+      {/* Image Expanded Dialog */}
+      <Dialog open={imageExpanded} onOpenChange={setImageExpanded}>
+        <DialogContent className="max-w-4xl p-0 bg-transparent border-none">
+          <img 
+            src={post.imageUrl || ''} 
+            alt="Post expanded" 
+            className="w-full h-auto max-h-[90vh] object-contain rounded-lg"
+          />
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
 
