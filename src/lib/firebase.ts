@@ -3,15 +3,14 @@ import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
-// TODO: Replace with your Firebase config from Firebase Console
-// Go to: Firebase Console > Project Settings > Your apps > Web app > Config
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyCrRyM_pZs-cfNnbOBR-UjqLHGJs52sReo",
+  authDomain: "lovableloja.firebaseapp.com",
+  projectId: "lovableloja",
+  storageBucket: "lovableloja.firebasestorage.app",
+  messagingSenderId: "618755274709",
+  appId: "1:618755274709:web:49c372c88f737614b12f5c",
+  measurementId: "G-0MHKBG4DQ1"
 };
 
 // Initialize Firebase
