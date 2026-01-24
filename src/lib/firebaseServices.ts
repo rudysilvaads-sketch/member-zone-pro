@@ -77,6 +77,19 @@ export interface Purchase {
   productImage?: string;
   price: number;
   purchasedAt: Timestamp;
+  reviewed?: boolean;
+}
+
+export interface ProductReview {
+  id: string;
+  productId: string;
+  productName: string;
+  userId: string;
+  userName: string;
+  userAvatar?: string;
+  rating: number; // 1-5
+  comment: string;
+  createdAt: Timestamp;
 }
 
 export interface Mission {
@@ -862,6 +875,109 @@ export const deleteNotification = async (notificationId: string): Promise<boolea
     return true;
   } catch (error) {
     console.error('Error deleting notification:', error);
+    return false;
+  }
+};
+
+// ==================== Product Reviews ====================
+
+export const createProductReview = async (
+  userId: string,
+  userName: string,
+  userAvatar: string | undefined,
+  productId: string,
+  productName: string,
+  rating: number,
+  comment: string
+): Promise<{ success: boolean; reviewId?: string; error?: string }> => {
+  try {
+    // Check if user already reviewed this product
+    const existingReview = await getDocs(
+      query(
+        collection(db, 'reviews'),
+        where('userId', '==', userId),
+        where('productId', '==', productId)
+      )
+    );
+    
+    if (!existingReview.empty) {
+      return { success: false, error: 'Você já avaliou este produto' };
+    }
+    
+    // Create review
+    const reviewRef = doc(collection(db, 'reviews'));
+    await setDoc(reviewRef, {
+      productId,
+      productName,
+      userId,
+      userName,
+      userAvatar: userAvatar || null,
+      rating,
+      comment,
+      createdAt: serverTimestamp(),
+    });
+    
+    // Mark purchase as reviewed
+    const purchasesQuery = query(
+      collection(db, 'purchases'),
+      where('userId', '==', userId),
+      where('productId', '==', productId)
+    );
+    const purchaseSnap = await getDocs(purchasesQuery);
+    if (!purchaseSnap.empty) {
+      await updateDoc(purchaseSnap.docs[0].ref, { reviewed: true });
+    }
+    
+    return { success: true, reviewId: reviewRef.id };
+  } catch (error) {
+    console.error('Error creating review:', error);
+    return { success: false, error: 'Erro ao criar avaliação' };
+  }
+};
+
+export const getProductReviews = async (productId: string): Promise<ProductReview[]> => {
+  try {
+    const reviewsQuery = query(
+      collection(db, 'reviews'),
+      where('productId', '==', productId),
+      orderBy('createdAt', 'desc')
+    );
+    const snapshot = await getDocs(reviewsQuery);
+    return snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+    })) as ProductReview[];
+  } catch (error) {
+    console.error('Error fetching reviews:', error);
+    return [];
+  }
+};
+
+export const getProductAverageRating = async (productId: string): Promise<{ average: number; count: number }> => {
+  try {
+    const reviews = await getProductReviews(productId);
+    if (reviews.length === 0) return { average: 0, count: 0 };
+    
+    const total = reviews.reduce((sum, r) => sum + r.rating, 0);
+    return { average: total / reviews.length, count: reviews.length };
+  } catch (error) {
+    console.error('Error calculating average rating:', error);
+    return { average: 0, count: 0 };
+  }
+};
+
+export const deleteProductReview = async (reviewId: string, userId: string): Promise<boolean> => {
+  try {
+    const reviewRef = doc(db, 'reviews', reviewId);
+    const reviewSnap = await getDoc(reviewRef);
+    
+    if (!reviewSnap.exists()) return false;
+    if (reviewSnap.data().userId !== userId) return false;
+    
+    await deleteDoc(reviewRef);
+    return true;
+  } catch (error) {
+    console.error('Error deleting review:', error);
     return false;
   }
 };
