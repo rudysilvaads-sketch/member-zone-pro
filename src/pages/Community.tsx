@@ -35,6 +35,7 @@ import {
   uploadPostImage,
   createNotification
 } from "@/lib/firebaseServices";
+import { completeMission } from "@/lib/missionService";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { OnlineIndicator } from "@/components/OnlineIndicator";
@@ -172,6 +173,12 @@ const Community = () => {
         setNewPost("");
         removeImage();
         await fetchPosts();
+        
+        // Complete engage-community mission
+        const missionCompleted = await completeMission(userProfile.uid, 'engage-community');
+        if (missionCompleted) {
+          toast.success('🎯 Missão "Membro Ativo" completada!');
+        }
       } else {
         toast.error(result.error || 'Erro ao publicar');
       }
@@ -275,6 +282,12 @@ const Community = () => {
             postContent: selectedPost.content?.substring(0, 50) || '',
             commentContent: commentText.substring(0, 100),
           });
+        }
+        
+        // Complete engage-community mission
+        const missionCompleted = await completeMission(userProfile.uid, 'engage-community');
+        if (missionCompleted) {
+          toast.success('🎯 Missão "Membro Ativo" completada!');
         }
         
         toast.success('Comentário adicionado!');
