@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Crown, Mail, Lock, User, AlertCircle, Gift, Sparkles, Trophy, Zap } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Crown, Mail, Lock, User, AlertCircle, Gift, Sparkles, Trophy, Zap, ArrowLeft, Loader2, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function Auth() {
@@ -18,8 +19,12 @@ export default function Auth() {
   const [displayName, setDisplayName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [resetDialogOpen, setResetDialogOpen] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetLoading, setResetLoading] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
   
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp, resetPassword } = useAuth();
   const navigate = useNavigate();
 
   // Auto-switch to signup if coming from referral link
@@ -248,14 +253,22 @@ export default function Auth() {
               </div>
               {isLogin && (
                 <div className="text-right">
-                  <button type="button" className="text-sm text-primary hover:underline">
+                  <button 
+                    type="button" 
+                    className="text-sm text-primary hover:underline"
+                    onClick={() => {
+                      setResetEmail(email);
+                      setResetDialogOpen(true);
+                      setResetSent(false);
+                    }}
+                  >
                     Esqueceu a senha?
                   </button>
                 </div>
               )}
             </div>
             
-            <Button 
+            <Button
               type="submit" 
               className="w-full h-12 rounded-xl text-base font-semibold bg-primary hover:bg-primary/90" 
               disabled={loading}
@@ -289,6 +302,105 @@ export default function Auth() {
           </p>
         </div>
       </div>
+
+      {/* Reset Password Dialog */}
+      <Dialog open={resetDialogOpen} onOpenChange={(open) => {
+        setResetDialogOpen(open);
+        if (!open) {
+          setResetSent(false);
+        }
+      }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Mail className="h-5 w-5 text-primary" />
+              Recuperar Senha
+            </DialogTitle>
+            <DialogDescription>
+              {resetSent 
+                ? "Email enviado! Verifique sua caixa de entrada."
+                : "Digite seu email para receber o link de recuperação."
+              }
+            </DialogDescription>
+          </DialogHeader>
+
+          {resetSent ? (
+            <div className="py-8 text-center">
+              <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                <CheckCircle className="h-8 w-8 text-primary" />
+              </div>
+              <h3 className="font-semibold text-lg mb-2">Email Enviado!</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Enviamos um link de recuperação para <strong>{resetEmail}</strong>.
+                <br />
+                Verifique sua caixa de entrada e spam.
+              </p>
+              <Button onClick={() => setResetDialogOpen(false)} className="w-full">
+                Voltar ao Login
+              </Button>
+            </div>
+          ) : (
+            <>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="reset-email">Email</Label>
+                  <div className="relative">
+                    <Mail className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      id="reset-email"
+                      type="email"
+                      placeholder="seu@email.com"
+                      value={resetEmail}
+                      onChange={(e) => setResetEmail(e.target.value)}
+                      className="pl-12 h-12 rounded-xl bg-secondary/50 border-border/50"
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <DialogFooter className="gap-2">
+                <Button variant="outline" onClick={() => setResetDialogOpen(false)}>
+                  Cancelar
+                </Button>
+                <Button 
+                  onClick={async () => {
+                    if (!resetEmail) {
+                      toast.error('Digite seu email');
+                      return;
+                    }
+                    setResetLoading(true);
+                    try {
+                      await resetPassword(resetEmail);
+                      setResetSent(true);
+                    } catch (err: any) {
+                      if (err.code === 'auth/user-not-found') {
+                        toast.error('Email não encontrado');
+                      } else if (err.code === 'auth/invalid-email') {
+                        toast.error('Email inválido');
+                      } else {
+                        toast.error('Erro ao enviar email. Tente novamente.');
+                      }
+                    } finally {
+                      setResetLoading(false);
+                    }
+                  }}
+                  disabled={resetLoading}
+                >
+                  {resetLoading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Enviando...
+                    </>
+                  ) : (
+                    'Enviar Link'
+                  )}
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

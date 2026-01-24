@@ -6,7 +6,8 @@ import {
   signOut,
   onAuthStateChanged,
   GoogleAuthProvider,
-  signInWithPopup
+  signInWithPopup,
+  sendPasswordResetEmail
 } from 'firebase/auth';
 import { doc, setDoc, getDoc, serverTimestamp, updateDoc, increment } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
@@ -42,6 +43,7 @@ interface AuthContextType {
   signUp: (email: string, password: string, displayName: string, referralCode?: string) => Promise<void>;
   signInWithGoogle: (referralCode?: string) => Promise<void>;
   logout: () => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
   updateUserPoints: (points: number) => Promise<void>;
   addXp: (xp: number) => Promise<{ leveledUp: boolean; bonusXp: number; originalXp: number } | undefined>;
   refreshProfile: () => Promise<void>;
@@ -197,6 +199,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUserProfile(null);
   };
 
+  const resetPassword = async (email: string) => {
+    await sendPasswordResetEmail(auth, email);
+  };
+
   const updateUserPoints = async (points: number) => {
     if (!user || !userProfile) return;
     
@@ -250,6 +256,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     signUp,
     signInWithGoogle,
     logout,
+    resetPassword,
     updateUserPoints,
     addXp,
     refreshProfile,
