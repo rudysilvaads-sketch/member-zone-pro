@@ -12,6 +12,13 @@ const badgeVariants = cva(
         secondary: "border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80",
         destructive: "border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80",
         outline: "text-foreground",
+        gold: "border-transparent bg-gradient-gold text-primary-foreground shadow-glow-gold",
+        silver: "border-transparent bg-silver text-primary-foreground",
+        bronze: "border-transparent bg-bronze text-primary-foreground",
+        diamond: "border-transparent bg-rank-diamond text-primary-foreground shadow-glow-accent",
+        platinum: "border-transparent bg-rank-platinum text-primary-foreground",
+        accent: "border-transparent bg-gradient-accent text-accent-foreground shadow-glow-accent",
+        success: "border-transparent bg-success text-success-foreground",
       },
     },
     defaultVariants: {
