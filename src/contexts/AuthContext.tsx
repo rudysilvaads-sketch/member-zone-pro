@@ -30,6 +30,8 @@ interface UserProfile {
   createdAt: Date;
   unlockedAvatars?: string[];
   currentAvatarId?: string;
+  unlockedFrames?: string[];
+  currentFrameId?: string;
 }
 
 interface AuthContextType {

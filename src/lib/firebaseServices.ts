@@ -40,6 +40,8 @@ export interface UserProfile {
   createdAt: Timestamp;
   unlockedAvatars?: string[];
   currentAvatarId?: string;
+  unlockedFrames?: string[];
+  currentFrameId?: string;
 }
 
 export interface Achievement {
