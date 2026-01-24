@@ -6,27 +6,20 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { Search, Star, Lock, CheckCircle, Coins, Package, Sparkles, Crown, Gem, ShoppingBag, User, Gift, BookOpen, Box } from "lucide-react";
+import { Search, Lock, CheckCircle, Coins, Package, Sparkles, Crown, Gem, ShoppingBag, User, Gift, BookOpen, Box, Play, Wrench } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getProducts, purchaseProduct, getUserPurchases, Product, Purchase, ProductCategory } from "@/lib/firebaseServices";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
 const rankOrder = ['bronze', 'silver', 'gold', 'platinum', 'diamond'];
-const rankConfig: Record<string, { color: string; bg: string; label: string }> = {
-  bronze: { color: "text-orange-400", bg: "bg-orange-500/20", label: "Bronze" },
-  silver: { color: "text-slate-300", bg: "bg-slate-400/20", label: "Prata" },
-  gold: { color: "text-yellow-400", bg: "bg-yellow-500/20", label: "Ouro" },
-  platinum: { color: "text-cyan-400", bg: "bg-cyan-500/20", label: "Platina" },
-  diamond: { color: "text-purple-400", bg: "bg-purple-500/20", label: "Diamante" },
-};
 
-const categoryConfig: Record<ProductCategory, { label: string; icon: React.ElementType; color: string; bg: string }> = {
-  avatars: { label: "Avatares", icon: User, color: "text-violet-400", bg: "bg-violet-500/20" },
-  items: { label: "Itens", icon: Box, color: "text-blue-400", bg: "bg-blue-500/20" },
-  benefits: { label: "Benefícios", icon: Gift, color: "text-emerald-400", bg: "bg-emerald-500/20" },
-  courses: { label: "Cursos", icon: BookOpen, color: "text-amber-400", bg: "bg-amber-500/20" },
-  other: { label: "Outros", icon: Package, color: "text-slate-400", bg: "bg-slate-500/20" },
+const categoryConfig: Record<ProductCategory, { label: string; icon: React.ElementType }> = {
+  avatars: { label: "Avatares", icon: User },
+  items: { label: "Itens", icon: Box },
+  benefits: { label: "Benefícios", icon: Gift },
+  courses: { label: "Cursos", icon: BookOpen },
+  other: { label: "Outros", icon: Package },
 };
 
 const Products = () => {
@@ -45,81 +38,118 @@ const Products = () => {
   const defaultProducts: Product[] = [
     {
       id: 'sample-1',
-      name: 'Avatar Ninja',
-      description: 'Avatar exclusivo estilo ninja com máscara e olhos brilhantes. Mostre sua determinação!',
+      name: 'Pack Elementor CSS',
+      description: 'Pack completo de elementos CSS para Elementor. Acelere seu desenvolvimento!',
       price: 800,
-      image: 'https://images.unsplash.com/photo-1618336753974-aae8e04506aa?w=400&h=400&fit=crop',
+      image: 'https://images.unsplash.com/photo-1618336753974-aae8e04506aa?w=600&h=400&fit=crop',
       available: true,
-      category: 'avatars',
+      category: 'items',
       featured: true,
     },
     {
       id: 'sample-2',
-      name: 'Avatar Robô',
-      description: 'Avatar futurista com design de robô cyberpunk. Perfeito para amantes de tecnologia.',
+      name: 'App Disparo em Massa',
+      description: 'Aplicativo para disparo em massa via WhatsApp. Automatize suas mensagens.',
       price: 1200,
-      image: 'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=400&h=400&fit=crop',
-      available: true,
-      category: 'avatars',
-      requiredRank: 'silver',
-    },
-    {
-      id: 'sample-3',
-      name: 'Badge Campeão',
-      description: 'Badge dourada exclusiva para exibir no seu perfil. Mostra que você é um verdadeiro campeão!',
-      price: 500,
-      image: 'https://images.unsplash.com/photo-1618401471353-b98afee0b2eb?w=400&h=400&fit=crop',
+      image: 'https://images.unsplash.com/photo-1611532736597-de2d4265fba3?w=600&h=400&fit=crop',
       available: true,
       category: 'items',
     },
     {
+      id: 'sample-3',
+      name: 'Catálogo de Cursos',
+      description: 'Acesso ao catálogo completo de cursos da plataforma.',
+      price: 500,
+      image: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600&h=400&fit=crop',
+      available: true,
+      category: 'courses',
+      requiredRank: 'gold',
+    },
+    {
       id: 'sample-4',
-      name: 'Tema Neon',
-      description: 'Tema visual neon cyberpunk para seu dashboard. Cores vibrantes e futuristas.',
+      name: 'Pack After Effects',
+      description: 'Pack com 500 elementos UHD 4K para After Effects.',
       price: 750,
-      image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400&h=400&fit=crop',
+      image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=600&h=400&fit=crop',
       available: true,
       category: 'items',
       featured: true,
     },
     {
       id: 'sample-5',
-      name: 'Mentoria Individual',
-      description: '1 hora de mentoria individual com um especialista da área. Tire todas suas dúvidas!',
+      name: 'Método IA do Job',
+      description: 'Aprenda a usar IA para conseguir oportunidades de trabalho.',
       price: 3000,
-      image: 'https://images.unsplash.com/photo-1552581234-26160f608093?w=400&h=400&fit=crop',
+      image: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=600&h=400&fit=crop',
       available: true,
-      category: 'benefits',
+      category: 'courses',
       requiredRank: 'platinum',
       featured: true,
     },
     {
       id: 'sample-6',
-      name: 'Certificado Premium',
-      description: 'Certificado personalizado com selo holográfico para impressão física.',
+      name: 'Tema Express Shopify',
+      description: 'Tema profissional e otimizado para lojas Shopify.',
       price: 1500,
-      image: 'https://images.unsplash.com/photo-1589330694653-ded6df03f754?w=400&h=400&fit=crop',
+      image: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=600&h=400&fit=crop',
       available: true,
-      category: 'benefits',
+      category: 'items',
     },
     {
       id: 'sample-7',
-      name: 'Curso Avançado de Produtividade',
-      description: 'Módulos exclusivos sobre técnicas avançadas de produtividade e gestão de tempo.',
+      name: 'Prompts VEO 3',
+      description: 'Coleção de prompts otimizados para geração de vídeos com IA.',
       price: 2500,
-      image: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&h=400&fit=crop',
+      image: 'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=600&h=400&fit=crop',
       available: true,
-      category: 'courses',
+      category: 'benefits',
       featured: true,
     },
     {
       id: 'sample-8',
-      name: 'Workshop Criatividade',
-      description: 'Workshop interativo para desenvolver seu potencial criativo e inovador.',
+      name: 'Pack Edit Pro Kit',
+      description: 'Kit básico de edição com mais de 2000 recursos.',
       price: 1800,
-      image: 'https://images.unsplash.com/photo-1456406644174-8ddd4cd52a06?w=400&h=400&fit=crop',
+      image: 'https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?w=600&h=400&fit=crop',
       available: true,
-      category: 'courses',
+      category: 'items',
+    },
+    {
+      id: 'sample-9',
+      name: 'Master Pay',
+      description: 'Sistema completo de pagamentos para seu negócio.',
+      price: 4500,
+      image: 'https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=600&h=400&fit=crop',
+      available: true,
+      category: 'benefits',
+      requiredRank: 'diamond',
+    },
+    {
+      id: 'sample-10',
+      name: 'Script Raspadinha',
+      description: 'Script de raspadinha premiada para engajamento.',
+      price: 900,
+      image: 'https://images.unsplash.com/photo-1518186285589-2f7649de83e0?w=600&h=400&fit=crop',
+      available: true,
+      category: 'items',
+    },
+    {
+      id: 'sample-11',
+      name: 'Cortes Virais Biblioteca',
+      description: 'Biblioteca completa de cortes virais para redes sociais.',
+      price: 1100,
+      image: 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=600&h=400&fit=crop',
+      available: true,
+      category: 'items',
+    },
+    {
+      id: 'sample-12',
+      name: 'Páginas de Vendas',
+      description: 'Templates de páginas de vendas de alta conversão.',
+      price: 2000,
+      image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=600&h=400&fit=crop',
+      available: false,
+      category: 'items',
     },
   ];
 
@@ -130,12 +160,10 @@ const Products = () => {
           getProducts(),
           userProfile ? getUserPurchases(userProfile.uid) : Promise.resolve([])
         ]);
-        // Use default products if Firebase returns empty
         setProducts(productsData.length > 0 ? productsData : defaultProducts);
         setPurchases(purchasesData);
       } catch (error) {
         console.error('Error fetching products:', error);
-        // Fallback to default products on error
         setProducts(defaultProducts);
       } finally {
         setLoading(false);
@@ -191,12 +219,10 @@ const Products = () => {
   const getDisplayProducts = () => {
     let displayProducts = filteredProducts;
     
-    // Category filter
     if (categoryFilter !== 'all') {
       displayProducts = displayProducts.filter(p => p.category === categoryFilter);
     }
     
-    // Status filter
     if (statusFilter === 'available') {
       displayProducts = displayProducts.filter(p => canPurchase(p).allowed && !isPurchased(p.id));
     } else if (statusFilter === 'purchased') {
@@ -206,7 +232,6 @@ const Products = () => {
     return displayProducts;
   };
 
-  // Get category counts
   const getCategoryCounts = () => {
     const counts: Record<string, number> = { all: filteredProducts.length };
     (Object.keys(categoryConfig) as ProductCategory[]).forEach(cat => {
@@ -217,6 +242,18 @@ const Products = () => {
 
   const categoryCounts = getCategoryCounts();
 
+  // Split product name to highlight first word
+  const formatProductName = (name: string) => {
+    const words = name.split(' ');
+    if (words.length === 1) return <span className="text-primary font-bold">{name}</span>;
+    return (
+      <>
+        <span className="text-primary font-bold">{words[0]}</span>{' '}
+        <span className="text-foreground">{words.slice(1).join(' ')}</span>
+      </>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
@@ -224,188 +261,118 @@ const Products = () => {
       <div className={`transition-all duration-300 ${sidebarCollapsed ? 'pl-20' : 'pl-64'}`}>
         <Header />
         
-        <main className="p-6 space-y-8">
-          {/* Hero Section */}
-          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/20 via-primary/10 to-transparent border border-primary/20 p-8">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-            <div className="absolute bottom-0 left-0 w-48 h-48 bg-accent/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
-            
-            <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-              <div className="space-y-2">
-                <div className="flex items-center gap-3">
-                  <div className="p-3 rounded-xl bg-primary/20 backdrop-blur-sm">
-                    <Gem className="h-8 w-8 text-primary" />
-                  </div>
-                  <div>
-                    <h1 className="text-3xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
-                      Vitrine de Recompensas
-                    </h1>
-                    <p className="text-muted-foreground">
-                      Troque seus pontos por prêmios exclusivos
-                    </p>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="flex items-center gap-3 px-6 py-4 rounded-xl bg-background/80 backdrop-blur-sm border border-border/50 shadow-lg">
-                <div className="p-2 rounded-lg bg-primary/20">
-                  <Coins className="h-6 w-6 text-primary" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Seus pontos</p>
-                  <p className="text-2xl font-bold text-primary">{userProfile?.points?.toLocaleString() || 0}</p>
-                </div>
-              </div>
+        <main className="p-6 space-y-6">
+          {/* Header Section */}
+          <div className="flex items-center gap-4">
+            <div className="p-3 rounded-xl bg-primary/10 border border-primary/20">
+              <Package className="h-6 w-6 text-primary" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold">
+                <span className="text-primary">MEUS</span> PRODUTOS
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                Produtos que você tem acesso
+              </p>
             </div>
           </div>
 
-          {/* Search */}
-          <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-            <Input
-              placeholder="Buscar recompensas..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-12 h-12 text-base rounded-xl border-border/50 bg-background/50 backdrop-blur-sm"
-            />
+          {/* Filters Row */}
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Search */}
+            <div className="relative flex-1 min-w-[200px] max-w-md">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar produtos..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-9 h-10 bg-secondary/50 border-border/50 rounded-lg"
+              />
+            </div>
+
+            {/* Category Filters */}
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant={categoryFilter === 'all' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setCategoryFilter('all')}
+                className="h-8"
+              >
+                Todos ({categoryCounts.all})
+              </Button>
+              {(Object.keys(categoryConfig) as ProductCategory[]).map(cat => {
+                const count = categoryCounts[cat];
+                if (count === 0) return null;
+                return (
+                  <Button
+                    key={cat}
+                    variant={categoryFilter === cat ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setCategoryFilter(cat)}
+                    className="h-8"
+                  >
+                    {categoryConfig[cat].label} ({count})
+                  </Button>
+                );
+              })}
+            </div>
+
+            {/* Status Filters */}
+            <div className="flex gap-2 ml-auto">
+              <Button
+                variant={statusFilter === 'available' ? 'secondary' : 'ghost'}
+                size="sm"
+                onClick={() => setStatusFilter(statusFilter === 'available' ? 'all' : 'available')}
+                className="h-8"
+              >
+                <Sparkles className="h-3 w-3 mr-1" />
+                Disponíveis
+              </Button>
+              <Button
+                variant={statusFilter === 'purchased' ? 'secondary' : 'ghost'}
+                size="sm"
+                onClick={() => setStatusFilter(statusFilter === 'purchased' ? 'all' : 'purchased')}
+                className="h-8"
+              >
+                <CheckCircle className="h-3 w-3 mr-1" />
+                Liberados
+              </Button>
+            </div>
           </div>
 
-          {/* Category Filters */}
-          <div className="flex flex-wrap gap-2">
-            <Button
-              variant={categoryFilter === 'all' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setCategoryFilter('all')}
-              className="rounded-xl"
-            >
-              <ShoppingBag className="h-4 w-4 mr-2" />
-              Todos
-              <Badge variant="secondary" className="ml-2 text-xs">{categoryCounts.all}</Badge>
-            </Button>
-            {(Object.keys(categoryConfig) as ProductCategory[]).map(cat => {
-              const config = categoryConfig[cat];
-              const Icon = config.icon;
-              const count = categoryCounts[cat];
-              if (count === 0) return null;
-              return (
-                <Button
-                  key={cat}
-                  variant={categoryFilter === cat ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setCategoryFilter(cat)}
-                  className="rounded-xl"
-                >
-                  <Icon className="h-4 w-4 mr-2" />
-                  {config.label}
-                  <Badge variant="secondary" className="ml-2 text-xs">{count}</Badge>
-                </Button>
-              );
-            })}
-          </div>
-
-          {/* Status Filters */}
-          <div className="flex gap-2">
-            <Button
-              variant={statusFilter === 'all' ? 'secondary' : 'ghost'}
-              size="sm"
-              onClick={() => setStatusFilter('all')}
-              className="rounded-xl"
-            >
-              Todos os status
-            </Button>
-            <Button
-              variant={statusFilter === 'available' ? 'secondary' : 'ghost'}
-              size="sm"
-              onClick={() => setStatusFilter('available')}
-              className="rounded-xl"
-            >
-              <Sparkles className="h-4 w-4 mr-2" />
-              Disponíveis
-            </Button>
-            <Button
-              variant={statusFilter === 'purchased' ? 'secondary' : 'ghost'}
-              size="sm"
-              onClick={() => setStatusFilter('purchased')}
-              className="rounded-xl"
-            >
-              <CheckCircle className="h-4 w-4 mr-2" />
-              Resgatados
-            </Button>
-          </div>
-
+          {/* Products Grid */}
           {loading ? (
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {[...Array(8)].map((_, i) => (
-                <div key={i} className="aspect-[4/5] bg-muted/30 rounded-2xl animate-pulse" />
+            <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-7">
+              {[...Array(14)].map((_, i) => (
+                <div key={i} className="aspect-[4/3] bg-secondary/30 rounded-lg animate-pulse" />
               ))}
             </div>
           ) : (
             <>
-              {/* Featured Products */}
-              {getDisplayProducts().filter(p => p.featured).length > 0 && (
-                <section className="space-y-4">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-yellow-500/20">
-                      <Crown className="h-5 w-5 text-yellow-500" />
-                    </div>
-                    <h2 className="text-xl font-bold">Destaques</h2>
-                  </div>
-                  <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                    {getDisplayProducts().filter(p => p.featured).map(product => (
-                      <ShowcaseCard 
-                        key={product.id} 
-                        product={product} 
-                        canPurchase={canPurchase(product)}
-                        isPurchased={isPurchased(product.id)}
-                        onSelect={() => setSelectedProduct(product)}
-                        featured
-                      />
-                    ))}
-                  </div>
-                </section>
-              )}
-
-              {/* Regular Products */}
-              {getDisplayProducts().filter(p => !p.featured).length > 0 && (
-                <section className="space-y-4">
-                  {getDisplayProducts().filter(p => p.featured).length > 0 && (
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 rounded-lg bg-primary/20">
-                        <Package className="h-5 w-5 text-primary" />
-                      </div>
-                      <h2 className="text-xl font-bold">Todas as Recompensas</h2>
-                    </div>
-                  )}
-                  <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                    {getDisplayProducts().filter(p => !p.featured).map(product => (
-                      <ShowcaseCard 
-                        key={product.id} 
-                        product={product} 
-                        canPurchase={canPurchase(product)}
-                        isPurchased={isPurchased(product.id)}
-                        onSelect={() => setSelectedProduct(product)}
-                      />
-                    ))}
-                  </div>
-                </section>
-              )}
+              <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-7">
+                {getDisplayProducts().map((product, index) => (
+                  <ProductCard
+                    key={product.id}
+                    product={product}
+                    canPurchase={canPurchase(product)}
+                    isPurchased={isPurchased(product.id)}
+                    onSelect={() => setSelectedProduct(product)}
+                    formatName={formatProductName}
+                    index={index}
+                  />
+                ))}
+              </div>
 
               {getDisplayProducts().length === 0 && (
-                <Card className="border-dashed">
-                  <CardContent className="py-16 text-center">
-                    <div className="mx-auto w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
-                      <Package className="h-8 w-8 text-muted-foreground" />
-                    </div>
-                    <h3 className="text-lg font-semibold mb-2">Nenhum produto encontrado</h3>
-                    <p className="text-muted-foreground">
-                      {statusFilter === 'purchased' 
-                        ? "Você ainda não fez nenhuma compra" 
-                        : statusFilter === 'available' 
-                          ? "Nenhum produto disponível no momento"
-                          : "Tente ajustar sua busca ou filtros"}
-                    </p>
-                  </CardContent>
-                </Card>
+                <div className="py-20 text-center">
+                  <Package className="h-16 w-16 mx-auto text-muted-foreground/50 mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">Nenhum produto encontrado</h3>
+                  <p className="text-muted-foreground">
+                    {statusFilter === 'purchased' 
+                      ? "Você ainda não liberou nenhum produto" 
+                      : "Tente ajustar sua busca ou filtros"}
+                  </p>
+                </div>
               )}
             </>
           )}
@@ -418,10 +385,10 @@ const Products = () => {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Gem className="h-5 w-5 text-primary" />
-              Confirmar Resgate
+              Liberar Acesso
             </DialogTitle>
             <DialogDescription>
-              Você está prestes a trocar seus pontos por esta recompensa
+              Você está prestes a trocar seus pontos por este produto
             </DialogDescription>
           </DialogHeader>
           
@@ -433,12 +400,6 @@ const Products = () => {
                   alt={selectedProduct.name}
                   className="w-full h-48 object-cover"
                 />
-                {selectedProduct.featured && (
-                  <Badge className="absolute top-3 left-3 bg-yellow-500 text-yellow-950">
-                    <Star className="h-3 w-3 mr-1" />
-                    Destaque
-                  </Badge>
-                )}
               </div>
               <div>
                 <h3 className="font-bold text-xl">{selectedProduct.name}</h3>
@@ -455,14 +416,14 @@ const Products = () => {
                 <div className={cn(
                   "p-4 rounded-xl text-center",
                   (userProfile?.points || 0) - selectedProduct.price >= 0 
-                    ? "bg-green-500/10" 
+                    ? "bg-primary/10" 
                     : "bg-destructive/10"
                 )}>
                   <p className="text-sm text-muted-foreground">Saldo após</p>
                   <p className={cn(
                     "text-2xl font-bold",
                     (userProfile?.points || 0) - selectedProduct.price >= 0 
-                      ? "text-green-500" 
+                      ? "text-primary" 
                       : "text-destructive"
                   )}>
                     {((userProfile?.points || 0) - selectedProduct.price).toLocaleString()}
@@ -482,7 +443,7 @@ const Products = () => {
               disabled={purchasing || !selectedProduct || !canPurchase(selectedProduct!).allowed}
               className="rounded-xl"
             >
-              {purchasing ? 'Processando...' : 'Confirmar Resgate'}
+              {purchasing ? 'Processando...' : 'Liberar Acesso'}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -491,103 +452,122 @@ const Products = () => {
   );
 };
 
-interface ShowcaseCardProps {
+interface ProductCardProps {
   product: Product;
   canPurchase: { allowed: boolean; reason?: string };
   isPurchased: boolean;
   onSelect: () => void;
-  featured?: boolean;
+  formatName: (name: string) => React.ReactNode;
+  index: number;
 }
 
-const ShowcaseCard = ({ product, canPurchase, isPurchased, onSelect, featured }: ShowcaseCardProps) => {
-  const rankStyle = product.requiredRank 
-    ? rankConfig[product.requiredRank.toLowerCase()] 
-    : null;
-
+const ProductCard = ({ product, canPurchase, isPurchased, onSelect, formatName, index }: ProductCardProps) => {
+  const isUnavailable = !product.available;
+  
   return (
-    <Card className={cn(
-      "group overflow-hidden rounded-2xl border-border/50 transition-all duration-300",
-      "hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1 hover:border-primary/30",
-      featured && "border-yellow-500/30 bg-gradient-to-b from-yellow-500/5 to-transparent",
-      isPurchased && "border-green-500/30 bg-gradient-to-b from-green-500/5 to-transparent"
-    )}>
+    <div 
+      className="group animate-fade-in cursor-pointer"
+      style={{ animationDelay: `${index * 30}ms` }}
+      onClick={onSelect}
+    >
       {/* Image Container */}
-      <div className="relative aspect-[4/3] overflow-hidden">
+      <div className="relative aspect-[4/3] rounded-lg overflow-hidden bg-secondary/50 mb-2">
         <img 
           src={product.image} 
           alt={product.name}
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+          className={cn(
+            "w-full h-full object-cover transition-all duration-300",
+            "group-hover:scale-105",
+            (isUnavailable || (!canPurchase.allowed && !isPurchased)) && "opacity-60"
+          )}
         />
         
-        {/* Gradient Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent opacity-60" />
-        
-        {/* Featured Badge */}
-        {featured && (
-          <Badge className="absolute top-3 left-3 bg-yellow-500/90 backdrop-blur-sm text-yellow-950 shadow-lg">
-            <Star className="h-3 w-3 mr-1 fill-yellow-950" />
-            Destaque
-          </Badge>
+        {/* Top Badges */}
+        <div className="absolute top-2 left-2 right-2 flex items-start justify-between gap-1">
+          <div className="flex flex-wrap gap-1">
+            {/* Demo/VIP Badge */}
+            {product.featured && (
+              <Badge className="bg-primary text-primary-foreground text-[10px] px-1.5 py-0.5 h-5">
+                <Play className="h-2.5 w-2.5 mr-0.5 fill-current" />
+                DEMO
+              </Badge>
+            )}
+            {product.requiredRank && (
+              <Badge className="bg-primary/90 text-primary-foreground text-[10px] px-1.5 py-0.5 h-5">
+                <Crown className="h-2.5 w-2.5 mr-0.5" />
+                VIP
+              </Badge>
+            )}
+          </div>
+          
+          {/* Status Badge - Right Side */}
+          <div className="flex items-center gap-1">
+            {isPurchased && (
+              <Badge className="bg-primary text-primary-foreground text-[10px] px-1.5 py-0.5 h-5">
+                <CheckCircle className="h-2.5 w-2.5 mr-0.5" />
+                LIBERADO
+              </Badge>
+            )}
+            {!isPurchased && canPurchase.allowed && !isUnavailable && (
+              <Badge className="bg-primary text-primary-foreground text-[10px] px-1.5 py-0.5 h-5">
+                <Sparkles className="h-2.5 w-2.5 mr-0.5" />
+                NOVO
+              </Badge>
+            )}
+          </div>
+        </div>
+
+        {/* App Icon Overlay - Bottom Right */}
+        <div className="absolute bottom-2 right-2">
+          <div className="h-8 w-8 rounded-lg bg-primary/20 backdrop-blur-sm flex items-center justify-center border border-primary/30">
+            {product.category && categoryConfig[product.category] ? (
+              (() => {
+                const Icon = categoryConfig[product.category!].icon;
+                return <Icon className="h-4 w-4 text-primary" />;
+              })()
+            ) : (
+              <Package className="h-4 w-4 text-primary" />
+            )}
+          </div>
+        </div>
+
+        {/* Unavailable Overlay */}
+        {isUnavailable && (
+          <div className="absolute inset-0 bg-background/60 backdrop-blur-[2px] flex items-center justify-center">
+            <Badge variant="secondary" className="text-xs px-2 py-1">
+              <Wrench className="h-3 w-3 mr-1" />
+              Manutenção
+            </Badge>
+          </div>
         )}
-        
-        {/* Rank Badge */}
-        {product.requiredRank && rankStyle && (
-          <Badge className={cn("absolute top-3 right-3 backdrop-blur-sm shadow-lg", rankStyle.bg, rankStyle.color)}>
-            <Lock className="h-3 w-3 mr-1" />
-            {rankStyle.label}
-          </Badge>
-        )}
-        
-        {/* Purchased Overlay */}
-        {isPurchased && (
-          <div className="absolute inset-0 bg-background/60 backdrop-blur-sm flex items-center justify-center">
-            <Badge className="bg-green-500/90 backdrop-blur-sm text-white px-4 py-2 text-base shadow-lg">
-              <CheckCircle className="h-5 w-5 mr-2" />
-              Resgatado
+
+        {/* Locked Overlay */}
+        {!isPurchased && !canPurchase.allowed && !isUnavailable && (
+          <div className="absolute inset-0 bg-background/40 backdrop-blur-[1px] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+            <Badge variant="secondary" className="text-xs px-2 py-1">
+              <Lock className="h-3 w-3 mr-1" />
+              {canPurchase.reason}
             </Badge>
           </div>
         )}
       </div>
-      
-      {/* Content */}
-      <CardContent className="p-5 space-y-4">
-        <div>
-          <div className="flex items-center gap-2 mb-1.5">
-            <h3 className="font-bold text-lg leading-tight line-clamp-1 flex-1">{product.name}</h3>
-            {product.category && categoryConfig[product.category] && (
-              <Badge 
-                variant="outline" 
-                className={cn("text-xs shrink-0", categoryConfig[product.category].color)}
-              >
-                {categoryConfig[product.category].label}
-              </Badge>
-            )}
-          </div>
-          <p className="text-sm text-muted-foreground line-clamp-2 min-h-[40px]">
-            {product.description}
-          </p>
-        </div>
-        
-        {/* Price & Action */}
-        <div className="flex items-center justify-between pt-2 border-t border-border/50">
-          <div className="flex items-center gap-2">
-            <Coins className="h-5 w-5 text-primary" />
-            <span className="text-xl font-bold text-primary">
-              {product.price.toLocaleString()}
-            </span>
-          </div>
-          <Button 
-            size="sm"
-            variant={isPurchased ? "outline" : canPurchase.allowed ? "default" : "secondary"}
-            disabled={!canPurchase.allowed || isPurchased}
-            onClick={onSelect}
-            className="rounded-xl"
-          >
-            {isPurchased ? 'Resgatado' : canPurchase.allowed ? 'Resgatar' : canPurchase.reason}
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+
+      {/* Product Info */}
+      <div className="space-y-0.5">
+        <h3 className="text-sm font-semibold leading-tight line-clamp-2 group-hover:text-primary transition-colors">
+          {formatName(product.name)}
+        </h3>
+        <button 
+          className="text-primary text-xs font-medium hover:underline flex items-center gap-1"
+          onClick={(e) => {
+            e.stopPropagation();
+            onSelect();
+          }}
+        >
+          {isPurchased ? 'Acessar' : `${product.price.toLocaleString()} pts`}
+        </button>
+      </div>
+    </div>
   );
 };
 
