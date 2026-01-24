@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTheme } from "next-themes";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Header } from "@/components/layout/Header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,7 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Settings as SettingsIcon, User, Bell, Shield, Palette, Camera, Save, Mail, Key, Trash2, LogOut } from "lucide-react";
+import { Settings as SettingsIcon, User, Bell, Shield, Palette, Camera, Save, Mail, Key, Trash2, LogOut, Sun, Moon, Monitor } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -324,38 +325,79 @@ const Settings = () => {
 
             {/* Appearance Tab */}
             <TabsContent value="appearance">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Aparência</CardTitle>
-                  <CardDescription>
-                    Personalize a aparência da plataforma
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="space-y-3">
-                    <Label>Tema</Label>
-                    <div className="grid grid-cols-3 gap-4">
-                      <Button variant="outline" className="h-20 flex-col gap-2">
-                        <div className="w-8 h-8 rounded bg-background border" />
-                        <span className="text-xs">Claro</span>
-                      </Button>
-                      <Button variant="outline" className="h-20 flex-col gap-2 border-primary">
-                        <div className="w-8 h-8 rounded bg-slate-900" />
-                        <span className="text-xs">Escuro</span>
-                      </Button>
-                      <Button variant="outline" className="h-20 flex-col gap-2">
-                        <div className="w-8 h-8 rounded bg-gradient-to-r from-background to-slate-900" />
-                        <span className="text-xs">Sistema</span>
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              <AppearanceSettings />
             </TabsContent>
           </Tabs>
         </main>
       </div>
     </div>
+  );
+};
+
+const AppearanceSettings = () => {
+  const { theme, setTheme } = useTheme();
+  
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Aparência</CardTitle>
+        <CardDescription>
+          Personalize a aparência da plataforma
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <div className="space-y-3">
+          <Label>Tema</Label>
+          <div className="grid grid-cols-3 gap-4">
+            <Button 
+              variant="outline" 
+              className={cn(
+                "h-20 flex-col gap-2",
+                theme === 'light' && "border-primary ring-2 ring-primary"
+              )}
+              onClick={() => setTheme('light')}
+            >
+              <div className="w-10 h-10 rounded-lg bg-white border-2 flex items-center justify-center">
+                <Sun className="h-5 w-5 text-yellow-500" />
+              </div>
+              <span className="text-xs font-medium">Claro</span>
+            </Button>
+            <Button 
+              variant="outline" 
+              className={cn(
+                "h-20 flex-col gap-2",
+                theme === 'dark' && "border-primary ring-2 ring-primary"
+              )}
+              onClick={() => setTheme('dark')}
+            >
+              <div className="w-10 h-10 rounded-lg bg-slate-900 border-2 border-slate-700 flex items-center justify-center">
+                <Moon className="h-5 w-5 text-slate-300" />
+              </div>
+              <span className="text-xs font-medium">Escuro</span>
+            </Button>
+            <Button 
+              variant="outline" 
+              className={cn(
+                "h-20 flex-col gap-2",
+                theme === 'system' && "border-primary ring-2 ring-primary"
+              )}
+              onClick={() => setTheme('system')}
+            >
+              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-white to-slate-900 border-2 flex items-center justify-center">
+                <Monitor className="h-5 w-5 text-foreground" />
+              </div>
+              <span className="text-xs font-medium">Sistema</span>
+            </Button>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            {theme === 'system' 
+              ? 'O tema será ajustado automaticamente de acordo com as preferências do seu sistema.' 
+              : `Tema ${theme === 'dark' ? 'escuro' : 'claro'} selecionado.`
+            }
+          </p>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 

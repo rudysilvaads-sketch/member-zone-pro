@@ -6,6 +6,73 @@
 
 @layer base {
   :root {
+    --background: 0 0% 100%;
+    --foreground: 222 47% 11%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+
+    --primary: 45 93% 47%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 220 14% 96%;
+    --secondary-foreground: 222 47% 11%;
+
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 9% 46%;
+
+    --accent: 262 83% 58%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 45 93% 47%;
+
+    --radius: 0.75rem;
+
+    /* Custom tokens */
+    --gold: 45 93% 47%;
+    --gold-light: 45 93% 60%;
+    --gold-dark: 45 80% 35%;
+    
+    --silver: 210 10% 60%;
+    --bronze: 30 60% 45%;
+    
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 100%;
+    
+    --rank-diamond: 199 89% 48%;
+    --rank-platinum: 220 14% 65%;
+    --rank-gold: 45 93% 47%;
+    --rank-silver: 210 10% 60%;
+    --rank-bronze: 30 60% 45%;
+
+    --gradient-gold: linear-gradient(135deg, hsl(45, 93%, 47%) 0%, hsl(35, 100%, 45%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(262, 83%, 58%) 0%, hsl(280, 100%, 70%) 100%);
+    --gradient-card: linear-gradient(180deg, hsl(0, 0%, 100%) 0%, hsl(220, 14%, 98%) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(220, 14%, 98%) 0%, hsl(262, 40%, 95%) 50%, hsl(220, 14%, 98%) 100%);
+
+    --shadow-glow-gold: 0 0 20px hsl(45, 93%, 47%, 0.25);
+    --shadow-glow-accent: 0 0 20px hsl(262, 83%, 58%, 0.25);
+    --shadow-card: 0 4px 24px hsl(0, 0%, 0%, 0.08);
+
+    --sidebar-background: 220 14% 96%;
+    --sidebar-foreground: 222 47% 11%;
+    --sidebar-primary: 45 93% 47%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 14% 91%;
+    --sidebar-accent-foreground: 222 47% 11%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 45 93% 47%;
+  }
+
+  .dark {
     --background: 222 47% 6%;
     --foreground: 210 40% 98%;
 
@@ -34,9 +101,7 @@
     --input: 217 33% 17%;
     --ring: 45 93% 58%;
 
-    --radius: 0.75rem;
-
-    /* Custom tokens */
+    /* Custom tokens - Dark */
     --gold: 45 93% 58%;
     --gold-light: 45 93% 70%;
     --gold-dark: 45 80% 45%;
@@ -70,28 +135,6 @@
     --sidebar-accent-foreground: 210 40% 98%;
     --sidebar-border: 217 33% 17%;
     --sidebar-ring: 45 93% 58%;
-  }
-
-  .dark {
-    --background: 222 47% 6%;
-    --foreground: 210 40% 98%;
-    --card: 222 47% 8%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222 47% 8%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 45 93% 58%;
-    --primary-foreground: 222 47% 6%;
-    --secondary: 217 33% 17%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217 33% 17%;
-    --muted-foreground: 215 20% 65%;
-    --accent: 262 83% 58%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62% 30%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217 33% 17%;
-    --input: 217 33% 17%;
-    --ring: 45 93% 58%;
   }
 }
 

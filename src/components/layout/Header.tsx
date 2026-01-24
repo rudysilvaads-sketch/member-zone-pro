@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const getBadgeVariant = (rank: string) => {
   switch (rank?.toLowerCase()) {
@@ -33,6 +34,9 @@ export function Header() {
 
       {/* Right Section */}
       <div className="flex items-center gap-4">
+        {/* Theme Toggle */}
+        <ThemeToggle />
+        
         {/* Notifications */}
         <Button variant="ghost" size="icon" className="relative">
           <Bell className="h-5 w-5" />
@@ -52,7 +56,7 @@ export function Header() {
               <span className="text-xs text-muted-foreground">{userProfile?.points?.toLocaleString() || 0} pts</span>
             </div>
           </div>
-          <Avatar className="h-10 w-10 border-2 border-gold">
+          <Avatar className="h-10 w-10 border-2 border-primary">
             <AvatarImage src={userProfile?.photoURL || undefined} />
             <AvatarFallback>{userProfile?.displayName?.[0] || 'M'}</AvatarFallback>
           </Avatar>
