@@ -12,6 +12,7 @@ import { doc, setDoc, getDoc, serverTimestamp, updateDoc, increment } from 'fire
 import { auth, db } from '@/lib/firebase';
 import { calculateLevel } from '@/lib/firebaseServices';
 import { getStreakBonus } from '@/components/dashboard/StreakCard';
+import { getUserByReferralCode, processReferral, getUserReferralCode } from '@/lib/referralService';
 
 interface UserProfile {
   uid: string;
@@ -34,8 +35,8 @@ interface AuthContextType {
   userProfile: UserProfile | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, displayName: string) => Promise<void>;
-  signInWithGoogle: () => Promise<void>;
+  signUp: (email: string, password: string, displayName: string, referralCode?: string) => Promise<void>;
+  signInWithGoogle: (referralCode?: string) => Promise<void>;
   logout: () => Promise<void>;
   updateUserPoints: (points: number) => Promise<void>;
   addXp: (xp: number) => Promise<{ leveledUp: boolean; bonusXp: number; originalXp: number } | undefined>;
@@ -101,8 +102,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => unsubscribe();
   }, []);
 
-  const createUserProfile = async (user: User, displayName: string) => {
+  const createUserProfile = async (user: User, displayName: string, referralCode?: string) => {
     const userRef = doc(db, 'users', user.uid);
+    
+    // Generate referral code for new user
+    const newUserReferralCode = await getUserReferralCode(user.uid);
+    
     const newProfile: UserProfile = {
       uid: user.uid,
       email: user.email || '',
@@ -121,10 +126,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     
     await setDoc(userRef, {
       ...newProfile,
+      referralCode: newUserReferralCode,
       createdAt: serverTimestamp(),
     });
     
     setUserProfile(newProfile);
+    
+    // Process referral if code exists
+    if (referralCode) {
+      const referrerId = await getUserByReferralCode(referralCode);
+      if (referrerId && referrerId !== user.uid) {
+        const result = await processReferral(referrerId, user.uid);
+        if (result.success) {
+          console.log(`Referral processed! Referrer earned ${result.xpAwarded} XP`);
+        }
+      }
+    }
   };
 
   const signIn = async (email: string, password: string) => {
@@ -154,12 +171,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const signUp = async (email: string, password: string, displayName: string) => {
+  const signUp = async (email: string, password: string, displayName: string, referralCode?: string) => {
     const result = await createUserWithEmailAndPassword(auth, email, password);
-    await createUserProfile(result.user, displayName);
+    await createUserProfile(result.user, displayName, referralCode);
   };
 
-  const signInWithGoogle = async () => {
+  const signInWithGoogle = async (referralCode?: string) => {
     const provider = new GoogleAuthProvider();
     const result = await signInWithPopup(auth, provider);
     
@@ -167,7 +184,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const docSnap = await getDoc(docRef);
     
     if (!docSnap.exists()) {
-      await createUserProfile(result.user, result.user.displayName || '');
+      await createUserProfile(result.user, result.user.displayName || '', referralCode);
     }
   };
 
