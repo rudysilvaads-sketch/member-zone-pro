@@ -9,6 +9,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Crown, Mail, Lock, User, AlertCircle, Gift, Sparkles, Trophy, Zap, ArrowLeft, Loader2, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import logoLaCasa from '@/assets/logo-lacasa.png';
 
 export default function Auth() {
   const [searchParams] = useSearchParams();
@@ -101,15 +102,11 @@ export default function Auth() {
         
         {/* Logo */}
         <div className="relative z-10">
-          <div className="flex items-center gap-3">
-            <div className="h-12 w-12 rounded-xl bg-primary flex items-center justify-center">
-              <Crown className="h-7 w-7 text-primary-foreground" />
-            </div>
-            <div className="flex flex-col">
-              <span className="text-2xl font-bold text-primary">La Casa</span>
-              <span className="text-xs text-muted-foreground tracking-widest uppercase">Members Club</span>
-            </div>
-          </div>
+          <img 
+            src={logoLaCasa} 
+            alt="La Casa Members Club" 
+            className="h-16 w-auto"
+          />
         </div>
         
         {/* Features */}
@@ -172,16 +169,12 @@ export default function Auth() {
       <div className="flex-1 flex items-center justify-center p-6 lg:p-12">
         <div className="w-full max-w-md space-y-8">
           {/* Mobile Logo */}
-          <div className="lg:hidden text-center">
-            <div className="inline-flex items-center gap-3 mb-6">
-              <div className="h-12 w-12 rounded-xl bg-primary flex items-center justify-center">
-                <Crown className="h-7 w-7 text-primary-foreground" />
-              </div>
-              <div className="flex flex-col text-left">
-                <span className="text-2xl font-bold text-primary">La Casa</span>
-                <span className="text-xs text-muted-foreground tracking-widest uppercase">Members Club</span>
-              </div>
-            </div>
+          <div className="lg:hidden text-center mb-6">
+            <img 
+              src={logoLaCasa} 
+              alt="La Casa Members Club" 
+              className="h-12 w-auto mx-auto"
+            />
           </div>
           
           {/* Header */}
