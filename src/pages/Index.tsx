@@ -8,6 +8,7 @@ import { AchievementsCard } from "@/components/dashboard/AchievementsCard";
 import { ProductsShowcase } from "@/components/dashboard/ProductsShowcase";
 import { DailyMissions } from "@/components/dashboard/DailyMissions";
 import { LevelProgress } from "@/components/dashboard/LevelProgress";
+import { StreakCard } from "@/components/dashboard/StreakCard";
 import { useAuth } from "@/contexts/AuthContext";
 import { getTopUsers, UserProfile } from "@/lib/firebaseServices";
 
@@ -65,12 +66,13 @@ const Index = () => {
             streakDays={userProfile?.streakDays || 0}
           />
 
-          {/* Level & Missions Row */}
-          <div className="mt-8 grid gap-6 lg:grid-cols-2">
+          {/* Level, Streak & Missions Row */}
+          <div className="mt-8 grid gap-6 lg:grid-cols-3">
             <LevelProgress 
               xp={userProfile?.xp || 0} 
               points={userProfile?.points || 0} 
             />
+            <StreakCard />
             <DailyMissions />
           </div>
 

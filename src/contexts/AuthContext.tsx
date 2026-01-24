@@ -11,6 +11,7 @@ import {
 import { doc, setDoc, getDoc, serverTimestamp, updateDoc, increment } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 import { calculateLevel } from '@/lib/firebaseServices';
+import { getStreakBonus } from '@/components/dashboard/StreakCard';
 
 interface UserProfile {
   uid: string;
@@ -37,7 +38,7 @@ interface AuthContextType {
   signInWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
   updateUserPoints: (points: number) => Promise<void>;
-  addXp: (xp: number) => Promise<boolean | undefined>;
+  addXp: (xp: number) => Promise<{ leveledUp: boolean; bonusXp: number; originalXp: number } | undefined>;
   refreshProfile: () => Promise<void>;
 }
 
@@ -197,13 +198,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const addXp = async (xp: number) => {
     if (!user || !userProfile) return;
     
-    const newXp = (userProfile.xp || 0) + xp;
+    // Apply streak bonus to XP
+    const streakBonus = getStreakBonus(userProfile.streakDays || 0);
+    const bonusXp = Math.round(xp * streakBonus);
+    
+    const newXp = (userProfile.xp || 0) + bonusXp;
     const newLevel = calculateLevel(newXp);
     const leveledUp = newLevel > (userProfile.level || 1);
     
     const userRef = doc(db, 'users', user.uid);
     await updateDoc(userRef, {
-      xp: increment(xp),
+      xp: increment(bonusXp),
       level: newLevel,
     });
     
@@ -213,7 +218,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       level: newLevel,
     });
     
-    return leveledUp;
+    return { leveledUp, bonusXp, originalXp: xp };
   };
 
   const value = {
