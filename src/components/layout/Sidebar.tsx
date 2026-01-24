@@ -1,0 +1,93 @@
+import { 
+  LayoutDashboard, 
+  Trophy, 
+  Award, 
+  ShoppingBag, 
+  Users, 
+  Settings,
+  Crown,
+  ChevronLeft,
+  ChevronRight
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+
+interface NavItem {
+  icon: React.ElementType;
+  label: string;
+  href: string;
+  active?: boolean;
+}
+
+const navItems: NavItem[] = [
+  { icon: LayoutDashboard, label: "Dashboard", href: "/", active: true },
+  { icon: Trophy, label: "Ranking", href: "/ranking" },
+  { icon: Award, label: "Conquistas", href: "/achievements" },
+  { icon: ShoppingBag, label: "Produtos", href: "/products" },
+  { icon: Users, label: "Comunidade", href: "/community" },
+  { icon: Settings, label: "Configurações", href: "/settings" },
+];
+
+export function Sidebar() {
+  const [collapsed, setCollapsed] = useState(false);
+
+  return (
+    <aside 
+      className={cn(
+        "fixed left-0 top-0 z-40 h-screen bg-sidebar border-r border-sidebar-border transition-all duration-300",
+        collapsed ? "w-20" : "w-64"
+      )}
+    >
+      <div className="flex h-full flex-col">
+        {/* Logo */}
+        <div className="flex h-16 items-center justify-between border-b border-sidebar-border px-4">
+          <div className={cn("flex items-center gap-3", collapsed && "justify-center w-full")}>
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-gold">
+              <Crown className="h-5 w-5 text-primary-foreground" />
+            </div>
+            {!collapsed && (
+              <span className="text-lg font-bold text-foreground">MemberHub</span>
+            )}
+          </div>
+        </div>
+
+        {/* Navigation */}
+        <nav className="flex-1 space-y-1 p-4">
+          {navItems.map((item) => (
+            <a
+              key={item.label}
+              href={item.href}
+              className={cn(
+                "flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-all duration-200",
+                collapsed && "justify-center px-0",
+                item.active
+                  ? "bg-sidebar-accent text-sidebar-primary shadow-glow-gold"
+                  : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-foreground"
+              )}
+            >
+              <item.icon className={cn("h-5 w-5", item.active && "text-primary")} />
+              {!collapsed && <span>{item.label}</span>}
+            </a>
+          ))}
+        </nav>
+
+        {/* Collapse Button */}
+        <div className="border-t border-sidebar-border p-4">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setCollapsed(!collapsed)}
+            className="w-full justify-center"
+          >
+            {collapsed ? (
+              <ChevronRight className="h-5 w-5" />
+            ) : (
+              <ChevronLeft className="h-5 w-5" />
+            )}
+          </Button>
+        </div>
+      </div>
+    </aside>
+  );
+}
