@@ -17,7 +17,8 @@ import {
   arrayUnion,
   arrayRemove
 } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
+import { db, storage } from '@/lib/firebase';
 
 // Types
 export interface UserProfile {
@@ -332,6 +333,8 @@ export interface Post {
   authorRank: string;
   authorLevel: number;
   content: string;
+  imageUrl?: string | null;
+  imagePath?: string | null; // Storage path for deletion
   likes: string[]; // array of user IDs who liked
   commentsCount: number;
   createdAt: Timestamp;
@@ -349,14 +352,61 @@ export interface Comment {
   createdAt: Timestamp;
 }
 
+// Upload image to Firebase Storage
+export const uploadPostImage = async (
+  userId: string,
+  file: File
+): Promise<{ success: boolean; url?: string; path?: string; error?: string }> => {
+  try {
+    // Validate file
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxSize) {
+      return { success: false, error: 'Imagem muito grande. Máximo 5MB.' };
+    }
+    
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      return { success: false, error: 'Tipo de arquivo não suportado. Use JPG, PNG, GIF ou WebP.' };
+    }
+    
+    // Generate unique filename
+    const timestamp = Date.now();
+    const extension = file.name.split('.').pop() || 'jpg';
+    const path = `posts/${userId}/${timestamp}.${extension}`;
+    
+    const storageRef = ref(storage, path);
+    await uploadBytes(storageRef, file);
+    const url = await getDownloadURL(storageRef);
+    
+    return { success: true, url, path };
+  } catch (error) {
+    console.error('Error uploading image:', error);
+    return { success: false, error: 'Erro ao fazer upload da imagem' };
+  }
+};
+
+// Delete image from Firebase Storage
+export const deletePostImage = async (path: string): Promise<boolean> => {
+  try {
+    const storageRef = ref(storage, path);
+    await deleteObject(storageRef);
+    return true;
+  } catch (error) {
+    console.error('Error deleting image:', error);
+    return false;
+  }
+};
+
 // Create a new post
 export const createPost = async (
   user: { uid: string; displayName: string; photoURL: string | null; rank: string; level?: number },
-  content: string
+  content: string,
+  imageUrl?: string | null,
+  imagePath?: string | null
 ): Promise<{ success: boolean; postId?: string; error?: string }> => {
   try {
     const postsRef = collection(db, 'posts');
-    const postData = {
+    const postData: Record<string, any> = {
       authorId: user.uid,
       authorName: user.displayName,
       authorAvatar: user.photoURL,
@@ -367,6 +417,11 @@ export const createPost = async (
       commentsCount: 0,
       createdAt: serverTimestamp(),
     };
+    
+    if (imageUrl) {
+      postData.imageUrl = imageUrl;
+      postData.imagePath = imagePath;
+    }
     
     const docRef = await addDoc(postsRef, postData);
     return { success: true, postId: docRef.id };
@@ -430,6 +485,11 @@ export const deletePost = async (postId: string, userId: string): Promise<boolea
     
     const post = postSnap.data() as Post;
     if (post.authorId !== userId) return false;
+    
+    // Delete image from storage if exists
+    if (post.imagePath) {
+      await deletePostImage(post.imagePath);
+    }
     
     // Delete all comments for this post
     const commentsRef = collection(db, 'posts', postId, 'comments');
