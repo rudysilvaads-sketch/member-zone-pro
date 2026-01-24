@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { Lock, Sparkles, Check, Zap, Crown, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
@@ -146,68 +147,153 @@ export function AvatarSelector({ currentAvatarId, onAvatarChange }: AvatarSelect
         const isLegendary = avatar.category === 'exclusive' && avatar.xpCost >= 5000;
 
         return (
-          <div
-            key={avatar.id}
-            className={cn(
-              "relative group cursor-pointer transition-all duration-300",
-              !unlocked && !canUnlock && "opacity-50"
-            )}
-            onClick={() => handleAvatarClick(avatar)}
-          >
-            <div
-              className={cn(
-                "relative rounded-xl p-1 transition-all duration-300",
-                isCurrentAvatar && "ring-2 ring-primary ring-offset-2 ring-offset-background",
-                unlocked && !isCurrentAvatar && "hover:ring-2 hover:ring-primary/50 hover:ring-offset-2 hover:ring-offset-background",
-                canUnlock && "hover:ring-2 hover:ring-accent hover:ring-offset-2 hover:ring-offset-background"
-              )}
-            >
-              <div className={cn("relative flex items-center justify-center", effectClasses)}>
-                {avatar.category === 'exclusive' && unlocked && <SparkleParticles />}
-                <Avatar className={cn(
-                  "h-16 w-16 border-2",
-                  unlocked && avatar.category === 'exclusive' ? "border-transparent" : "border-border",
-                  unlocked && avatar.category === 'premium' ? "border-transparent" : ""
-                )}>
-                  <AvatarImage src={avatar.url} alt={avatar.name} />
-                  <AvatarFallback>{avatar.name.charAt(0)}</AvatarFallback>
-                </Avatar>
+          <HoverCard key={avatar.id} openDelay={200} closeDelay={100}>
+            <HoverCardTrigger asChild>
+              <div
+                className={cn(
+                  "relative group cursor-pointer transition-all duration-300",
+                  !unlocked && !canUnlock && "opacity-50"
+                )}
+                onClick={() => handleAvatarClick(avatar)}
+              >
+                <div
+                  className={cn(
+                    "relative rounded-xl p-1 transition-all duration-300",
+                    isCurrentAvatar && "ring-2 ring-primary ring-offset-2 ring-offset-background",
+                    unlocked && !isCurrentAvatar && "hover:ring-2 hover:ring-primary/50 hover:ring-offset-2 hover:ring-offset-background",
+                    canUnlock && "hover:ring-2 hover:ring-accent hover:ring-offset-2 hover:ring-offset-background"
+                  )}
+                >
+                  <div className={cn("relative flex items-center justify-center", effectClasses)}>
+                    {avatar.category === 'exclusive' && unlocked && <SparkleParticles />}
+                    <Avatar className={cn(
+                      "h-16 w-16 border-2",
+                      unlocked && avatar.category === 'exclusive' ? "border-transparent" : "border-border",
+                      unlocked && avatar.category === 'premium' ? "border-transparent" : ""
+                    )}>
+                      <AvatarImage src={avatar.url} alt={avatar.name} />
+                      <AvatarFallback>{avatar.name.charAt(0)}</AvatarFallback>
+                    </Avatar>
+                  </div>
+
+                  {/* Locked overlay */}
+                  {!unlocked && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-background/60 rounded-xl backdrop-blur-sm">
+                      <Lock className="h-5 w-5 text-muted-foreground" />
+                    </div>
+                  )}
+
+                  {/* Selected check */}
+                  {isCurrentAvatar && (
+                    <div className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-primary flex items-center justify-center z-10">
+                      <Check className="h-3 w-3 text-primary-foreground" />
+                    </div>
+                  )}
+                </div>
+
+                {/* Avatar info */}
+                <div className="mt-3 text-center">
+                  <p className={cn(
+                    "text-xs font-medium truncate",
+                    unlocked && isLegendary && "text-gradient-gold font-bold"
+                  )}>{avatar.name}</p>
+                  {unlocked && avatar.category !== 'default' && (
+                    <Badge className={cn("text-[10px] px-1.5 py-0 mt-1", getCategoryColor(avatar.category))}>
+                      {isLegendary ? '✨ Lendário' : getCategoryLabel(avatar.category)}
+                    </Badge>
+                  )}
+                  {!unlocked && (
+                    <div className="flex items-center justify-center gap-1 mt-1">
+                      <Zap className="h-3 w-3 text-primary" />
+                      <span className="text-xs text-muted-foreground">{avatar.xpCost}</span>
+                    </div>
+                  )}
+                </div>
               </div>
-
-              {/* Locked overlay */}
-              {!unlocked && (
-                <div className="absolute inset-0 flex items-center justify-center bg-background/60 rounded-xl backdrop-blur-sm">
-                  <Lock className="h-5 w-5 text-muted-foreground" />
+            </HoverCardTrigger>
+            
+            {/* Hover Preview Card */}
+            <HoverCardContent 
+              side="right" 
+              align="center" 
+              className="w-72 p-4"
+              sideOffset={10}
+            >
+              <div className="flex flex-col items-center space-y-3">
+                {/* Large Avatar Preview */}
+                <div className={cn("relative", effectClasses)}>
+                  {avatar.category === 'exclusive' && unlocked && <SparkleParticles />}
+                  <Avatar className={cn(
+                    "h-24 w-24 border-3",
+                    unlocked && avatar.category === 'exclusive' ? "border-transparent" : "border-border",
+                    unlocked && avatar.category === 'premium' ? "border-transparent" : ""
+                  )}>
+                    <AvatarImage src={avatar.url} alt={avatar.name} />
+                    <AvatarFallback className="text-2xl">{avatar.name.charAt(0)}</AvatarFallback>
+                  </Avatar>
                 </div>
-              )}
-
-              {/* Selected check */}
-              {isCurrentAvatar && (
-                <div className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-primary flex items-center justify-center z-10">
-                  <Check className="h-3 w-3 text-primary-foreground" />
+                
+                {/* Avatar Details */}
+                <div className="text-center space-y-2">
+                  <h4 className={cn(
+                    "font-bold text-lg",
+                    isLegendary && "text-gradient-gold"
+                  )}>{avatar.name}</h4>
+                  
+                  <Badge className={cn("px-2 py-0.5", getCategoryColor(avatar.category))}>
+                    {isLegendary ? '✨ Lendário' : getCategoryLabel(avatar.category)}
+                  </Badge>
+                  
+                  {avatar.description && (
+                    <p className="text-sm text-muted-foreground">{avatar.description}</p>
+                  )}
+                  
+                  {/* Status & Requirements */}
+                  <div className="pt-2 border-t border-border space-y-1">
+                    {isCurrentAvatar && (
+                      <div className="flex items-center justify-center gap-1 text-primary">
+                        <Check className="h-4 w-4" />
+                        <span className="text-sm font-medium">Equipado</span>
+                      </div>
+                    )}
+                    
+                    {unlocked && !isCurrentAvatar && (
+                      <p className="text-sm text-muted-foreground">Clique para equipar</p>
+                    )}
+                    
+                    {!unlocked && (
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-center gap-2">
+                          <Zap className="h-4 w-4 text-primary" />
+                          <span className="font-bold text-primary">{avatar.xpCost}</span>
+                          <span className="text-sm text-muted-foreground">XP</span>
+                        </div>
+                        
+                        {avatar.requiredLevel && (
+                          <div className="flex items-center justify-center gap-2">
+                            <Star className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-sm text-muted-foreground">
+                              Nível {avatar.requiredLevel} necessário
+                            </span>
+                          </div>
+                        )}
+                        
+                        {canUnlock ? (
+                          <p className="text-sm text-success font-medium">✓ Disponível para compra</p>
+                        ) : (
+                          <p className="text-sm text-destructive">
+                            {avatar.requiredLevel && avatar.requiredLevel > currentLevel 
+                              ? `Requer nível ${avatar.requiredLevel}` 
+                              : 'XP insuficiente'}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
-              )}
-            </div>
-
-            {/* Avatar info */}
-            <div className="mt-3 text-center">
-              <p className={cn(
-                "text-xs font-medium truncate",
-                unlocked && isLegendary && "text-gradient-gold font-bold"
-              )}>{avatar.name}</p>
-              {unlocked && avatar.category !== 'default' && (
-                <Badge className={cn("text-[10px] px-1.5 py-0 mt-1", getCategoryColor(avatar.category))}>
-                  {isLegendary ? '✨ Lendário' : getCategoryLabel(avatar.category)}
-                </Badge>
-              )}
-              {!unlocked && (
-                <div className="flex items-center justify-center gap-1 mt-1">
-                  <Zap className="h-3 w-3 text-primary" />
-                  <span className="text-xs text-muted-foreground">{avatar.xpCost}</span>
-                </div>
-              )}
-            </div>
-          </div>
+              </div>
+            </HoverCardContent>
+          </HoverCard>
         );
       })}
     </div>

@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { Lock, Check, Zap, Crown, Star, Frame } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
@@ -134,58 +135,133 @@ export function FrameSelector({ onFrameChange }: FrameSelectorProps) {
         const isLegendary = frame.id === 'frame-legendary';
 
         return (
-          <div
-            key={frame.id}
-            className={cn(
-              "relative group cursor-pointer transition-all duration-300",
-              !unlocked && !canUnlock && "opacity-50"
-            )}
-            onClick={() => handleFrameClick(frame)}
-          >
-            <div
-              className={cn(
-                "relative rounded-xl p-2 transition-all duration-300 flex flex-col items-center",
-                isCurrentFrame && "ring-2 ring-primary ring-offset-2 ring-offset-background bg-primary/5",
-                unlocked && !isCurrentFrame && "hover:ring-2 hover:ring-primary/50 hover:ring-offset-2 hover:ring-offset-background hover:bg-secondary/50",
-                canUnlock && "hover:ring-2 hover:ring-accent hover:ring-offset-2 hover:ring-offset-background"
-              )}
+          <HoverCard key={frame.id} openDelay={200} closeDelay={100}>
+            <HoverCardTrigger asChild>
+              <div
+                className={cn(
+                  "relative group cursor-pointer transition-all duration-300",
+                  !unlocked && !canUnlock && "opacity-50"
+                )}
+                onClick={() => handleFrameClick(frame)}
+              >
+                <div
+                  className={cn(
+                    "relative rounded-xl p-2 transition-all duration-300 flex flex-col items-center",
+                    isCurrentFrame && "ring-2 ring-primary ring-offset-2 ring-offset-background bg-primary/5",
+                    unlocked && !isCurrentFrame && "hover:ring-2 hover:ring-primary/50 hover:ring-offset-2 hover:ring-offset-background hover:bg-secondary/50",
+                    canUnlock && "hover:ring-2 hover:ring-accent hover:ring-offset-2 hover:ring-offset-background"
+                  )}
+                >
+                  {renderFramePreview(frame)}
+
+                  {/* Locked overlay */}
+                  {!unlocked && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-background/60 rounded-xl backdrop-blur-sm">
+                      <Lock className="h-5 w-5 text-muted-foreground" />
+                    </div>
+                  )}
+
+                  {/* Selected check */}
+                  {isCurrentFrame && (
+                    <div className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-primary flex items-center justify-center z-10">
+                      <Check className="h-3 w-3 text-primary-foreground" />
+                    </div>
+                  )}
+                </div>
+
+                {/* Frame info */}
+                <div className="mt-2 text-center">
+                  <p className={cn(
+                    "text-xs font-medium truncate",
+                    unlocked && isLegendary && "text-gradient-gold font-bold"
+                  )}>{frame.name}</p>
+                  {unlocked && frame.category !== 'default' && (
+                    <Badge className={cn("text-[10px] px-1.5 py-0 mt-1", getCategoryColor(frame.category))}>
+                      {isLegendary ? '✨ Lendária' : getCategoryLabel(frame.category)}
+                    </Badge>
+                  )}
+                  {!unlocked && (
+                    <div className="flex items-center justify-center gap-1 mt-1">
+                      <Zap className="h-3 w-3 text-primary" />
+                      <span className="text-xs text-muted-foreground">{frame.xpCost}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </HoverCardTrigger>
+            
+            {/* Hover Preview Card */}
+            <HoverCardContent 
+              side="right" 
+              align="center" 
+              className="w-72 p-4"
+              sideOffset={10}
             >
-              {renderFramePreview(frame)}
-
-              {/* Locked overlay */}
-              {!unlocked && (
-                <div className="absolute inset-0 flex items-center justify-center bg-background/60 rounded-xl backdrop-blur-sm">
-                  <Lock className="h-5 w-5 text-muted-foreground" />
+              <div className="flex flex-col items-center space-y-3">
+                {/* Large Frame Preview */}
+                {renderFramePreview(frame, 'lg')}
+                
+                {/* Frame Details */}
+                <div className="text-center space-y-2">
+                  <h4 className={cn(
+                    "font-bold text-lg",
+                    isLegendary && "text-gradient-gold"
+                  )}>{frame.name}</h4>
+                  
+                  <Badge className={cn("px-2 py-0.5", getCategoryColor(frame.category))}>
+                    {isLegendary ? '✨ Lendária' : getCategoryLabel(frame.category)}
+                  </Badge>
+                  
+                  {frame.description && (
+                    <p className="text-sm text-muted-foreground">{frame.description}</p>
+                  )}
+                  
+                  {/* Status & Requirements */}
+                  <div className="pt-2 border-t border-border space-y-1">
+                    {isCurrentFrame && (
+                      <div className="flex items-center justify-center gap-1 text-primary">
+                        <Check className="h-4 w-4" />
+                        <span className="text-sm font-medium">Equipada</span>
+                      </div>
+                    )}
+                    
+                    {unlocked && !isCurrentFrame && (
+                      <p className="text-sm text-muted-foreground">Clique para equipar</p>
+                    )}
+                    
+                    {!unlocked && (
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-center gap-2">
+                          <Zap className="h-4 w-4 text-primary" />
+                          <span className="font-bold text-primary">{frame.xpCost}</span>
+                          <span className="text-sm text-muted-foreground">XP</span>
+                        </div>
+                        
+                        {frame.requiredLevel && (
+                          <div className="flex items-center justify-center gap-2">
+                            <Star className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-sm text-muted-foreground">
+                              Nível {frame.requiredLevel} necessário
+                            </span>
+                          </div>
+                        )}
+                        
+                        {canUnlock ? (
+                          <p className="text-sm text-success font-medium">✓ Disponível para compra</p>
+                        ) : (
+                          <p className="text-sm text-destructive">
+                            {frame.requiredLevel && frame.requiredLevel > currentLevel 
+                              ? `Requer nível ${frame.requiredLevel}` 
+                              : 'XP insuficiente'}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
-              )}
-
-              {/* Selected check */}
-              {isCurrentFrame && (
-                <div className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-primary flex items-center justify-center z-10">
-                  <Check className="h-3 w-3 text-primary-foreground" />
-                </div>
-              )}
-            </div>
-
-            {/* Frame info */}
-            <div className="mt-2 text-center">
-              <p className={cn(
-                "text-xs font-medium truncate",
-                unlocked && isLegendary && "text-gradient-gold font-bold"
-              )}>{frame.name}</p>
-              {unlocked && frame.category !== 'default' && (
-                <Badge className={cn("text-[10px] px-1.5 py-0 mt-1", getCategoryColor(frame.category))}>
-                  {isLegendary ? '✨ Lendária' : getCategoryLabel(frame.category)}
-                </Badge>
-              )}
-              {!unlocked && (
-                <div className="flex items-center justify-center gap-1 mt-1">
-                  <Zap className="h-3 w-3 text-primary" />
-                  <span className="text-xs text-muted-foreground">{frame.xpCost}</span>
-                </div>
-              )}
-            </div>
-          </div>
+              </div>
+            </HoverCardContent>
+          </HoverCard>
         );
       })}
     </div>
