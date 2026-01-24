@@ -8,7 +8,8 @@ import {
   Crown,
   ChevronLeft,
   ChevronRight,
-  LogOut
+  LogOut,
+  Shield
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -16,11 +17,15 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
+// Admin emails list
+const ADMIN_EMAILS = ['rudysilvaads@gmail.com'];
+
 interface NavItem {
   icon: React.ElementType;
   label: string;
   href: string;
   active?: boolean;
+  adminOnly?: boolean;
 }
 
 const navItems: NavItem[] = [
@@ -30,6 +35,7 @@ const navItems: NavItem[] = [
   { icon: ShoppingBag, label: "Produtos", href: "/products" },
   { icon: Users, label: "Comunidade", href: "/community" },
   { icon: Settings, label: "Configurações", href: "/settings" },
+  { icon: Shield, label: "Admin", href: "/admin", adminOnly: true },
 ];
 
 interface SidebarProps {
@@ -38,8 +44,10 @@ interface SidebarProps {
 }
 
 export function Sidebar({ collapsed, onToggle }: SidebarProps) {
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
+  
+  const isAdmin = user && ADMIN_EMAILS.includes(user.email || '');
 
   const handleLogout = async () => {
     try {
@@ -73,7 +81,9 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
 
         {/* Navigation */}
         <nav className="flex-1 space-y-1 p-4">
-          {navItems.map((item) => (
+          {navItems
+            .filter(item => !item.adminOnly || isAdmin)
+            .map((item) => (
             <a
               key={item.label}
               href={item.href}
@@ -82,10 +92,11 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                 collapsed && "justify-center px-0",
                 item.active
                   ? "bg-sidebar-accent text-sidebar-primary shadow-glow-gold"
-                  : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-foreground"
+                  : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-foreground",
+                item.adminOnly && "text-accent"
               )}
             >
-              <item.icon className={cn("h-5 w-5", item.active && "text-primary")} />
+              <item.icon className={cn("h-5 w-5", item.active && "text-primary", item.adminOnly && "text-accent")} />
               {!collapsed && <span>{item.label}</span>}
             </a>
           ))}
