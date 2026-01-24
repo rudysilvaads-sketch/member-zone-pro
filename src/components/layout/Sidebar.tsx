@@ -43,11 +43,18 @@ interface SidebarProps {
 }
 
 export function Sidebar({ collapsed, onToggle }: SidebarProps) {
-  const { user, logout } = useAuth();
+  const { user, userProfile, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   
-  const isAdmin = user && ADMIN_EMAILS.includes(user.email || '');
+  // Check both email list AND Firestore role for admin/moderator access
+  const isAdmin = user && (
+    ADMIN_EMAILS.includes(user.email || '') || 
+    (userProfile as any)?.isAdmin || 
+    (userProfile as any)?.role === 'admin'
+  );
+  const isModerator = (userProfile as any)?.isModerator || (userProfile as any)?.role === 'moderator';
+  const hasAdminAccess = isAdmin || isModerator;
 
   const handleLogout = async () => {
     try {
@@ -89,7 +96,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
         {/* Navigation */}
         <nav className="flex-1 space-y-1 p-4">
           {navItems
-            .filter(item => !item.adminOnly || isAdmin)
+            .filter(item => !item.adminOnly || hasAdminAccess)
             .map((item) => {
               const active = isActive(item.href);
               return (
