@@ -14,7 +14,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import { toast } from "sonner";
 
 // Admin emails list
@@ -24,12 +24,11 @@ interface NavItem {
   icon: React.ElementType;
   label: string;
   href: string;
-  active?: boolean;
   adminOnly?: boolean;
 }
 
 const navItems: NavItem[] = [
-  { icon: LayoutDashboard, label: "Dashboard", href: "/", active: true },
+  { icon: LayoutDashboard, label: "Dashboard", href: "/" },
   { icon: Trophy, label: "Ranking", href: "/ranking" },
   { icon: Award, label: "Conquistas", href: "/achievements" },
   { icon: ShoppingBag, label: "Produtos", href: "/products" },
@@ -46,6 +45,7 @@ interface SidebarProps {
 export function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   
   const isAdmin = user && ADMIN_EMAILS.includes(user.email || '');
 
@@ -57,6 +57,13 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
     } catch (error) {
       toast.error('Erro ao fazer logout');
     }
+  };
+
+  const isActive = (href: string) => {
+    if (href === '/') {
+      return location.pathname === '/';
+    }
+    return location.pathname.startsWith(href);
   };
 
   return (
@@ -83,23 +90,26 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
         <nav className="flex-1 space-y-1 p-4">
           {navItems
             .filter(item => !item.adminOnly || isAdmin)
-            .map((item) => (
-            <a
-              key={item.label}
-              href={item.href}
-              className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-all duration-200",
-                collapsed && "justify-center px-0",
-                item.active
-                  ? "bg-sidebar-accent text-sidebar-primary shadow-glow-gold"
-                  : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-foreground",
-                item.adminOnly && "text-accent"
-              )}
-            >
-              <item.icon className={cn("h-5 w-5", item.active && "text-primary", item.adminOnly && "text-accent")} />
-              {!collapsed && <span>{item.label}</span>}
-            </a>
-          ))}
+            .map((item) => {
+              const active = isActive(item.href);
+              return (
+                <Link
+                  key={item.label}
+                  to={item.href}
+                  className={cn(
+                    "flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-all duration-200",
+                    collapsed && "justify-center px-0",
+                    active
+                      ? "bg-sidebar-accent text-sidebar-primary shadow-glow-gold"
+                      : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-foreground",
+                    item.adminOnly && "text-accent"
+                  )}
+                >
+                  <item.icon className={cn("h-5 w-5", active && "text-primary", item.adminOnly && "text-accent")} />
+                  {!collapsed && <span>{item.label}</span>}
+                </Link>
+              );
+            })}
         </nav>
 
         {/* Logout & Collapse */}

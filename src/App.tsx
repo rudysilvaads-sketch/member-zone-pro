@@ -9,6 +9,11 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import AdminSetup from "./pages/AdminSetup";
 import AdminPanel from "./pages/AdminPanel";
+import Ranking from "./pages/Ranking";
+import Achievements from "./pages/Achievements";
+import Products from "./pages/Products";
+import Community from "./pages/Community";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -23,12 +28,59 @@ const App = () => (
           <Routes>
             <Route path="/auth" element={<Auth />} />
             <Route path="/admin/setup" element={<AdminSetup />} />
-            <Route path="/admin" element={<AdminPanel />} />
+            <Route 
+              path="/admin" 
+              element={
+                <ProtectedRoute>
+                  <AdminPanel />
+                </ProtectedRoute>
+              } 
+            />
             <Route 
               path="/" 
               element={
                 <ProtectedRoute>
                   <Index />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/ranking" 
+              element={
+                <ProtectedRoute>
+                  <Ranking />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/achievements" 
+              element={
+                <ProtectedRoute>
+                  <Achievements />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/products" 
+              element={
+                <ProtectedRoute>
+                  <Products />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/community" 
+              element={
+                <ProtectedRoute>
+                  <Community />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/settings" 
+              element={
+                <ProtectedRoute>
+                  <Settings />
                 </ProtectedRoute>
               } 
             />
