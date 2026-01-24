@@ -7,11 +7,14 @@ import {
   Settings,
   Crown,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  LogOut
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 interface NavItem {
   icon: React.ElementType;
@@ -29,8 +32,24 @@ const navItems: NavItem[] = [
   { icon: Settings, label: "Configurações", href: "/settings" },
 ];
 
-export function Sidebar() {
-  const [collapsed, setCollapsed] = useState(false);
+interface SidebarProps {
+  collapsed: boolean;
+  onToggle: () => void;
+}
+
+export function Sidebar({ collapsed, onToggle }: SidebarProps) {
+  const { logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      toast.success('Logout realizado com sucesso!');
+      navigate('/auth');
+    } catch (error) {
+      toast.error('Erro ao fazer logout');
+    }
+  };
 
   return (
     <aside 
@@ -72,12 +91,21 @@ export function Sidebar() {
           ))}
         </nav>
 
-        {/* Collapse Button */}
-        <div className="border-t border-sidebar-border p-4">
+        {/* Logout & Collapse */}
+        <div className="border-t border-sidebar-border p-4 space-y-2">
+          <Button
+            variant="ghost"
+            onClick={handleLogout}
+            className={cn("w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10", collapsed && "justify-center")}
+          >
+            <LogOut className="h-5 w-5" />
+            {!collapsed && <span className="ml-3">Sair</span>}
+          </Button>
+          
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => setCollapsed(!collapsed)}
+            onClick={onToggle}
             className="w-full justify-center"
           >
             {collapsed ? (
