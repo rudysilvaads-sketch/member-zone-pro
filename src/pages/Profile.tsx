@@ -11,9 +11,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   User, Trophy, Target, Flame, Star, Award, ArrowLeft,
   MessageSquare, Heart, Calendar, TrendingUp, Zap, Medal,
-  CheckCircle2, Lock
+  CheckCircle2, Lock, Share2, Loader2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 import { 
   getUserProfile, 
   UserProfile, 
@@ -25,6 +26,7 @@ import {
 import { collection, query, where, orderBy, limit, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/AuthContext";
+import { completeMission } from "@/lib/missionService";
 
 const rankConfig: Record<string, { color: string; bg: string; label: string }> = {
   bronze: { color: "text-orange-400", bg: "bg-orange-500/20", label: "Bronze" },
@@ -59,6 +61,7 @@ const Profile = () => {
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [sharing, setSharing] = useState(false);
 
   useEffect(() => {
     const fetchProfileData = async () => {
@@ -125,6 +128,40 @@ const Profile = () => {
       month: 'long', 
       year: 'numeric' 
     }).format(date);
+  };
+
+  const handleShareProgress = async () => {
+    if (!currentUser || sharing) return;
+    
+    setSharing(true);
+    try {
+      const shareUrl = `${window.location.origin}/profile/${currentUser.uid}`;
+      const shareText = `🏆 Confira meu progresso! Nível ${currentUser.level || 1} com ${currentUser.points?.toLocaleString() || 0} pontos!`;
+      
+      if (navigator.share) {
+        await navigator.share({
+          title: 'Meu Progresso',
+          text: shareText,
+          url: shareUrl,
+        });
+      } else {
+        await navigator.clipboard.writeText(`${shareText}\n${shareUrl}`);
+        toast.success('Link copiado para a área de transferência!');
+      }
+      
+      // Complete share-progress mission
+      const missionCompleted = await completeMission(currentUser.uid, 'share-progress');
+      if (missionCompleted) {
+        toast.success('🎯 Missão "Compartilhador" completada!');
+      }
+    } catch (error) {
+      // User cancelled share or error occurred
+      if ((error as Error).name !== 'AbortError') {
+        console.error('Error sharing:', error);
+      }
+    } finally {
+      setSharing(false);
+    }
   };
 
   if (loading) {
@@ -226,9 +263,23 @@ const Profile = () => {
                 </div>
 
                 {isOwnProfile && (
-                  <Link to="/settings">
-                    <Button variant="outline">Editar Perfil</Button>
-                  </Link>
+                  <div className="flex gap-2">
+                    <Button 
+                      variant="outline" 
+                      onClick={handleShareProgress}
+                      disabled={sharing}
+                    >
+                      {sharing ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      ) : (
+                        <Share2 className="h-4 w-4 mr-2" />
+                      )}
+                      Compartilhar
+                    </Button>
+                    <Link to="/settings">
+                      <Button variant="outline">Editar Perfil</Button>
+                    </Link>
+                  </div>
                 )}
               </div>
             </CardContent>
