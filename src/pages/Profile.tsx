@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   User, Trophy, Target, Flame, Star, Award, ArrowLeft,
   MessageSquare, Heart, Calendar, TrendingUp, Zap, Medal,
-  CheckCircle2, Lock, Share2, Loader2
+  CheckCircle2, Lock, Share2, Loader2, ShoppingBag, Package, ExternalLink
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -20,8 +20,10 @@ import {
   UserProfile, 
   Post, 
   Achievement,
+  Purchase,
   getAchievements,
-  getXpToNextLevel
+  getXpToNextLevel,
+  getUserPurchases
 } from "@/lib/firebaseServices";
 import { collection, query, where, orderBy, limit, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -59,6 +61,7 @@ const Profile = () => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
   const [achievements, setAchievements] = useState<Achievement[]>([]);
+  const [purchases, setPurchases] = useState<Purchase[]>([]);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [loading, setLoading] = useState(true);
   const [sharing, setSharing] = useState(false);
@@ -69,15 +72,17 @@ const Profile = () => {
       
       setLoading(true);
       try {
-        const [profileData, userPosts, allAchievements] = await Promise.all([
+        const [profileData, userPosts, allAchievements, userPurchases] = await Promise.all([
           getUserProfile(userId),
           getUserPosts(userId),
-          getAchievements()
+          getAchievements(),
+          getUserPurchases(userId)
         ]);
         
         setProfile(profileData);
         setPosts(userPosts);
         setAchievements(allAchievements);
+        setPurchases(userPurchases);
       } catch (error) {
         console.error('Error fetching profile:', error);
       } finally {
@@ -356,6 +361,10 @@ const Profile = () => {
                 <Award className="h-4 w-4 mr-2" />
                 Conquistas
               </TabsTrigger>
+              <TabsTrigger value="purchases">
+                <ShoppingBag className="h-4 w-4 mr-2" />
+                Compras ({purchases.length})
+              </TabsTrigger>
               <TabsTrigger value="posts">
                 <MessageSquare className="h-4 w-4 mr-2" />
                 Posts ({posts.length})
@@ -413,6 +422,75 @@ const Profile = () => {
                       </Card>
                     );
                   })}
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="purchases">
+              {purchases.length === 0 ? (
+                <Card>
+                  <CardContent className="py-12 text-center">
+                    <ShoppingBag className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                    <p className="text-muted-foreground">
+                      {isOwnProfile 
+                        ? "Você ainda não adquiriu nenhum produto"
+                        : "Este usuário ainda não adquiriu produtos"
+                      }
+                    </p>
+                    {isOwnProfile && (
+                      <Link to="/products">
+                        <Button variant="outline" className="mt-4">
+                          <Package className="h-4 w-4 mr-2" />
+                          Ver Vitrine
+                        </Button>
+                      </Link>
+                    )}
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  {purchases.map((purchase) => (
+                    <Card key={purchase.id} className="overflow-hidden">
+                      {purchase.productImage && (
+                        <div className="aspect-video overflow-hidden">
+                          <img 
+                            src={purchase.productImage} 
+                            alt={purchase.productName}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      )}
+                      <CardContent className="p-4">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0 flex-1">
+                            <h3 className="font-semibold truncate">{purchase.productName}</h3>
+                            <p className="text-sm text-muted-foreground mt-1">
+                              {purchase.purchasedAt?.toDate 
+                                ? new Intl.DateTimeFormat('pt-BR', { 
+                                    day: '2-digit',
+                                    month: 'short',
+                                    year: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                  }).format(purchase.purchasedAt.toDate())
+                                : 'Data não disponível'
+                              }
+                            </p>
+                          </div>
+                          <Badge variant="secondary" className="shrink-0">
+                            <Star className="h-3 w-3 mr-1" />
+                            {purchase.price?.toLocaleString() || 0} pts
+                          </Badge>
+                        </div>
+                        {isOwnProfile && (
+                          <Button variant="outline" size="sm" className="w-full mt-3">
+                            <ExternalLink className="h-3 w-3 mr-2" />
+                            Acessar Produto
+                          </Button>
+                        )}
+                      </CardContent>
+                    </Card>
+                  ))}
                 </div>
               )}
             </TabsContent>
