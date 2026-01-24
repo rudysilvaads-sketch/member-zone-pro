@@ -1,14 +1,17 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Crown, Mail, Lock, User, AlertCircle } from 'lucide-react';
+import { Crown, Mail, Lock, User, AlertCircle, Gift } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function Auth() {
+  const [searchParams] = useSearchParams();
+  const referralCode = searchParams.get('ref') || '';
+  
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -18,6 +21,13 @@ export default function Auth() {
   
   const { signIn, signUp, signInWithGoogle } = useAuth();
   const navigate = useNavigate();
+
+  // Auto-switch to signup if coming from referral link
+  useEffect(() => {
+    if (referralCode) {
+      setIsLogin(false);
+    }
+  }, [referralCode]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,7 +44,7 @@ export default function Auth() {
           setLoading(false);
           return;
         }
-        await signUp(email, password, displayName);
+        await signUp(email, password, displayName, referralCode || undefined);
         toast.success('Conta criada com sucesso!');
       }
       navigate('/');
@@ -71,7 +81,7 @@ export default function Auth() {
     setLoading(true);
     
     try {
-      await signInWithGoogle();
+      await signInWithGoogle(referralCode || undefined);
       toast.success('Login com Google realizado!');
       navigate('/');
     } catch (err: any) {
@@ -95,9 +105,19 @@ export default function Auth() {
           <CardDescription>
             {isLogin 
               ? 'Entre para acessar sua área de membros'
-              : 'Junte-se à nossa comunidade exclusiva'
+              : referralCode
+                ? 'Você foi convidado para a nossa comunidade!'
+                : 'Junte-se à nossa comunidade exclusiva'
             }
           </CardDescription>
+          {referralCode && !isLogin && (
+            <div className="flex items-center justify-center gap-2 mt-2 p-2 rounded-lg bg-primary/10">
+              <Gift className="h-4 w-4 text-primary" />
+              <span className="text-sm text-primary font-medium">
+                Convite especial aplicado!
+              </span>
+            </div>
+          )}
         </CardHeader>
         <CardContent>
           {error && (
