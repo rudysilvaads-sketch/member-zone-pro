@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Header } from "@/components/layout/Header";
 import { StatsCards } from "@/components/dashboard/StatsCards";
@@ -5,20 +6,50 @@ import { ProgressSection } from "@/components/dashboard/ProgressSection";
 import { RankingCard } from "@/components/dashboard/RankingCard";
 import { AchievementsCard } from "@/components/dashboard/AchievementsCard";
 import { ProductsShowcase } from "@/components/dashboard/ProductsShowcase";
+import { useAuth } from "@/contexts/AuthContext";
+import { getTopUsers, UserProfile } from "@/lib/firebaseServices";
 
 const Index = () => {
+  const { userProfile } = useAuth();
+  const [topUsers, setTopUsers] = useState<(UserProfile & { position: number })[]>([]);
+  const [userRank, setUserRank] = useState<number | null>(null);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+  useEffect(() => {
+    const fetchRanking = async () => {
+      try {
+        const users = await getTopUsers(100);
+        setTopUsers(users.slice(0, 5));
+        
+        // Find current user's rank
+        if (userProfile) {
+          const userIndex = users.findIndex(u => u.uid === userProfile.uid);
+          if (userIndex !== -1) {
+            setUserRank(userIndex + 1);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching ranking:', error);
+      }
+    };
+
+    fetchRanking();
+  }, [userProfile]);
+
+  const displayName = userProfile?.displayName?.split(' ')[0] || 'Membro';
+
   return (
     <div className="min-h-screen bg-background">
-      <Sidebar />
+      <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
       
-      <div className="pl-64 transition-all duration-300">
+      <div className={`transition-all duration-300 ${sidebarCollapsed ? 'pl-20' : 'pl-64'}`}>
         <Header />
         
         <main className="p-6">
           {/* Welcome Section */}
           <div className="mb-8">
             <h1 className="text-3xl font-bold">
-              Bem-vindo de volta, <span className="text-gradient-gold">João</span>! 👋
+              Bem-vindo de volta, <span className="text-gradient-gold">{displayName}</span>! 👋
             </h1>
             <p className="mt-1 text-muted-foreground">
               Continue sua jornada e alcance novos patamares.
@@ -26,29 +57,40 @@ const Index = () => {
           </div>
 
           {/* Stats Cards */}
-          <StatsCards />
+          <StatsCards 
+            userRank={userRank} 
+            points={userProfile?.points || 0}
+            achievements={userProfile?.achievements.length || 0}
+            streakDays={userProfile?.streakDays || 0}
+          />
 
           {/* Main Grid */}
           <div className="mt-8 grid gap-6 lg:grid-cols-3">
             {/* Left Column - Progress */}
             <div className="lg:col-span-1">
-              <ProgressSection />
+              <ProgressSection 
+                currentPoints={userProfile?.points || 0}
+                currentRank={userProfile?.rank || 'bronze'}
+                completedModules={userProfile?.completedModules || 0}
+                achievements={userProfile?.achievements.length || 0}
+                streakDays={userProfile?.streakDays || 0}
+              />
             </div>
 
             {/* Right Column - Ranking */}
             <div className="lg:col-span-2">
-              <RankingCard />
+              <RankingCard users={topUsers} currentUserId={userProfile?.uid} />
             </div>
           </div>
 
           {/* Achievements Section */}
           <div className="mt-6">
-            <AchievementsCard />
+            <AchievementsCard unlockedAchievements={userProfile?.achievements || []} />
           </div>
 
           {/* Products Section */}
           <div className="mt-6">
-            <ProductsShowcase />
+            <ProductsShowcase userRank={userProfile?.rank || 'bronze'} userPoints={userProfile?.points || 0} />
           </div>
         </main>
       </div>

@@ -1,9 +1,22 @@
-import { Bell, Search, User } from "lucide-react";
+import { Bell, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useAuth } from "@/contexts/AuthContext";
+
+const getBadgeVariant = (rank: string) => {
+  switch (rank?.toLowerCase()) {
+    case 'diamond': return 'diamond';
+    case 'platinum': return 'platinum';
+    case 'gold': return 'gold';
+    case 'silver': return 'silver';
+    default: return 'bronze';
+  }
+};
 
 export function Header() {
+  const { userProfile } = useAuth();
+
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-background/80 backdrop-blur-md px-6">
       {/* Search */}
@@ -31,17 +44,17 @@ export function Header() {
         {/* User Menu */}
         <div className="flex items-center gap-3">
           <div className="hidden md:block text-right">
-            <p className="text-sm font-medium">João Silva</p>
+            <p className="text-sm font-medium">{userProfile?.displayName || 'Membro'}</p>
             <div className="flex items-center gap-1 justify-end">
-              <Badge variant="gold" className="text-[10px] px-1.5 py-0">
-                GOLD
+              <Badge variant={getBadgeVariant(userProfile?.rank || 'bronze') as any} className="text-[10px] px-1.5 py-0">
+                {userProfile?.rank?.toUpperCase() || 'BRONZE'}
               </Badge>
-              <span className="text-xs text-muted-foreground">1.250 pts</span>
+              <span className="text-xs text-muted-foreground">{userProfile?.points?.toLocaleString() || 0} pts</span>
             </div>
           </div>
           <Avatar className="h-10 w-10 border-2 border-gold">
-            <AvatarImage src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face" />
-            <AvatarFallback>JS</AvatarFallback>
+            <AvatarImage src={userProfile?.photoURL || undefined} />
+            <AvatarFallback>{userProfile?.displayName?.[0] || 'M'}</AvatarFallback>
           </Avatar>
         </div>
       </div>
