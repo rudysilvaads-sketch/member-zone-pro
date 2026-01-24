@@ -6,9 +6,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { Search, Star, Lock, CheckCircle, Coins, Package, Sparkles, Crown, Gem, ShoppingBag } from "lucide-react";
+import { Search, Star, Lock, CheckCircle, Coins, Package, Sparkles, Crown, Gem, ShoppingBag, User, Gift, BookOpen, Box } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { getProducts, purchaseProduct, getUserPurchases, Product, Purchase } from "@/lib/firebaseServices";
+import { getProducts, purchaseProduct, getUserPurchases, Product, Purchase, ProductCategory } from "@/lib/firebaseServices";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
@@ -21,6 +21,14 @@ const rankConfig: Record<string, { color: string; bg: string; label: string }> =
   diamond: { color: "text-purple-400", bg: "bg-purple-500/20", label: "Diamante" },
 };
 
+const categoryConfig: Record<ProductCategory, { label: string; icon: React.ElementType; color: string; bg: string }> = {
+  avatars: { label: "Avatares", icon: User, color: "text-violet-400", bg: "bg-violet-500/20" },
+  items: { label: "Itens", icon: Box, color: "text-blue-400", bg: "bg-blue-500/20" },
+  benefits: { label: "Benefícios", icon: Gift, color: "text-emerald-400", bg: "bg-emerald-500/20" },
+  courses: { label: "Cursos", icon: BookOpen, color: "text-amber-400", bg: "bg-amber-500/20" },
+  other: { label: "Outros", icon: Package, color: "text-slate-400", bg: "bg-slate-500/20" },
+};
+
 const Products = () => {
   const { userProfile, refreshProfile } = useAuth();
   const [products, setProducts] = useState<Product[]>([]);
@@ -30,7 +38,8 @@ const Products = () => {
   const [loading, setLoading] = useState(true);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [purchasing, setPurchasing] = useState(false);
-  const [filter, setFilter] = useState<'all' | 'available' | 'purchased'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'available' | 'purchased'>('all');
+  const [categoryFilter, setCategoryFilter] = useState<ProductCategory | 'all'>('all');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -97,17 +106,31 @@ const Products = () => {
   const getDisplayProducts = () => {
     let displayProducts = filteredProducts;
     
-    if (filter === 'available') {
+    // Category filter
+    if (categoryFilter !== 'all') {
+      displayProducts = displayProducts.filter(p => p.category === categoryFilter);
+    }
+    
+    // Status filter
+    if (statusFilter === 'available') {
       displayProducts = displayProducts.filter(p => canPurchase(p).allowed && !isPurchased(p.id));
-    } else if (filter === 'purchased') {
+    } else if (statusFilter === 'purchased') {
       displayProducts = displayProducts.filter(p => isPurchased(p.id));
     }
     
     return displayProducts;
   };
 
-  const featuredProducts = getDisplayProducts().filter(p => p.featured);
-  const regularProducts = getDisplayProducts().filter(p => !p.featured);
+  // Get category counts
+  const getCategoryCounts = () => {
+    const counts: Record<string, number> = { all: filteredProducts.length };
+    (Object.keys(categoryConfig) as ProductCategory[]).forEach(cat => {
+      counts[cat] = filteredProducts.filter(p => p.category === cat).length;
+    });
+    return counts;
+  };
+
+  const categoryCounts = getCategoryCounts();
 
   return (
     <div className="min-h-screen bg-background">
@@ -151,43 +174,78 @@ const Products = () => {
             </div>
           </div>
 
-          {/* Search & Filters */}
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-              <Input
-                placeholder="Buscar recompensas..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="pl-12 h-12 text-base rounded-xl border-border/50 bg-background/50 backdrop-blur-sm"
-              />
-            </div>
-            <div className="flex gap-2">
-              <Button
-                variant={filter === 'all' ? 'default' : 'outline'}
-                onClick={() => setFilter('all')}
-                className="rounded-xl"
-              >
-                <ShoppingBag className="h-4 w-4 mr-2" />
-                Todos
-              </Button>
-              <Button
-                variant={filter === 'available' ? 'default' : 'outline'}
-                onClick={() => setFilter('available')}
-                className="rounded-xl"
-              >
-                <Sparkles className="h-4 w-4 mr-2" />
-                Disponíveis
-              </Button>
-              <Button
-                variant={filter === 'purchased' ? 'default' : 'outline'}
-                onClick={() => setFilter('purchased')}
-                className="rounded-xl"
-              >
-                <CheckCircle className="h-4 w-4 mr-2" />
-                Minhas Compras
-              </Button>
-            </div>
+          {/* Search */}
+          <div className="relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+            <Input
+              placeholder="Buscar recompensas..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-12 h-12 text-base rounded-xl border-border/50 bg-background/50 backdrop-blur-sm"
+            />
+          </div>
+
+          {/* Category Filters */}
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant={categoryFilter === 'all' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setCategoryFilter('all')}
+              className="rounded-xl"
+            >
+              <ShoppingBag className="h-4 w-4 mr-2" />
+              Todos
+              <Badge variant="secondary" className="ml-2 text-xs">{categoryCounts.all}</Badge>
+            </Button>
+            {(Object.keys(categoryConfig) as ProductCategory[]).map(cat => {
+              const config = categoryConfig[cat];
+              const Icon = config.icon;
+              const count = categoryCounts[cat];
+              if (count === 0) return null;
+              return (
+                <Button
+                  key={cat}
+                  variant={categoryFilter === cat ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setCategoryFilter(cat)}
+                  className="rounded-xl"
+                >
+                  <Icon className="h-4 w-4 mr-2" />
+                  {config.label}
+                  <Badge variant="secondary" className="ml-2 text-xs">{count}</Badge>
+                </Button>
+              );
+            })}
+          </div>
+
+          {/* Status Filters */}
+          <div className="flex gap-2">
+            <Button
+              variant={statusFilter === 'all' ? 'secondary' : 'ghost'}
+              size="sm"
+              onClick={() => setStatusFilter('all')}
+              className="rounded-xl"
+            >
+              Todos os status
+            </Button>
+            <Button
+              variant={statusFilter === 'available' ? 'secondary' : 'ghost'}
+              size="sm"
+              onClick={() => setStatusFilter('available')}
+              className="rounded-xl"
+            >
+              <Sparkles className="h-4 w-4 mr-2" />
+              Disponíveis
+            </Button>
+            <Button
+              variant={statusFilter === 'purchased' ? 'secondary' : 'ghost'}
+              size="sm"
+              onClick={() => setStatusFilter('purchased')}
+              className="rounded-xl"
+            >
+              <CheckCircle className="h-4 w-4 mr-2" />
+              Resgatados
+            </Button>
           </div>
 
           {loading ? (
@@ -199,7 +257,7 @@ const Products = () => {
           ) : (
             <>
               {/* Featured Products */}
-              {featuredProducts.length > 0 && (
+              {getDisplayProducts().filter(p => p.featured).length > 0 && (
                 <section className="space-y-4">
                   <div className="flex items-center gap-3">
                     <div className="p-2 rounded-lg bg-yellow-500/20">
@@ -208,7 +266,7 @@ const Products = () => {
                     <h2 className="text-xl font-bold">Destaques</h2>
                   </div>
                   <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                    {featuredProducts.map(product => (
+                    {getDisplayProducts().filter(p => p.featured).map(product => (
                       <ShowcaseCard 
                         key={product.id} 
                         product={product} 
@@ -223,9 +281,9 @@ const Products = () => {
               )}
 
               {/* Regular Products */}
-              {regularProducts.length > 0 && (
+              {getDisplayProducts().filter(p => !p.featured).length > 0 && (
                 <section className="space-y-4">
-                  {featuredProducts.length > 0 && (
+                  {getDisplayProducts().filter(p => p.featured).length > 0 && (
                     <div className="flex items-center gap-3">
                       <div className="p-2 rounded-lg bg-primary/20">
                         <Package className="h-5 w-5 text-primary" />
@@ -234,7 +292,7 @@ const Products = () => {
                     </div>
                   )}
                   <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                    {regularProducts.map(product => (
+                    {getDisplayProducts().filter(p => !p.featured).map(product => (
                       <ShowcaseCard 
                         key={product.id} 
                         product={product} 
@@ -255,11 +313,11 @@ const Products = () => {
                     </div>
                     <h3 className="text-lg font-semibold mb-2">Nenhum produto encontrado</h3>
                     <p className="text-muted-foreground">
-                      {filter === 'purchased' 
+                      {statusFilter === 'purchased' 
                         ? "Você ainda não fez nenhuma compra" 
-                        : filter === 'available' 
+                        : statusFilter === 'available' 
                           ? "Nenhum produto disponível no momento"
-                          : "Tente ajustar sua busca"}
+                          : "Tente ajustar sua busca ou filtros"}
                     </p>
                   </CardContent>
                 </Card>
@@ -409,8 +467,18 @@ const ShowcaseCard = ({ product, canPurchase, isPurchased, onSelect, featured }:
       {/* Content */}
       <CardContent className="p-5 space-y-4">
         <div>
-          <h3 className="font-bold text-lg leading-tight line-clamp-1">{product.name}</h3>
-          <p className="text-sm text-muted-foreground line-clamp-2 mt-1.5 min-h-[40px]">
+          <div className="flex items-center gap-2 mb-1.5">
+            <h3 className="font-bold text-lg leading-tight line-clamp-1 flex-1">{product.name}</h3>
+            {product.category && categoryConfig[product.category] && (
+              <Badge 
+                variant="outline" 
+                className={cn("text-xs shrink-0", categoryConfig[product.category].color)}
+              >
+                {categoryConfig[product.category].label}
+              </Badge>
+            )}
+          </div>
+          <p className="text-sm text-muted-foreground line-clamp-2 min-h-[40px]">
             {product.description}
           </p>
         </div>
