@@ -74,6 +74,7 @@ export interface Purchase {
   userId: string;
   productId: string;
   productName: string;
+  productImage?: string;
   price: number;
   purchasedAt: Timestamp;
 }
@@ -261,6 +262,7 @@ export const purchaseProduct = async (
       userId: uid,
       productId: product.id,
       productName: product.name,
+      productImage: product.image,
       price: product.price,
       purchasedAt: serverTimestamp(),
     });
