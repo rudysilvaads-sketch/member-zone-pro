@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -17,6 +17,12 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { 
+  getUserDailyMissions, 
+  initializeUserDailyMissions, 
+  claimMissionReward,
+  UserDailyMission 
+} from '@/lib/missionService';
 
 interface DailyMission {
   id: string;
@@ -31,17 +37,8 @@ interface DailyMission {
   claimed: boolean;
 }
 
-const missionIcons: Record<string, React.ElementType> = {
-  login: Zap,
-  module: BookOpen,
-  comment: MessageSquare,
-  share: Share2,
-  streak: Trophy,
-  complete: Target,
-};
-
-// Default daily missions
-const defaultMissions: Omit<DailyMission, 'progress' | 'completed' | 'claimed'>[] = [
+// Default daily missions configuration
+const missionConfigs: Omit<DailyMission, 'progress' | 'completed' | 'claimed'>[] = [
   {
     id: 'daily-login',
     title: 'Login Diário',
@@ -85,17 +82,54 @@ export function DailyMissions() {
   const [missions, setMissions] = useState<DailyMission[]>([]);
   const [claimingId, setClaimingId] = useState<string | null>(null);
   const [timeUntilReset, setTimeUntilReset] = useState<string>('');
+  const [loading, setLoading] = useState(true);
+
+  // Load missions from Firebase
+  const loadMissions = useCallback(async () => {
+    if (!user) return;
+    
+    setLoading(true);
+    try {
+      const missionIds = missionConfigs.map(m => m.id);
+      
+      // Try to get existing missions for today
+      let userMissions = await getUserDailyMissions(user.uid);
+      
+      // If no missions for today, initialize them
+      if (!userMissions) {
+        userMissions = await initializeUserDailyMissions(user.uid, missionIds);
+      }
+      
+      // Merge mission configs with user progress
+      const mergedMissions = missionConfigs.map(config => {
+        const userMission = userMissions?.missions[config.id];
+        return {
+          ...config,
+          progress: userMission?.progress ?? 0,
+          completed: userMission?.completed ?? false,
+          claimed: userMission?.claimed ?? false,
+        };
+      });
+      
+      setMissions(mergedMissions);
+    } catch (error) {
+      console.error('Error loading missions:', error);
+      // Fallback to local state if Firebase fails
+      const fallbackMissions = missionConfigs.map(mission => ({
+        ...mission,
+        progress: mission.id === 'daily-login' ? 1 : 0,
+        completed: mission.id === 'daily-login',
+        claimed: false,
+      }));
+      setMissions(fallbackMissions);
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
 
   useEffect(() => {
-    // Initialize missions with login already completed
-    const initialMissions = defaultMissions.map(mission => ({
-      ...mission,
-      progress: mission.id === 'daily-login' ? 1 : 0,
-      completed: mission.id === 'daily-login',
-      claimed: false,
-    }));
-    setMissions(initialMissions);
-  }, []);
+    loadMissions();
+  }, [loadMissions]);
 
   useEffect(() => {
     // Calculate time until daily reset (midnight)
@@ -123,8 +157,17 @@ export function DailyMissions() {
     setClaimingId(mission.id);
     
     try {
+      // Save to Firebase first
+      const success = await claimMissionReward(user.uid, mission.id);
+      
+      if (!success) {
+        throw new Error('Failed to save claim');
+      }
+      
+      // Update points
       await updateUserPoints(mission.pointsReward);
       
+      // Update local state
       setMissions(prev => prev.map(m => 
         m.id === mission.id ? { ...m, claimed: true } : m
       ));
@@ -136,6 +179,7 @@ export function DailyMissions() {
         </div>
       );
     } catch (error) {
+      console.error('Error claiming reward:', error);
       toast.error('Erro ao resgatar recompensa');
     } finally {
       setClaimingId(null);
@@ -143,8 +187,23 @@ export function DailyMissions() {
   };
 
   const completedCount = missions.filter(m => m.completed).length;
-  const claimedCount = missions.filter(m => m.claimed).length;
   const totalXp = missions.reduce((sum, m) => sum + (m.claimed ? m.xpReward : 0), 0);
+
+  if (loading) {
+    return (
+      <Card variant="gradient" className="animate-fade-in">
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle className="flex items-center gap-2">
+            <Target className="h-5 w-5 text-accent" />
+            Missões Diárias
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card variant="gradient" className="animate-fade-in">
