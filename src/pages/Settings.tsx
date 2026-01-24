@@ -11,7 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Settings as SettingsIcon, User, Bell, Shield, Palette, Save, Mail, Key, Trash2, LogOut, Sun, Moon, Monitor, Sparkles, Frame } from "lucide-react";
+import { Settings as SettingsIcon, User, Bell, Shield, Palette, Save, Mail, Key, Trash2, LogOut, Sun, Moon, Monitor, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -19,8 +19,6 @@ import { useNavigate } from "react-router-dom";
 import { doc, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { AvatarSelector } from "@/components/settings/AvatarSelector";
-import { FrameSelector } from "@/components/settings/FrameSelector";
-import { getFrameById } from "@/lib/frameData";
 
 const rankConfig: Record<string, { color: string; bg: string; label: string }> = {
   bronze: { color: "text-orange-400", bg: "bg-orange-500/20", label: "Bronze" },
@@ -93,7 +91,7 @@ const Settings = () => {
           </div>
 
           <Tabs defaultValue="profile" className="space-y-6">
-            <TabsList className="grid w-full max-w-2xl grid-cols-6">
+            <TabsList className="grid w-full max-w-xl grid-cols-5">
               <TabsTrigger value="profile" className="flex items-center gap-2">
                 <User className="h-4 w-4" />
                 <span className="hidden sm:inline">Perfil</span>
@@ -101,10 +99,6 @@ const Settings = () => {
               <TabsTrigger value="avatars" className="flex items-center gap-2">
                 <Sparkles className="h-4 w-4" />
                 <span className="hidden sm:inline">Avatares</span>
-              </TabsTrigger>
-              <TabsTrigger value="frames" className="flex items-center gap-2">
-                <Frame className="h-4 w-4" />
-                <span className="hidden sm:inline">Molduras</span>
               </TabsTrigger>
               <TabsTrigger value="notifications" className="flex items-center gap-2">
                 <Bell className="h-4 w-4" />
@@ -127,25 +121,12 @@ const Settings = () => {
                 <Card className="lg:col-span-1">
                   <CardContent className="pt-6 text-center">
                     <div className="relative inline-flex items-center justify-center">
-                      {(() => {
-                        const frame = getFrameById(userProfile?.currentFrameId || 'frame-none');
-                        return (
-                          <div className={cn("avatar-frame-wrapper", frame?.animationClass)}>
-                            <Avatar 
-                              className={cn(
-                                "h-24 w-24 avatar-with-frame",
-                                frame?.borderStyle,
-                                frame?.glowStyle
-                              )}
-                            >
-                              <AvatarImage src={userProfile?.photoURL || undefined} />
-                              <AvatarFallback className="text-2xl bg-primary/20">
-                                {userProfile?.displayName?.charAt(0).toUpperCase()}
-                              </AvatarFallback>
-                            </Avatar>
-                          </div>
-                        );
-                      })()}
+                      <Avatar className="h-24 w-24 border-4 border-primary/20">
+                        <AvatarImage src={userProfile?.photoURL || undefined} />
+                        <AvatarFallback className="text-2xl bg-primary/20">
+                          {userProfile?.displayName?.charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
                     </div>
                     <h3 className="mt-4 font-bold text-lg">{userProfile?.displayName}</h3>
                     <p className="text-sm text-muted-foreground">{user?.email}</p>
@@ -343,11 +324,6 @@ const Settings = () => {
             {/* Avatars Tab */}
             <TabsContent value="avatars">
               <AvatarSelector />
-            </TabsContent>
-
-            {/* Frames Tab */}
-            <TabsContent value="frames">
-              <FrameSelector />
             </TabsContent>
 
             {/* Appearance Tab */}
