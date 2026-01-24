@@ -409,6 +409,24 @@
     }
   }
 
+  /* Animated border rotation */
+  @property --border-angle {
+    syntax: '<angle>';
+    initial-value: 0deg;
+    inherits: false;
+  }
+
+  .animate-border-rotate {
+    --border-angle: 0deg;
+    animation: border-rotate 4s linear infinite;
+  }
+
+  @keyframes border-rotate {
+    to {
+      --border-angle: 360deg;
+    }
+  }
+
   .animate-float {
     animation: float 3s ease-in-out infinite;
   }

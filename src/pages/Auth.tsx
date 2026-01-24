@@ -106,9 +106,17 @@ export default function Auth() {
         <LaCasaLogo size="xl" />
       </div>
       
-      {/* Glass Card */}
-      <div className="relative z-10 w-full max-w-md">
-        <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-8 shadow-2xl">
+      {/* Glass Card with Animated Border */}
+      <div className="relative z-10 w-full max-w-md group">
+        {/* Animated gradient border */}
+        <div 
+          className="absolute -inset-[1px] rounded-2xl opacity-75 blur-[1px]"
+          style={{
+            background: 'conic-gradient(from var(--border-angle, 0deg), #BFFF00, transparent 30%, transparent 70%, #BFFF00)',
+            animation: 'border-rotate 4s linear infinite',
+          }}
+        />
+        <div className="relative backdrop-blur-xl bg-[#0a0a0a]/90 border border-white/10 rounded-2xl p-8 shadow-2xl">
           {/* Badge */}
           <div className="flex justify-center mb-6">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#BFFF00]/10 border border-[#BFFF00]/20">
