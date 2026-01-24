@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -147,8 +147,18 @@ export default function Auth() {
         </div>
         
         {/* Footer */}
-        <div className="relative z-10 text-sm text-muted-foreground">
-          © 2024 Membership. Todos os direitos reservados.
+        <div className="relative z-10 space-y-2">
+          <p className="text-sm text-muted-foreground">
+            © 2024 Membership. Todos os direitos reservados.
+          </p>
+          <div className="flex gap-4 text-sm">
+            <Link to="/terms" className="text-muted-foreground hover:text-primary transition-colors">
+              Termos de Uso
+            </Link>
+            <Link to="/privacy" className="text-muted-foreground hover:text-primary transition-colors">
+              Privacidade
+            </Link>
+          </div>
         </div>
       </div>
       

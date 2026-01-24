@@ -16,6 +16,8 @@ import Products from "./pages/Products";
 import Community from "./pages/Community";
 import Settings from "./pages/Settings";
 import Profile from "./pages/Profile";
+import Terms from "./pages/Terms";
+import Privacy from "./pages/Privacy";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,6 +32,8 @@ const App = () => (
             <Sonner />
             <Routes>
               <Route path="/auth" element={<Auth />} />
+              <Route path="/terms" element={<Terms />} />
+              <Route path="/privacy" element={<Privacy />} />
               <Route path="/admin/setup" element={<AdminSetup />} />
               <Route 
                 path="/admin" 
