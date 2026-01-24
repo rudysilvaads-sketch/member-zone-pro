@@ -697,10 +697,15 @@ export interface Notification {
   fromUserId: string;
   fromUserName: string;
   fromUserAvatar: string | null;
-  type: 'like' | 'comment';
-  postId: string;
+  type: 'like' | 'comment' | 'new_product';
+  postId?: string;
   postContent?: string; // first 50 chars of post
   commentContent?: string; // for comment notifications
+  // Product notification fields
+  productId?: string;
+  productName?: string;
+  productImage?: string;
+  productPrice?: number;
   read: boolean;
   createdAt: Timestamp;
 }
@@ -710,8 +715,8 @@ export const createNotification = async (
   notification: Omit<Notification, 'id' | 'read' | 'createdAt'>
 ): Promise<boolean> => {
   try {
-    // Don't create notification for own actions
-    if (notification.userId === notification.fromUserId) return false;
+    // Don't create notification for own actions (skip for product notifications)
+    if (notification.type !== 'new_product' && notification.userId === notification.fromUserId) return false;
     
     const notificationsRef = collection(db, 'notifications');
     await addDoc(notificationsRef, {
@@ -723,6 +728,43 @@ export const createNotification = async (
   } catch (error) {
     console.error('Error creating notification:', error);
     return false;
+  }
+};
+
+// Create product notification for all users
+export const notifyNewProduct = async (product: Product): Promise<number> => {
+  try {
+    const usersRef = collection(db, 'users');
+    const usersSnapshot = await getDocs(usersRef);
+    
+    let notifiedCount = 0;
+    const batch = writeBatch(db);
+    const notificationsRef = collection(db, 'notifications');
+    
+    usersSnapshot.docs.forEach((userDoc) => {
+      const newNotificationRef = doc(notificationsRef);
+      batch.set(newNotificationRef, {
+        userId: userDoc.id,
+        fromUserId: 'system',
+        fromUserName: 'Loja',
+        fromUserAvatar: null,
+        type: 'new_product',
+        productId: product.id,
+        productName: product.name,
+        productImage: product.image,
+        productPrice: product.price,
+        read: false,
+        createdAt: serverTimestamp(),
+      });
+      notifiedCount++;
+    });
+    
+    await batch.commit();
+    console.log(`Notified ${notifiedCount} users about new product: ${product.name}`);
+    return notifiedCount;
+  } catch (error) {
+    console.error('Error notifying users about new product:', error);
+    return 0;
   }
 };
 
