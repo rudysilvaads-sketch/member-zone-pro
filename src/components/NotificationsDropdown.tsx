@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Bell, Check, CheckCheck, Heart, MessageSquare, Trash2, X } from "lucide-react";
+import { Bell, Check, CheckCheck, Heart, MessageSquare, Trash2, X, ShoppingBag, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -75,7 +75,13 @@ export function NotificationsDropdown() {
       await markNotificationAsRead(notification.id);
     }
     setOpen(false);
-    navigate(`/community`);
+    
+    // Navigate based on notification type
+    if (notification.type === 'new_product') {
+      navigate('/products');
+    } else {
+      navigate('/community');
+    }
   };
 
   const formatTimeAgo = (timestamp: any) => {
@@ -163,36 +169,68 @@ export function NotificationsDropdown() {
                   onClick={() => handleNotificationClick(notification)}
                 >
                   <div className="relative">
-                    <Avatar className="h-10 w-10">
-                      <AvatarImage src={notification.fromUserAvatar || undefined} />
-                      <AvatarFallback className="bg-primary/20">
-                        {notification.fromUserName?.charAt(0).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
+                    {notification.type === 'new_product' ? (
+                      <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center overflow-hidden">
+                        {notification.productImage ? (
+                          <img 
+                            src={notification.productImage} 
+                            alt={notification.productName || 'Produto'} 
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <ShoppingBag className="h-5 w-5 text-primary" />
+                        )}
+                      </div>
+                    ) : (
+                      <Avatar className="h-10 w-10">
+                        <AvatarImage src={notification.fromUserAvatar || undefined} />
+                        <AvatarFallback className="bg-primary/20">
+                          {notification.fromUserName?.charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                    )}
                     <div
                       className={cn(
                         "absolute -bottom-1 -right-1 h-5 w-5 rounded-full flex items-center justify-center",
                         notification.type === "like"
-                          ? "bg-red-500"
-                          : "bg-blue-500"
+                          ? "bg-destructive"
+                          : notification.type === "new_product"
+                            ? "bg-primary"
+                            : "bg-accent"
                       )}
                     >
                       {notification.type === "like" ? (
-                        <Heart className="h-3 w-3 text-white fill-white" />
+                        <Heart className="h-3 w-3 text-destructive-foreground fill-current" />
+                      ) : notification.type === "new_product" ? (
+                        <Sparkles className="h-3 w-3 text-primary-foreground" />
                       ) : (
-                        <MessageSquare className="h-3 w-3 text-white" />
+                        <MessageSquare className="h-3 w-3 text-accent-foreground" />
                       )}
                     </div>
                   </div>
 
                   <div className="flex-1 min-w-0">
                     <p className="text-sm">
-                      <span className="font-semibold">{notification.fromUserName}</span>{" "}
-                      {notification.type === "like"
-                        ? "curtiu seu post"
-                        : "comentou no seu post"}
+                      {notification.type === 'new_product' ? (
+                        <>
+                          <span className="font-semibold">Novo produto!</span>{" "}
+                          {notification.productName} disponível na loja
+                        </>
+                      ) : (
+                        <>
+                          <span className="font-semibold">{notification.fromUserName}</span>{" "}
+                          {notification.type === "like"
+                            ? "curtiu seu post"
+                            : "comentou no seu post"}
+                        </>
+                      )}
                     </p>
-                    {notification.postContent && (
+                    {notification.type === 'new_product' && notification.productPrice && (
+                      <p className="text-xs text-primary font-semibold mt-0.5">
+                        🎁 {notification.productPrice.toLocaleString()} pontos
+                      </p>
+                    )}
+                    {notification.postContent && notification.type !== 'new_product' && (
                       <p className="text-xs text-muted-foreground truncate mt-0.5">
                         "{notification.postContent}"
                       </p>
@@ -206,7 +244,6 @@ export function NotificationsDropdown() {
                       {formatTimeAgo(notification.createdAt)}
                     </p>
                   </div>
-
                   <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     {!notification.read && (
                       <Button

@@ -22,12 +22,21 @@ import {
   Trash2, 
   Sparkles,
   Loader2,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Bell,
+  Send
 } from 'lucide-react';
 import { collection, getDocs, doc, setDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { toast } from 'sonner';
-import { Product } from '@/lib/firebaseServices';
+import { Product, notifyNewProduct } from '@/lib/firebaseServices';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const emptyProduct: Omit<Product, 'id'> = {
   name: '',
@@ -37,6 +46,7 @@ const emptyProduct: Omit<Product, 'id'> = {
   available: true,
   featured: false,
   requiredRank: '',
+  category: 'other',
 };
 
 export function AdminProducts() {
@@ -46,6 +56,8 @@ export function AdminProducts() {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [formData, setFormData] = useState<Omit<Product, 'id'>>(emptyProduct);
   const [saving, setSaving] = useState(false);
+  const [notifyOnCreate, setNotifyOnCreate] = useState(true);
+  const [notifying, setNotifying] = useState<string | null>(null);
 
   useEffect(() => {
     fetchProducts();
@@ -84,8 +96,26 @@ export function AdminProducts() {
       available: product.available,
       featured: product.featured || false,
       requiredRank: product.requiredRank || '',
+      category: product.category || 'other',
     });
     setDialogOpen(true);
+  };
+
+  const handleNotifyProduct = async (product: Product) => {
+    setNotifying(product.id);
+    try {
+      const count = await notifyNewProduct(product);
+      if (count > 0) {
+        toast.success(`${count} usuários notificados sobre "${product.name}"`);
+      } else {
+        toast.info('Nenhum usuário para notificar');
+      }
+    } catch (error) {
+      console.error('Error notifying:', error);
+      toast.error('Erro ao enviar notificações');
+    } finally {
+      setNotifying(null);
+    }
   };
 
   const handleSave = async () => {
@@ -105,6 +135,15 @@ export function AdminProducts() {
         const docId = formData.name.toLowerCase().replace(/\s+/g, '-');
         await setDoc(doc(db, 'products', docId), formData);
         toast.success('Produto criado!');
+        
+        // Notify users if enabled
+        if (notifyOnCreate) {
+          const newProduct: Product = { id: docId, ...formData };
+          const count = await notifyNewProduct(newProduct);
+          if (count > 0) {
+            toast.success(`${count} usuários notificados!`);
+          }
+        }
       }
       
       setDialogOpen(false);
@@ -202,7 +241,20 @@ export function AdminProducts() {
                 <p className="text-xl font-bold text-primary">
                   {product.price.toLocaleString()} <span className="text-sm">pts</span>
                 </p>
-                <div className="flex gap-2">
+                <div className="flex gap-1">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    title="Notificar usuários"
+                    onClick={() => handleNotifyProduct(product)}
+                    disabled={notifying === product.id}
+                  >
+                    {notifying === product.id ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Bell className="h-4 w-4" />
+                    )}
+                  </Button>
                   <Button
                     variant="ghost"
                     size="icon"
@@ -292,13 +344,42 @@ export function AdminProducts() {
             </div>
             
             <div className="space-y-2">
+              <Label htmlFor="category">Categoria</Label>
+              <Select
+                value={formData.category || 'other'}
+                onValueChange={(value) => setFormData({ ...formData, category: value as any })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione a categoria" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="avatars">Avatares</SelectItem>
+                  <SelectItem value="items">Itens</SelectItem>
+                  <SelectItem value="benefits">Benefícios</SelectItem>
+                  <SelectItem value="courses">Cursos</SelectItem>
+                  <SelectItem value="other">Outros</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
               <Label htmlFor="requiredRank">Rank Necessário (opcional)</Label>
-              <Input
-                id="requiredRank"
-                value={formData.requiredRank}
-                onChange={(e) => setFormData({ ...formData, requiredRank: e.target.value })}
-                placeholder="Ex: platinum, gold..."
-              />
+              <Select
+                value={formData.requiredRank || 'none'}
+                onValueChange={(value) => setFormData({ ...formData, requiredRank: value === 'none' ? '' : value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Sem restrição" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Sem restrição</SelectItem>
+                  <SelectItem value="bronze">Bronze</SelectItem>
+                  <SelectItem value="silver">Prata</SelectItem>
+                  <SelectItem value="gold">Ouro</SelectItem>
+                  <SelectItem value="platinum">Platina</SelectItem>
+                  <SelectItem value="diamond">Diamante</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             
             <div className="flex items-center justify-between">
@@ -318,6 +399,20 @@ export function AdminProducts() {
                 onCheckedChange={(checked) => setFormData({ ...formData, featured: checked })}
               />
             </div>
+            
+            {!editingProduct && (
+              <div className="flex items-center justify-between p-3 rounded-lg bg-primary/10 border border-primary/20">
+                <div className="flex items-center gap-2">
+                  <Bell className="h-4 w-4 text-primary" />
+                  <Label htmlFor="notify" className="text-sm">Notificar usuários</Label>
+                </div>
+                <Switch
+                  id="notify"
+                  checked={notifyOnCreate}
+                  onCheckedChange={setNotifyOnCreate}
+                />
+              </div>
+            )}
           </div>
           
           <DialogFooter>
@@ -325,7 +420,16 @@ export function AdminProducts() {
               Cancelar
             </Button>
             <Button variant="gold" onClick={handleSave} disabled={saving}>
-              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Salvar'}
+              {saving ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : notifyOnCreate && !editingProduct ? (
+                <>
+                  <Send className="h-4 w-4 mr-2" />
+                  Salvar e Notificar
+                </>
+              ) : (
+                'Salvar'
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
