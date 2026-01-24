@@ -300,58 +300,120 @@ export const initializeDefaultData = async () => {
     await setDoc(docRef, achievement, { merge: true });
   }
   
-  // Default products
+  // Default products - Sample showcase items
   const products: Omit<Product, 'id'>[] = [
+    // AVATARES
     {
-      name: 'Curso Avançado',
-      description: 'Desbloqueie conteúdo exclusivo de nível avançado',
-      price: 1500,
-      image: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&h=250&fit=crop',
-      available: true,
-      category: 'courses',
-      featured: true,
-    },
-    {
-      name: 'Mentoria VIP',
-      description: '1 hora de mentoria individual com especialista',
-      price: 3000,
-      image: 'https://images.unsplash.com/photo-1552581234-26160f608093?w=400&h=250&fit=crop',
-      available: true,
-      category: 'benefits',
-      requiredRank: 'Platinum',
-    },
-    {
-      name: 'Badge Exclusiva',
-      description: 'Badge personalizada para seu perfil',
-      price: 500,
-      image: 'https://images.unsplash.com/photo-1618401471353-b98afee0b2eb?w=400&h=250&fit=crop',
-      available: true,
-      category: 'items',
-    },
-    {
-      name: 'Avatar Premium',
-      description: 'Avatar exclusivo para seu perfil',
+      name: 'Avatar Ninja',
+      description: 'Avatar exclusivo estilo ninja com máscara e olhos brilhantes. Mostre sua determinação!',
       price: 800,
-      image: 'https://images.unsplash.com/photo-1566837945700-30057527ade0?w=400&h=250&fit=crop',
+      image: 'https://images.unsplash.com/photo-1618336753974-aae8e04506aa?w=400&h=400&fit=crop',
       available: true,
       category: 'avatars',
       featured: true,
     },
     {
-      name: 'Acesso Antecipado',
-      description: 'Acesse novos recursos antes de todos',
+      name: 'Avatar Robô',
+      description: 'Avatar futurista com design de robô cyberpunk. Perfeito para amantes de tecnologia.',
+      price: 1200,
+      image: 'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=400&h=400&fit=crop',
+      available: true,
+      category: 'avatars',
+      requiredRank: 'Silver',
+    },
+    {
+      name: 'Avatar Espacial',
+      description: 'Astronauta com capacete estilizado. Explore o universo do conhecimento!',
+      price: 1500,
+      image: 'https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?w=400&h=400&fit=crop',
+      available: true,
+      category: 'avatars',
+      requiredRank: 'Gold',
+    },
+    
+    // ITENS
+    {
+      name: 'Badge Campeão',
+      description: 'Badge dourada exclusiva para exibir no seu perfil. Mostra que você é um verdadeiro campeão!',
+      price: 500,
+      image: 'https://images.unsplash.com/photo-1618401471353-b98afee0b2eb?w=400&h=400&fit=crop',
+      available: true,
+      category: 'items',
+    },
+    {
+      name: 'Tema Neon',
+      description: 'Tema visual neon cyberpunk para seu dashboard. Cores vibrantes e futuristas.',
+      price: 750,
+      image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400&h=400&fit=crop',
+      available: true,
+      category: 'items',
+      featured: true,
+    },
+    {
+      name: 'Efeito de Partículas',
+      description: 'Efeito visual de partículas brilhantes ao redor do seu avatar no ranking.',
+      price: 1000,
+      image: 'https://images.unsplash.com/photo-1534796636912-3b95b3ab5986?w=400&h=400&fit=crop',
+      available: true,
+      category: 'items',
+      requiredRank: 'Silver',
+    },
+    
+    // BENEFÍCIOS
+    {
+      name: 'Mentoria Individual',
+      description: '1 hora de mentoria individual com um especialista da área. Tire todas suas dúvidas!',
+      price: 3000,
+      image: 'https://images.unsplash.com/photo-1552581234-26160f608093?w=400&h=400&fit=crop',
+      available: true,
+      category: 'benefits',
+      requiredRank: 'Platinum',
+      featured: true,
+    },
+    {
+      name: 'Acesso VIP',
+      description: 'Acesso antecipado a novos cursos e recursos exclusivos antes do lançamento oficial.',
       price: 2000,
-      image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=250&fit=crop',
+      image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=400&fit=crop',
+      available: true,
+      category: 'benefits',
+      requiredRank: 'Gold',
+    },
+    {
+      name: 'Certificado Premium',
+      description: 'Certificado personalizado com selo holográfico para impressão física.',
+      price: 1500,
+      image: 'https://images.unsplash.com/photo-1589330694653-ded6df03f754?w=400&h=400&fit=crop',
       available: true,
       category: 'benefits',
     },
+    
+    // CURSOS
     {
-      name: 'Tema Personalizado',
-      description: 'Desbloqueie temas exclusivos para o dashboard',
-      price: 600,
-      image: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400&h=250&fit=crop',
+      name: 'Curso Avançado de Produtividade',
+      description: 'Módulos exclusivos sobre técnicas avançadas de produtividade e gestão de tempo.',
+      price: 2500,
+      image: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&h=400&fit=crop',
       available: true,
-      category: 'items',
+      category: 'courses',
+      featured: true,
+    },
+    {
+      name: 'Masterclass Liderança',
+      description: 'Curso completo sobre liderança e gestão de equipes com cases reais.',
+      price: 4000,
+      image: 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=400&h=400&fit=crop',
+      available: true,
+      category: 'courses',
+      requiredRank: 'Platinum',
+    },
+    {
+      name: 'Workshop Criatividade',
+      description: 'Workshop interativo para desenvolver seu potencial criativo e inovador.',
+      price: 1800,
+      image: 'https://images.unsplash.com/photo-1456406644174-8ddd4cd52a06?w=400&h=400&fit=crop',
+      available: true,
+      category: 'courses',
     },
   ];
   
