@@ -63,6 +63,79 @@ export function AdminProducts() {
     fetchProducts();
   }, []);
 
+  const defaultProducts: Omit<Product, 'id'>[] = [
+    {
+      name: 'Pack Elementor CSS',
+      description: 'Pack completo de elementos CSS para Elementor. Acelere seu desenvolvimento!',
+      price: 800,
+      image: 'https://images.unsplash.com/photo-1618336753974-aae8e04506aa?w=600&h=400&fit=crop',
+      available: true,
+      category: 'items',
+      featured: true,
+    },
+    {
+      name: 'App Disparo em Massa',
+      description: 'Aplicativo para disparo em massa via WhatsApp. Automatize suas mensagens.',
+      price: 1200,
+      image: 'https://images.unsplash.com/photo-1611532736597-de2d4265fba3?w=600&h=400&fit=crop',
+      available: true,
+      category: 'items',
+    },
+    {
+      name: 'Catálogo de Cursos',
+      description: 'Acesso ao catálogo completo de cursos da plataforma.',
+      price: 500,
+      image: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600&h=400&fit=crop',
+      available: true,
+      category: 'courses',
+      requiredRank: 'gold',
+    },
+    {
+      name: 'Pack After Effects',
+      description: 'Pack com 500 elementos UHD 4K para After Effects.',
+      price: 750,
+      image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=600&h=400&fit=crop',
+      available: true,
+      category: 'items',
+      featured: true,
+    },
+    {
+      name: 'Método IA do Job',
+      description: 'Aprenda a usar IA para conseguir oportunidades de trabalho.',
+      price: 3000,
+      image: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=600&h=400&fit=crop',
+      available: true,
+      category: 'courses',
+      requiredRank: 'platinum',
+      featured: true,
+    },
+    {
+      name: 'Tema Express Shopify',
+      description: 'Tema profissional e otimizado para lojas Shopify.',
+      price: 1500,
+      image: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=600&h=400&fit=crop',
+      available: true,
+      category: 'items',
+    },
+    {
+      name: 'Prompts VEO 3',
+      description: 'Coleção de prompts otimizados para geração de vídeos com IA.',
+      price: 2500,
+      image: 'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=600&h=400&fit=crop',
+      available: true,
+      category: 'benefits',
+      featured: true,
+    },
+    {
+      name: 'Pack Edit Pro Kit',
+      description: 'Kit básico de edição com mais de 2000 recursos.',
+      price: 1800,
+      image: 'https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?w=600&h=400&fit=crop',
+      available: true,
+      category: 'items',
+    },
+  ];
+
   const fetchProducts = async () => {
     try {
       const productsSnap = await getDocs(collection(db, 'products'));
@@ -77,6 +150,23 @@ export function AdminProducts() {
       toast.error('Erro ao carregar produtos');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSeedProducts = async () => {
+    setSaving(true);
+    try {
+      for (const product of defaultProducts) {
+        const docId = product.name.toLowerCase().replace(/\s+/g, '-');
+        await setDoc(doc(db, 'products', docId), product);
+      }
+      toast.success(`${defaultProducts.length} produtos adicionados!`);
+      fetchProducts();
+    } catch (error) {
+      console.error('Error seeding products:', error);
+      toast.error('Erro ao adicionar produtos');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -280,11 +370,17 @@ export function AdminProducts() {
       {products.length === 0 && (
         <Card variant="gradient" className="py-12 text-center">
           <ShoppingBag className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-          <p className="text-muted-foreground">Nenhum produto cadastrado</p>
-          <Button variant="gold" className="mt-4" onClick={handleOpenCreate}>
-            <Plus className="h-4 w-4 mr-2" />
-            Criar Primeiro Produto
-          </Button>
+          <p className="text-muted-foreground mb-4">Nenhum produto cadastrado</p>
+          <div className="flex gap-3 justify-center">
+            <Button variant="outline" onClick={handleSeedProducts} disabled={saving}>
+              {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}
+              Adicionar Produtos de Exemplo
+            </Button>
+            <Button variant="gold" onClick={handleOpenCreate}>
+              <Plus className="h-4 w-4 mr-2" />
+              Criar Novo Produto
+            </Button>
+          </div>
         </Card>
       )}
 
