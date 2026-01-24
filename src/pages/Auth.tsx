@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Mail, Lock, User, AlertCircle, Gift, Sparkles, Loader2, CheckCircle, Shield, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 import { LaCasaLogo } from '@/components/LaCasaLogo';
+import authBackground from '@/assets/auth-background.jpg';
 
 export default function Auth() {
   const [searchParams] = useSearchParams();
@@ -93,10 +94,12 @@ export default function Auth() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] flex flex-col items-center justify-center p-4 relative overflow-hidden">
-      {/* Background Effects */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[#0a0a0a] via-[#111] to-[#0a0a0a]" />
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#BFFF00]/5 rounded-full blur-[150px]" />
-      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#BFFF00]/3 rounded-full blur-[150px]" />
+      {/* Background Image */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: `url(${authBackground})` }}
+      />
+      <div className="absolute inset-0 bg-black/40" />
       
       {/* Logo */}
       <div className="relative z-10 mb-8">
