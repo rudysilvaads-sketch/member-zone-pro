@@ -105,10 +105,10 @@ export default function Auth() {
             <div className="h-12 w-12 rounded-xl bg-primary flex items-center justify-center">
               <Crown className="h-7 w-7 text-primary-foreground" />
             </div>
-            <span className="text-2xl font-bold">
-              <span className="text-primary">MEMBER</span>
-              <span className="text-foreground">SHIP</span>
-            </span>
+            <div className="flex flex-col">
+              <span className="text-2xl font-bold text-primary">La Casa</span>
+              <span className="text-xs text-muted-foreground tracking-widest uppercase">Members Club</span>
+            </div>
           </div>
         </div>
         
@@ -153,10 +153,9 @@ export default function Auth() {
           </div>
         </div>
         
-        {/* Footer */}
         <div className="relative z-10 space-y-2">
           <p className="text-sm text-muted-foreground">
-            © 2024 Membership. Todos os direitos reservados.
+            © 2024 La Casa Members Club. Todos os direitos reservados.
           </p>
           <div className="flex gap-4 text-sm">
             <Link to="/terms" className="text-muted-foreground hover:text-primary transition-colors">
@@ -178,10 +177,10 @@ export default function Auth() {
               <div className="h-12 w-12 rounded-xl bg-primary flex items-center justify-center">
                 <Crown className="h-7 w-7 text-primary-foreground" />
               </div>
-              <span className="text-2xl font-bold">
-                <span className="text-primary">MEMBER</span>
-                <span className="text-foreground">SHIP</span>
-              </span>
+              <div className="flex flex-col text-left">
+                <span className="text-2xl font-bold text-primary">La Casa</span>
+                <span className="text-xs text-muted-foreground tracking-widest uppercase">Members Club</span>
+              </div>
             </div>
           </div>
           
