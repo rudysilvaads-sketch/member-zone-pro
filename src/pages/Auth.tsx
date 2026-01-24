@@ -107,16 +107,16 @@ export default function Auth() {
       </div>
       
       {/* Glass Card with Animated Border */}
-      <div className="relative z-10 w-full max-w-md group">
-        {/* Animated gradient border */}
+      <div className="relative z-10 w-full max-w-md">
+        {/* Animated gradient border - thin line */}
         <div 
-          className="absolute -inset-[1px] rounded-2xl opacity-75 blur-[1px]"
+          className="absolute -inset-[1px] rounded-2xl"
           style={{
-            background: 'conic-gradient(from var(--border-angle, 0deg), #BFFF00, transparent 30%, transparent 70%, #BFFF00)',
-            animation: 'border-rotate 4s linear infinite',
+            background: 'conic-gradient(from var(--border-angle, 0deg), #BFFF00 0%, transparent 25%, transparent 75%, #BFFF00 100%)',
+            animation: 'border-rotate 3s linear infinite',
           }}
         />
-        <div className="relative backdrop-blur-xl bg-[#0a0a0a]/90 border border-white/10 rounded-2xl p-8 shadow-2xl">
+        <div className="relative backdrop-blur-xl bg-[#0a0a0a] border-0 rounded-2xl p-8 shadow-2xl">
           {/* Badge */}
           <div className="flex justify-center mb-6">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#BFFF00]/10 border border-[#BFFF00]/20">
