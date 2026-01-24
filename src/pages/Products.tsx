@@ -520,13 +520,8 @@ const FeaturedProductCard = ({ product, canPurchase, isPurchased, onSelect, form
       className="group cursor-pointer"
       onClick={onSelect}
     >
-      {/* Glow Container */}
-      <div className="relative">
-        {/* Animated Glow Background */}
-        <div className="absolute -inset-1 bg-gradient-to-r from-primary via-accent to-primary rounded-xl opacity-50 blur-lg animate-glow-pulse group-hover:opacity-75 transition-opacity duration-300" />
-        
-        {/* Image Container */}
-        <div className="relative aspect-[4/3] rounded-xl overflow-hidden bg-secondary/50 mb-3 border-2 border-primary/30 animate-border-glow group-hover:border-primary/60 transition-all duration-300">
+      {/* Image Container */}
+      <div className="relative aspect-[4/3] rounded-xl overflow-hidden bg-secondary/50 mb-3 border border-border/50 group-hover:border-primary/50 transition-all duration-300">
         <img 
           src={product.image} 
           alt={product.name}
@@ -585,7 +580,6 @@ const FeaturedProductCard = ({ product, canPurchase, isPurchased, onSelect, form
             </Badge>
           </div>
         )}
-        </div>
       </div>
     </div>
   );
