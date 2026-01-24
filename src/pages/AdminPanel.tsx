@@ -9,18 +9,16 @@ import {
   Users, 
   ShoppingBag, 
   Target, 
-  TrendingUp, 
   Crown, 
   ArrowLeft,
   BarChart3,
-  Award,
-  DollarSign,
-  Activity
+  MessageSquare
 } from 'lucide-react';
 import { AdminStats } from '@/components/admin/AdminStats';
 import { AdminUsers } from '@/components/admin/AdminUsers';
 import { AdminProducts } from '@/components/admin/AdminProducts';
 import { AdminMissions } from '@/components/admin/AdminMissions';
+import { AdminChats } from '@/components/admin/AdminChats';
 
 // List of admin emails (in production, this should come from database)
 const ADMIN_EMAILS = ['rudysilvaads@gmail.com'];
@@ -101,7 +99,7 @@ export default function AdminPanel() {
       {/* Content */}
       <main className="container mx-auto px-6 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:inline-grid">
+          <TabsList className="grid w-full grid-cols-5 lg:w-auto lg:inline-grid">
             <TabsTrigger value="stats" className="flex items-center gap-2">
               <BarChart3 className="h-4 w-4" />
               <span className="hidden sm:inline">Estatísticas</span>
@@ -117,6 +115,10 @@ export default function AdminPanel() {
             <TabsTrigger value="missions" className="flex items-center gap-2">
               <Target className="h-4 w-4" />
               <span className="hidden sm:inline">Missões</span>
+            </TabsTrigger>
+            <TabsTrigger value="chats" className="flex items-center gap-2">
+              <MessageSquare className="h-4 w-4" />
+              <span className="hidden sm:inline">Chats</span>
             </TabsTrigger>
           </TabsList>
 
@@ -134,6 +136,10 @@ export default function AdminPanel() {
 
           <TabsContent value="missions">
             <AdminMissions />
+          </TabsContent>
+
+          <TabsContent value="chats">
+            <AdminChats />
           </TabsContent>
         </Tabs>
       </main>
