@@ -28,6 +28,8 @@ interface UserProfile {
   completedModules: number;
   lastActiveDate?: string;
   createdAt: Date;
+  unlockedAvatars?: string[];
+  currentAvatarId?: string;
 }
 
 interface AuthContextType {

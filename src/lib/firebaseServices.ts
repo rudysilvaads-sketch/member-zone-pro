@@ -38,6 +38,8 @@ export interface UserProfile {
   completedModules: number;
   lastActiveDate?: string;
   createdAt: Timestamp;
+  unlockedAvatars?: string[];
+  currentAvatarId?: string;
 }
 
 export interface Achievement {

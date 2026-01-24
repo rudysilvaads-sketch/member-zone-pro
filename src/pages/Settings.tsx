@@ -11,13 +11,14 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Settings as SettingsIcon, User, Bell, Shield, Palette, Camera, Save, Mail, Key, Trash2, LogOut, Sun, Moon, Monitor } from "lucide-react";
+import { Settings as SettingsIcon, User, Bell, Shield, Palette, Save, Mail, Key, Trash2, LogOut, Sun, Moon, Monitor, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { doc, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { AvatarSelector } from "@/components/settings/AvatarSelector";
 
 const rankConfig: Record<string, { color: string; bg: string; label: string }> = {
   bronze: { color: "text-orange-400", bg: "bg-orange-500/20", label: "Bronze" },
@@ -90,10 +91,14 @@ const Settings = () => {
           </div>
 
           <Tabs defaultValue="profile" className="space-y-6">
-            <TabsList className="grid w-full max-w-md grid-cols-4">
+            <TabsList className="grid w-full max-w-xl grid-cols-5">
               <TabsTrigger value="profile" className="flex items-center gap-2">
                 <User className="h-4 w-4" />
                 <span className="hidden sm:inline">Perfil</span>
+              </TabsTrigger>
+              <TabsTrigger value="avatars" className="flex items-center gap-2">
+                <Sparkles className="h-4 w-4" />
+                <span className="hidden sm:inline">Avatares</span>
               </TabsTrigger>
               <TabsTrigger value="notifications" className="flex items-center gap-2">
                 <Bell className="h-4 w-4" />
@@ -122,13 +127,6 @@ const Settings = () => {
                           {userProfile?.displayName?.charAt(0).toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
-                      <Button 
-                        size="icon" 
-                        variant="secondary" 
-                        className="absolute bottom-0 right-0 h-8 w-8 rounded-full"
-                      >
-                        <Camera className="h-4 w-4" />
-                      </Button>
                     </div>
                     <h3 className="mt-4 font-bold text-lg">{userProfile?.displayName}</h3>
                     <p className="text-sm text-muted-foreground">{user?.email}</p>
@@ -321,6 +319,11 @@ const Settings = () => {
                   </CardContent>
                 </Card>
               </div>
+            </TabsContent>
+
+            {/* Avatars Tab */}
+            <TabsContent value="avatars">
+              <AvatarSelector />
             </TabsContent>
 
             {/* Appearance Tab */}
