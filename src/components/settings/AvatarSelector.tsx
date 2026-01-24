@@ -22,6 +22,7 @@ import {
   getCategoryColor,
   getStyleLabel,
 } from "@/lib/avatarData";
+import { getFrameById, Frame as FrameType } from "@/lib/frameData";
 
 // Sparkle particles component for exclusive avatars
 const SparkleParticles = () => (
@@ -46,6 +47,8 @@ export function AvatarSelector({ currentAvatarId, onAvatarChange }: AvatarSelect
   const unlockedAvatars = userProfile?.unlockedAvatars || [];
   const currentXp = userProfile?.xp || 0;
   const currentLevel = userProfile?.level || 1;
+  const currentFrameId = userProfile?.currentFrameId || 'frame-none';
+  const currentFrame = getFrameById(currentFrameId);
 
   const isAvatarUnlocked = (avatar: AvatarType): boolean => {
     if (avatar.category === 'default') return true;
@@ -137,6 +140,27 @@ export function AvatarSelector({ currentAvatarId, onAvatarChange }: AvatarSelect
     }
   };
 
+  // Render avatar with frame preview
+  const renderAvatarWithFrame = (avatar: AvatarType, frame: FrameType | undefined, size: 'sm' | 'lg' = 'sm') => {
+    const sizeClass = size === 'lg' ? 'h-24 w-24' : 'h-16 w-16';
+    
+    return (
+      <div className={cn("avatar-frame-wrapper", frame?.animationClass)}>
+        <Avatar 
+          className={cn(
+            sizeClass,
+            "avatar-with-frame",
+            frame?.borderStyle || "border-2 border-border",
+            frame?.glowStyle
+          )}
+        >
+          <AvatarImage src={avatar.url} alt={avatar.name} />
+          <AvatarFallback className="text-lg">{avatar.name.charAt(0)}</AvatarFallback>
+        </Avatar>
+      </div>
+    );
+  };
+
   const renderAvatarGrid = (avatars: AvatarType[]) => (
     <div className="grid grid-cols-3 gap-6 sm:grid-cols-4 md:grid-cols-5">
       {avatars.map((avatar) => {
@@ -217,21 +241,24 @@ export function AvatarSelector({ currentAvatarId, onAvatarChange }: AvatarSelect
             <HoverCardContent 
               side="right" 
               align="center" 
-              className="w-72 p-4"
+              className="w-80 p-4"
               sideOffset={10}
             >
-              <div className="flex flex-col items-center space-y-3">
-                {/* Large Avatar Preview */}
-                <div className={cn("relative", effectClasses)}>
-                  {avatar.category === 'exclusive' && unlocked && <SparkleParticles />}
-                  <Avatar className={cn(
-                    "h-24 w-24 border-3",
-                    unlocked && avatar.category === 'exclusive' ? "border-transparent" : "border-border",
-                    unlocked && avatar.category === 'premium' ? "border-transparent" : ""
-                  )}>
-                    <AvatarImage src={avatar.url} alt={avatar.name} />
-                    <AvatarFallback className="text-2xl">{avatar.name.charAt(0)}</AvatarFallback>
-                  </Avatar>
+              <div className="flex flex-col items-center space-y-4">
+                {/* Avatar Preview with Current Frame */}
+                <div className="text-center space-y-2">
+                  <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
+                    Preview com moldura atual
+                  </p>
+                  <div className={cn("relative", effectClasses)}>
+                    {avatar.category === 'exclusive' && unlocked && <SparkleParticles />}
+                    {renderAvatarWithFrame(avatar, currentFrame, 'lg')}
+                  </div>
+                  {currentFrame && currentFrame.id !== 'frame-none' && (
+                    <Badge variant="outline" className="text-xs">
+                      Moldura: {currentFrame.name}
+                    </Badge>
+                  )}
                 </div>
                 
                 {/* Avatar Details */}
