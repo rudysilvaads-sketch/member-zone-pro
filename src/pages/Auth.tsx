@@ -125,12 +125,12 @@ export default function Auth() {
             <p className="text-white/60 mt-2 text-sm">
               {isLogin ? (
                 <>
-                  <span className="text-[#BFFF00]">Estratégia, performance</span> e <span className="text-[#BFFF00]">conversão</span>: seu box completo para <span className="text-white">vender mais</span>
+                  <span className="text-[#BFFF00]">Estratégias, ferramentas</span> e <span className="text-[#BFFF00]">automação</span>: tudo para criar <span className="text-white">canais dark lucrativos</span>
                 </>
               ) : referralCode ? (
-                'Você foi convidado para a nossa comunidade!'
+                'Você foi convidado para dominar o YouTube!'
               ) : (
-                'Junte-se à nossa comunidade exclusiva'
+                'Aprenda a criar canais dark de sucesso'
               )}
             </p>
             <p className="text-white/40 text-xs mt-1">
