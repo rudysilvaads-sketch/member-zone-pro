@@ -394,14 +394,14 @@ const Products = () => {
 
           {/* Products Grid */}
           {loading ? (
-            <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-7">
-              {[...Array(14)].map((_, i) => (
-                <div key={i} className="aspect-[4/3] bg-secondary/30 rounded-lg animate-pulse" />
+            <div className="grid gap-5 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
+              {[...Array(12)].map((_, i) => (
+                <div key={i} className="aspect-[3/4] bg-secondary/30 rounded-2xl animate-pulse" />
               ))}
             </div>
           ) : (
             <>
-              <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-7">
+              <div className="grid gap-5 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
                 {getDisplayProducts().map((product, index) => (
                   <ProductCard
                     key={product.id}
@@ -609,95 +609,102 @@ const ProductCard = ({ product, canPurchase, isPurchased, onSelect, formatName, 
       style={{ animationDelay: `${index * 30}ms` }}
       onClick={onSelect}
     >
-      {/* Image Container */}
-      <div className="relative aspect-[4/3] rounded-lg overflow-hidden bg-secondary/50 mb-2">
+      {/* Card Container */}
+      <div className="relative aspect-[3/4] rounded-2xl overflow-hidden bg-secondary/30 border border-border/50 group-hover:border-primary/50 transition-all duration-300">
+        {/* Full Image */}
         <img 
           src={product.image} 
           alt={product.name}
           className={cn(
-            "w-full h-full object-cover transition-all duration-300",
-            "group-hover:scale-105",
-            (isUnavailable || (!canPurchase.allowed && !isPurchased)) && "opacity-60"
+            "w-full h-full object-cover transition-all duration-500",
+            "group-hover:scale-110",
+            (isUnavailable || (!canPurchase.allowed && !isPurchased)) && "opacity-70"
           )}
         />
         
-        {/* Top Badges */}
-        <div className="absolute top-2 left-2 right-2 flex items-start justify-between gap-1">
-          <div className="flex flex-wrap gap-1">
-            {/* Demo/VIP Badge */}
-            {product.featured && (
-              <Badge className="bg-primary text-primary-foreground text-[10px] px-1.5 py-0.5 h-5">
-                <Play className="h-2.5 w-2.5 mr-0.5 fill-current" />
-                DEMO
+        {/* Gradient Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent opacity-60" />
+        
+        {/* Top Badges Row */}
+        <div className="absolute top-3 left-3 right-3 flex items-start justify-between gap-2">
+          {/* Left Side Badges */}
+          <div className="flex flex-wrap gap-1.5">
+            {product.requiredRank && (
+              <Badge className="bg-accent text-accent-foreground text-[10px] px-2 py-0.5 h-5 font-semibold shadow-lg">
+                VIP
               </Badge>
             )}
-            {product.requiredRank && (
-              <Badge className="bg-primary/90 text-primary-foreground text-[10px] px-1.5 py-0.5 h-5">
-                <Crown className="h-2.5 w-2.5 mr-0.5" />
-                VIP
+            {!isPurchased && canPurchase.allowed && !isUnavailable && (
+              <Badge className="bg-primary text-primary-foreground text-[10px] px-2 py-0.5 h-5 font-semibold shadow-lg">
+                NOVO
+              </Badge>
+            )}
+            {product.featured && (
+              <Badge className="bg-primary text-primary-foreground text-[10px] px-2 py-0.5 h-5 font-semibold shadow-lg">
+                <Play className="h-2.5 w-2.5 mr-1 fill-current" />
+                DEMO
               </Badge>
             )}
           </div>
           
-          {/* Status Badge - Right Side */}
-          <div className="flex items-center gap-1">
-            {isPurchased && (
-              <Badge className="bg-primary text-primary-foreground text-[10px] px-1.5 py-0.5 h-5">
-                <CheckCircle className="h-2.5 w-2.5 mr-0.5" />
-                LIBERADO
-              </Badge>
-            )}
-            {!isPurchased && canPurchase.allowed && !isUnavailable && (
-              <Badge className="bg-primary text-primary-foreground text-[10px] px-1.5 py-0.5 h-5">
-                <Sparkles className="h-2.5 w-2.5 mr-0.5" />
-                NOVO
-              </Badge>
-            )}
-          </div>
+          {/* Right Side - Liberado Badge */}
+          {isPurchased && (
+            <Badge className="bg-primary text-primary-foreground text-[10px] px-2 py-0.5 h-5 font-semibold shadow-lg">
+              <CheckCircle className="h-2.5 w-2.5 mr-1" />
+              LIBERADO
+            </Badge>
+          )}
         </div>
 
-        {/* App Icon Overlay - Bottom Right */}
-        <div className="absolute bottom-2 right-2">
-          <div className="h-8 w-8 rounded-lg bg-primary/20 backdrop-blur-sm flex items-center justify-center border border-primary/30">
-            {product.category && categoryConfig[product.category] ? (
-              (() => {
+        {/* Center Download Icon for purchased items */}
+        {isPurchased && (
+          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            <div className="h-14 w-14 rounded-2xl bg-primary flex items-center justify-center shadow-xl">
+              <Package className="h-7 w-7 text-primary-foreground" />
+            </div>
+          </div>
+        )}
+
+        {/* Brand Logo Overlay - Top Right Corner */}
+        <div className="absolute top-3 right-3">
+          {!isPurchased && product.category && categoryConfig[product.category] && (
+            <div className="h-8 w-8 rounded-lg bg-background/80 backdrop-blur-sm flex items-center justify-center border border-border/50">
+              {(() => {
                 const Icon = categoryConfig[product.category!].icon;
                 return <Icon className="h-4 w-4 text-primary" />;
-              })()
-            ) : (
-              <Package className="h-4 w-4 text-primary" />
-            )}
-          </div>
+              })()}
+            </div>
+          )}
         </div>
 
         {/* Unavailable Overlay */}
         {isUnavailable && (
-          <div className="absolute inset-0 bg-background/60 backdrop-blur-[2px] flex items-center justify-center">
-            <Badge variant="secondary" className="text-xs px-2 py-1">
-              <Wrench className="h-3 w-3 mr-1" />
+          <div className="absolute inset-0 bg-background/70 backdrop-blur-[2px] flex items-center justify-center">
+            <Badge variant="secondary" className="text-xs px-3 py-1.5">
+              <Wrench className="h-3.5 w-3.5 mr-1.5" />
               Manutenção
             </Badge>
           </div>
         )}
 
-        {/* Locked Overlay */}
+        {/* Locked Overlay on Hover */}
         {!isPurchased && !canPurchase.allowed && !isUnavailable && (
-          <div className="absolute inset-0 bg-background/40 backdrop-blur-[1px] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-            <Badge variant="secondary" className="text-xs px-2 py-1">
-              <Lock className="h-3 w-3 mr-1" />
+          <div className="absolute inset-0 bg-background/50 backdrop-blur-[1px] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            <Badge variant="secondary" className="text-xs px-3 py-1.5">
+              <Lock className="h-3.5 w-3.5 mr-1.5" />
               {canPurchase.reason}
             </Badge>
           </div>
         )}
       </div>
 
-      {/* Product Info */}
-      <div className="space-y-0.5">
-        <h3 className="text-sm font-semibold leading-tight line-clamp-2 group-hover:text-primary transition-colors">
+      {/* Product Info Below Card */}
+      <div className="mt-3 space-y-1">
+        <h3 className="text-sm font-bold leading-tight line-clamp-2 uppercase tracking-wide">
           {formatName(product.name)}
         </h3>
         <button 
-          className="text-primary text-xs font-medium hover:underline flex items-center gap-1"
+          className="text-primary text-xs font-medium hover:underline"
           onClick={(e) => {
             e.stopPropagation();
             onSelect();
