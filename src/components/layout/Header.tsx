@@ -7,6 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { NotificationsDropdown } from "@/components/NotificationsDropdown";
 import { ChatModal } from "@/components/ChatModal";
+import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 
 const getBadgeVariant = (rank: string) => {
   switch (rank?.toLowerCase()) {
@@ -21,6 +22,7 @@ const getBadgeVariant = (rank: string) => {
 export function Header() {
   const { userProfile } = useAuth();
   const [chatOpen, setChatOpen] = useState(false);
+  const { unreadCount } = useUnreadMessages();
 
   return (
     <>
@@ -42,7 +44,7 @@ export function Header() {
           {/* Theme Toggle */}
           <ThemeToggle />
           
-          {/* Chat Button */}
+          {/* Chat Button with Badge */}
           <Button
             variant="ghost"
             size="icon"
@@ -50,6 +52,11 @@ export function Header() {
             className="relative"
           >
             <MessageCircle className="h-5 w-5" />
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground">
+                {unreadCount > 99 ? '99+' : unreadCount}
+              </span>
+            )}
           </Button>
           
           {/* Notifications */}
