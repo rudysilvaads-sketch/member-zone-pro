@@ -54,6 +54,8 @@ export interface Achievement {
   condition?: string;
 }
 
+export type ProductCategory = 'avatars' | 'items' | 'benefits' | 'courses' | 'other';
+
 export interface Product {
   id: string;
   name: string;
@@ -61,6 +63,7 @@ export interface Product {
   price: number;
   image: string;
   available: boolean;
+  category?: ProductCategory;
   requiredRank?: string;
   featured?: boolean;
   stock?: number;
@@ -305,6 +308,7 @@ export const initializeDefaultData = async () => {
       price: 1500,
       image: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&h=250&fit=crop',
       available: true,
+      category: 'courses',
       featured: true,
     },
     {
@@ -313,6 +317,7 @@ export const initializeDefaultData = async () => {
       price: 3000,
       image: 'https://images.unsplash.com/photo-1552581234-26160f608093?w=400&h=250&fit=crop',
       available: true,
+      category: 'benefits',
       requiredRank: 'Platinum',
     },
     {
@@ -321,6 +326,32 @@ export const initializeDefaultData = async () => {
       price: 500,
       image: 'https://images.unsplash.com/photo-1618401471353-b98afee0b2eb?w=400&h=250&fit=crop',
       available: true,
+      category: 'items',
+    },
+    {
+      name: 'Avatar Premium',
+      description: 'Avatar exclusivo para seu perfil',
+      price: 800,
+      image: 'https://images.unsplash.com/photo-1566837945700-30057527ade0?w=400&h=250&fit=crop',
+      available: true,
+      category: 'avatars',
+      featured: true,
+    },
+    {
+      name: 'Acesso Antecipado',
+      description: 'Acesse novos recursos antes de todos',
+      price: 2000,
+      image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=250&fit=crop',
+      available: true,
+      category: 'benefits',
+    },
+    {
+      name: 'Tema Personalizado',
+      description: 'Desbloqueie temas exclusivos para o dashboard',
+      price: 600,
+      image: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400&h=250&fit=crop',
+      available: true,
+      category: 'items',
     },
   ];
   
