@@ -2,12 +2,11 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { Crown, Mail, Lock, User, AlertCircle, Gift, Sparkles, Trophy, Zap, ArrowLeft, Loader2, CheckCircle } from 'lucide-react';
+import { Mail, Lock, User, AlertCircle, Gift, Sparkles, Loader2, CheckCircle, Shield, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 import { LaCasaLogo } from '@/components/LaCasaLogo';
 
@@ -18,6 +17,7 @@ export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [displayName, setDisplayName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -64,7 +64,6 @@ export default function Auth() {
     } catch (err: any) {
       console.error('Auth error:', err);
       
-      // Handle Firebase auth errors
       switch (err.code) {
         case 'auth/user-not-found':
           setError('Usuário não encontrado');
@@ -93,102 +92,54 @@ export default function Auth() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex">
-      {/* Left Side - Branding */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-primary/20 via-background to-accent/10 p-12 flex-col justify-between relative overflow-hidden">
-        {/* Decorative Elements */}
-        <div className="absolute top-20 right-20 w-72 h-72 bg-primary/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-20 left-10 w-96 h-96 bg-accent/10 rounded-full blur-3xl" />
-        
-        {/* Logo */}
-        <div className="relative z-10">
-          <LaCasaLogo size="xl" />
-        </div>
-        
-        {/* Features */}
-        <div className="relative z-10 space-y-8">
-          <h1 className="text-4xl font-bold leading-tight">
-            Sua jornada de
-            <br />
-            <span className="text-primary">sucesso</span> começa aqui
-          </h1>
-          
-          <div className="space-y-4">
-            <div className="flex items-center gap-4 p-4 rounded-xl bg-card/50 backdrop-blur-sm border border-border/50">
-              <div className="h-10 w-10 rounded-lg bg-primary/20 flex items-center justify-center">
-                <Trophy className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <h3 className="font-semibold">Sistema de Ranking</h3>
-                <p className="text-sm text-muted-foreground">Suba de nível e destaque-se</p>
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-4 p-4 rounded-xl bg-card/50 backdrop-blur-sm border border-border/50">
-              <div className="h-10 w-10 rounded-lg bg-primary/20 flex items-center justify-center">
-                <Zap className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <h3 className="font-semibold">Missões Diárias</h3>
-                <p className="text-sm text-muted-foreground">Complete tarefas e ganhe recompensas</p>
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-4 p-4 rounded-xl bg-card/50 backdrop-blur-sm border border-border/50">
-              <div className="h-10 w-10 rounded-lg bg-primary/20 flex items-center justify-center">
-                <Sparkles className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <h3 className="font-semibold">Produtos Exclusivos</h3>
-                <p className="text-sm text-muted-foreground">Acesse conteúdos premium</p>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <div className="relative z-10 space-y-2">
-          <p className="text-sm text-muted-foreground">
-            © 2024 La Casa Members Club. Todos os direitos reservados.
-          </p>
-          <div className="flex gap-4 text-sm">
-            <Link to="/terms" className="text-muted-foreground hover:text-primary transition-colors">
-              Termos de Uso
-            </Link>
-            <Link to="/privacy" className="text-muted-foreground hover:text-primary transition-colors">
-              Privacidade
-            </Link>
-          </div>
-        </div>
+    <div className="min-h-screen bg-[#0a0a0a] flex flex-col items-center justify-center p-4 relative overflow-hidden">
+      {/* Background Effects */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[#0a0a0a] via-[#111] to-[#0a0a0a]" />
+      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#BFFF00]/5 rounded-full blur-[150px]" />
+      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#BFFF00]/3 rounded-full blur-[150px]" />
+      
+      {/* Logo */}
+      <div className="relative z-10 mb-8">
+        <LaCasaLogo size="xl" />
       </div>
       
-      {/* Right Side - Auth Form */}
-      <div className="flex-1 flex items-center justify-center p-6 lg:p-12">
-        <div className="w-full max-w-md space-y-8">
-          {/* Mobile Logo */}
-          <div className="lg:hidden text-center mb-6">
-            <LaCasaLogo size="lg" />
+      {/* Glass Card */}
+      <div className="relative z-10 w-full max-w-md">
+        <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-8 shadow-2xl">
+          {/* Badge */}
+          <div className="flex justify-center mb-6">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#BFFF00]/10 border border-[#BFFF00]/20">
+              <Sparkles className="h-4 w-4 text-[#BFFF00]" />
+              <span className="text-sm text-[#BFFF00] font-medium">Área de Membros</span>
+            </div>
           </div>
           
           {/* Header */}
-          <div className="text-center lg:text-left">
-            <h2 className="text-3xl font-bold">
-              {isLogin ? 'Bem-vindo de volta!' : 'Crie sua conta'}
+          <div className="text-center mb-6">
+            <h2 className="text-2xl font-bold text-white">
+              {isLogin ? 'Bem-vindo de volta' : 'Crie sua conta'}
             </h2>
-            <p className="text-muted-foreground mt-2">
-              {isLogin 
-                ? 'Entre para acessar sua área exclusiva'
-                : referralCode
-                  ? 'Você foi convidado para a nossa comunidade!'
-                  : 'Junte-se à nossa comunidade exclusiva'
-              }
+            <p className="text-white/60 mt-2 text-sm">
+              {isLogin ? (
+                <>
+                  <span className="text-[#BFFF00]">Estratégia, performance</span> e <span className="text-[#BFFF00]">conversão</span>: seu box completo para <span className="text-white">vender mais</span>
+                </>
+              ) : referralCode ? (
+                'Você foi convidado para a nossa comunidade!'
+              ) : (
+                'Junte-se à nossa comunidade exclusiva'
+              )}
+            </p>
+            <p className="text-white/40 text-xs mt-1">
+              {isLogin ? 'Acesse sua conta para continuar' : 'Preencha os dados abaixo'}
             </p>
           </div>
           
           {/* Referral Badge */}
           {referralCode && !isLogin && (
-            <div className="flex items-center justify-center gap-2 p-3 rounded-xl bg-primary/10 border border-primary/20">
-              <Gift className="h-5 w-5 text-primary" />
-              <span className="text-sm text-primary font-medium">
+            <div className="flex items-center justify-center gap-2 p-3 rounded-xl bg-[#BFFF00]/10 border border-[#BFFF00]/20 mb-6">
+              <Gift className="h-5 w-5 text-[#BFFF00]" />
+              <span className="text-sm text-[#BFFF00] font-medium">
                 Convite especial aplicado!
               </span>
             </div>
@@ -196,67 +147,54 @@ export default function Auth() {
           
           {/* Error Message */}
           {error && (
-            <div className="flex items-center gap-3 p-4 rounded-xl bg-destructive/10 border border-destructive/20">
-              <AlertCircle className="h-5 w-5 text-destructive shrink-0" />
-              <span className="text-sm text-destructive">{error}</span>
+            <div className="flex items-center gap-3 p-4 rounded-xl bg-red-500/10 border border-red-500/20 mb-6">
+              <AlertCircle className="h-5 w-5 text-red-400 shrink-0" />
+              <span className="text-sm text-red-400">{error}</span>
             </div>
           )}
           
           {/* Auth Form */}
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-4">
             {!isLogin && (
               <div className="space-y-2">
-                <Label htmlFor="name" className="text-sm font-medium">Nome completo</Label>
+                <Label htmlFor="name" className="text-sm font-medium text-white/80">Nome completo</Label>
                 <div className="relative">
-                  <User className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+                  <User className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-white/40" />
                   <Input
                     id="name"
                     type="text"
                     placeholder="Digite seu nome"
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value)}
-                    className="pl-12 h-12 rounded-xl bg-secondary/50 border-border/50"
+                    className="pl-12 h-12 rounded-xl bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-[#BFFF00]/50 focus:ring-[#BFFF00]/20"
                   />
                 </div>
               </div>
             )}
             
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-sm font-medium">Email</Label>
+              <Label htmlFor="email" className="text-sm font-medium text-white/80">E-mail</Label>
               <div className="relative">
-                <Mail className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+                <Mail className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-white/40" />
                 <Input
                   id="email"
                   type="email"
                   placeholder="seu@email.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="pl-12 h-12 rounded-xl bg-secondary/50 border-border/50"
+                  className="pl-12 h-12 rounded-xl bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-[#BFFF00]/50 focus:ring-[#BFFF00]/20"
                   required
                 />
               </div>
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-sm font-medium">Senha</Label>
-              <div className="relative">
-                <Lock className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="pl-12 h-12 rounded-xl bg-secondary/50 border-border/50"
-                  required
-                  minLength={6}
-                />
-              </div>
-              {isLogin && (
-                <div className="text-right">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password" className="text-sm font-medium text-white/80">Senha</Label>
+                {isLogin && (
                   <button 
                     type="button" 
-                    className="text-sm text-primary hover:underline"
+                    className="text-xs text-[#BFFF00] hover:underline"
                     onClick={() => {
                       setResetEmail(email);
                       setResetDialogOpen(true);
@@ -265,8 +203,28 @@ export default function Auth() {
                   >
                     Esqueceu a senha?
                   </button>
-                </div>
-              )}
+                )}
+              </div>
+              <div className="relative">
+                <Lock className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-white/40" />
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="pl-12 pr-12 h-12 rounded-xl bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-[#BFFF00]/50 focus:ring-[#BFFF00]/20"
+                  required
+                  minLength={6}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/60 transition-colors"
+                >
+                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                </button>
+              </div>
             </div>
             
             {!isLogin && (
@@ -275,18 +233,18 @@ export default function Auth() {
                   id="terms"
                   checked={acceptedTerms}
                   onCheckedChange={(checked) => setAcceptedTerms(checked === true)}
-                  className="mt-0.5"
+                  className="mt-0.5 border-white/20 data-[state=checked]:bg-[#BFFF00] data-[state=checked]:border-[#BFFF00]"
                 />
                 <label
                   htmlFor="terms"
-                  className="text-sm text-muted-foreground leading-relaxed cursor-pointer"
+                  className="text-sm text-white/60 leading-relaxed cursor-pointer"
                 >
                   Li e aceito os{' '}
-                  <Link to="/terms" className="text-primary hover:underline" target="_blank">
+                  <Link to="/terms" className="text-[#BFFF00] hover:underline" target="_blank">
                     Termos de Uso
                   </Link>{' '}
                   e a{' '}
-                  <Link to="/privacy" className="text-primary hover:underline" target="_blank">
+                  <Link to="/privacy" className="text-[#BFFF00] hover:underline" target="_blank">
                     Política de Privacidade
                   </Link>
                 </label>
@@ -295,12 +253,12 @@ export default function Auth() {
             
             <Button
               type="submit" 
-              className="w-full h-12 rounded-xl text-base font-semibold bg-primary hover:bg-primary/90" 
+              className="w-full h-12 rounded-xl text-base font-semibold bg-[#BFFF00] hover:bg-[#BFFF00]/90 text-black transition-all duration-300 shadow-[0_0_30px_rgba(191,255,0,0.3)] hover:shadow-[0_0_40px_rgba(191,255,0,0.5)]" 
               disabled={loading}
             >
               {loading ? (
                 <div className="flex items-center gap-2">
-                  <div className="h-5 w-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                  <Loader2 className="h-5 w-5 animate-spin" />
                   Carregando...
                 </div>
               ) : isLogin ? (
@@ -312,7 +270,7 @@ export default function Auth() {
           </form>
           
           {/* Toggle Auth Mode */}
-          <p className="text-center text-sm text-muted-foreground">
+          <p className="text-center text-sm text-white/60 mt-6">
             {isLogin ? 'Não tem uma conta?' : 'Já tem uma conta?'}{' '}
             <button
               type="button"
@@ -320,12 +278,18 @@ export default function Auth() {
                 setIsLogin(!isLogin);
                 setError('');
               }}
-              className="text-primary hover:underline font-semibold"
+              className="text-[#BFFF00] hover:underline font-semibold"
             >
               {isLogin ? 'Criar conta' : 'Fazer login'}
             </button>
           </p>
         </div>
+      </div>
+      
+      {/* Footer */}
+      <div className="relative z-10 mt-8 flex items-center gap-2 text-white/40 text-xs">
+        <Shield className="h-4 w-4" />
+        <span>Protegido por criptografia de ponta a ponta</span>
       </div>
 
       {/* Reset Password Dialog */}
@@ -335,13 +299,13 @@ export default function Auth() {
           setResetSent(false);
         }
       }}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md bg-[#1a1a1a] border-white/10">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Mail className="h-5 w-5 text-primary" />
+            <DialogTitle className="flex items-center gap-2 text-white">
+              <Mail className="h-5 w-5 text-[#BFFF00]" />
               Recuperar Senha
             </DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="text-white/60">
               {resetSent 
                 ? "Email enviado! Verifique sua caixa de entrada."
                 : "Digite seu email para receber o link de recuperação."
@@ -351,16 +315,19 @@ export default function Auth() {
 
           {resetSent ? (
             <div className="py-8 text-center">
-              <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                <CheckCircle className="h-8 w-8 text-primary" />
+              <div className="mx-auto w-16 h-16 rounded-full bg-[#BFFF00]/10 flex items-center justify-center mb-4">
+                <CheckCircle className="h-8 w-8 text-[#BFFF00]" />
               </div>
-              <h3 className="font-semibold text-lg mb-2">Email Enviado!</h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                Enviamos um link de recuperação para <strong>{resetEmail}</strong>.
+              <h3 className="font-semibold text-lg mb-2 text-white">Email Enviado!</h3>
+              <p className="text-sm text-white/60 mb-4">
+                Enviamos um link de recuperação para <strong className="text-white">{resetEmail}</strong>.
                 <br />
                 Verifique sua caixa de entrada e spam.
               </p>
-              <Button onClick={() => setResetDialogOpen(false)} className="w-full">
+              <Button 
+                onClick={() => setResetDialogOpen(false)} 
+                className="w-full bg-[#BFFF00] hover:bg-[#BFFF00]/90 text-black"
+              >
                 Voltar ao Login
               </Button>
             </div>
@@ -368,16 +335,16 @@ export default function Auth() {
             <>
               <div className="space-y-4 py-4">
                 <div className="space-y-2">
-                  <Label htmlFor="reset-email">Email</Label>
+                  <Label htmlFor="reset-email" className="text-white/80">Email</Label>
                   <div className="relative">
-                    <Mail className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+                    <Mail className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-white/40" />
                     <Input
                       id="reset-email"
                       type="email"
                       placeholder="seu@email.com"
                       value={resetEmail}
                       onChange={(e) => setResetEmail(e.target.value)}
-                      className="pl-12 h-12 rounded-xl bg-secondary/50 border-border/50"
+                      className="pl-12 h-12 rounded-xl bg-white/5 border-white/10 text-white placeholder:text-white/30"
                       required
                     />
                   </div>
@@ -385,7 +352,7 @@ export default function Auth() {
               </div>
 
               <DialogFooter className="gap-2">
-                <Button variant="outline" onClick={() => setResetDialogOpen(false)}>
+                <Button variant="outline" onClick={() => setResetDialogOpen(false)} className="border-white/10 text-white hover:bg-white/5">
                   Cancelar
                 </Button>
                 <Button 
@@ -411,6 +378,7 @@ export default function Auth() {
                     }
                   }}
                   disabled={resetLoading}
+                  className="bg-[#BFFF00] hover:bg-[#BFFF00]/90 text-black"
                 >
                   {resetLoading ? (
                     <>
