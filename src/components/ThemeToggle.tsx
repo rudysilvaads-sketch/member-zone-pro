@@ -1,5 +1,4 @@
-import { Moon, Sun, Monitor, Palette, Waves, Trees, Sunset } from "lucide-react";
-import { useTheme } from "next-themes";
+import { Moon, Sun, Monitor, Waves, Trees, Sunset, Loader2, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -9,6 +8,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useEffect } from "react";
+import { useThemePreference } from "@/hooks/useThemePreference";
 
 const themes = [
   { id: "light", label: "Claro", icon: Sun, color: "text-amber-500" },
@@ -20,7 +20,7 @@ const themes = [
 ];
 
 export function ThemeToggle() {
-  const { setTheme, theme } = useTheme();
+  const { theme, setTheme, isSaving } = useThemePreference();
 
   // Apply theme class to document
   useEffect(() => {
@@ -32,7 +32,7 @@ export function ThemeToggle() {
     // Add the custom theme class if it's one of our special themes
     if (theme === "ocean") {
       root.classList.add("theme-ocean");
-      root.classList.add("dark"); // Base on dark mode
+      root.classList.add("dark");
     } else if (theme === "forest") {
       root.classList.add("theme-forest");
       root.classList.add("dark");
@@ -48,22 +48,30 @@ export function ThemeToggle() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-9 w-9">
-          <CurrentIcon className={`h-4 w-4 ${currentTheme.color}`} />
+        <Button variant="ghost" size="icon" className="h-9 w-9 relative">
+          {isSaving ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <CurrentIcon className={`h-4 w-4 ${currentTheme.color}`} />
+          )}
           <span className="sr-only">Alternar tema</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-40">
+      <DropdownMenuContent align="end" className="w-44">
         {themes.slice(0, 2).map((t) => {
           const Icon = t.icon;
+          const isActive = theme === t.id;
           return (
             <DropdownMenuItem 
               key={t.id}
               onClick={() => setTheme(t.id)} 
-              className={`gap-2 ${theme === t.id ? 'bg-accent' : ''}`}
+              className={`gap-2 justify-between ${isActive ? 'bg-accent' : ''}`}
             >
-              <Icon className={`h-4 w-4 ${t.color}`} />
-              {t.label}
+              <div className="flex items-center gap-2">
+                <Icon className={`h-4 w-4 ${t.color}`} />
+                {t.label}
+              </div>
+              {isActive && <Check className="h-4 w-4 text-primary" />}
             </DropdownMenuItem>
           );
         })}
@@ -76,14 +84,18 @@ export function ThemeToggle() {
         
         {themes.slice(2, 5).map((t) => {
           const Icon = t.icon;
+          const isActive = theme === t.id;
           return (
             <DropdownMenuItem 
               key={t.id}
               onClick={() => setTheme(t.id)} 
-              className={`gap-2 ${theme === t.id ? 'bg-accent' : ''}`}
+              className={`gap-2 justify-between ${isActive ? 'bg-accent' : ''}`}
             >
-              <Icon className={`h-4 w-4 ${t.color}`} />
-              {t.label}
+              <div className="flex items-center gap-2">
+                <Icon className={`h-4 w-4 ${t.color}`} />
+                {t.label}
+              </div>
+              {isActive && <Check className="h-4 w-4 text-primary" />}
             </DropdownMenuItem>
           );
         })}
@@ -92,10 +104,13 @@ export function ThemeToggle() {
         
         <DropdownMenuItem 
           onClick={() => setTheme("system")} 
-          className={`gap-2 ${theme === 'system' ? 'bg-accent' : ''}`}
+          className={`gap-2 justify-between ${theme === 'system' ? 'bg-accent' : ''}`}
         >
-          <Monitor className="h-4 w-4 text-muted-foreground" />
-          Sistema
+          <div className="flex items-center gap-2">
+            <Monitor className="h-4 w-4 text-muted-foreground" />
+            Sistema
+          </div>
+          {theme === 'system' && <Check className="h-4 w-4 text-primary" />}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
