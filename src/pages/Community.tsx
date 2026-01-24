@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from "react";
+import { Link } from "react-router-dom";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Header } from "@/components/layout/Header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -514,7 +515,11 @@ const Community = () => {
                       const rankStyle = rankConfig[user.rank] || rankConfig.bronze;
                       
                       return (
-                        <div key={user.uid} className="flex items-center gap-3">
+                        <Link 
+                          key={user.uid} 
+                          to={`/profile/${user.uid}`}
+                          className="flex items-center gap-3 hover:bg-muted/50 p-2 rounded-lg -mx-2 transition-colors"
+                        >
                           <Avatar className="h-10 w-10">
                             <AvatarImage src={user.photoURL || undefined} />
                             <AvatarFallback className={rankStyle.bg}>
@@ -527,10 +532,7 @@ const Community = () => {
                               {user.rank?.charAt(0).toUpperCase() + user.rank?.slice(1)}
                             </Badge>
                           </div>
-                          <Button variant="ghost" size="icon" className="shrink-0">
-                            <UserPlus className="h-4 w-4" />
-                          </Button>
-                        </div>
+                        </Link>
                       );
                     })}
                   </div>
@@ -678,16 +680,23 @@ const PostCard = ({ post, currentUserId, onLike, onDelete, onOpenComments, forma
       <Card>
         <CardContent className="p-4">
           <div className="flex gap-4">
-            <Avatar className="h-12 w-12">
-              <AvatarImage src={post.authorAvatar || undefined} />
-              <AvatarFallback className={rankStyle.bg}>
-                {post.authorName?.charAt(0).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
+            <Link to={`/profile/${post.authorId}`}>
+              <Avatar className="h-12 w-12 cursor-pointer hover:ring-2 hover:ring-primary/50 transition-all">
+                <AvatarImage src={post.authorAvatar || undefined} />
+                <AvatarFallback className={rankStyle.bg}>
+                  {post.authorName?.charAt(0).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+            </Link>
             <div className="flex-1">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-semibold">{post.authorName}</span>
+                  <Link 
+                    to={`/profile/${post.authorId}`}
+                    className="font-semibold hover:text-primary transition-colors"
+                  >
+                    {post.authorName}
+                  </Link>
                   <Badge className={cn("text-xs", rankStyle.bg, rankStyle.color)}>
                     {post.authorRank?.charAt(0).toUpperCase() + post.authorRank?.slice(1)}
                   </Badge>
