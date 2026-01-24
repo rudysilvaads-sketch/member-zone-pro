@@ -23,85 +23,85 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange themes={["light", "dark", "ocean", "forest", "sunset", "system"]}>
-      <AuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/admin/setup" element={<AdminSetup />} />
-            <Route 
-              path="/admin" 
-              element={
-                <ProtectedRoute>
-                  <AdminPanel />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/" 
-              element={
-                <ProtectedRoute>
-                  <Index />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/ranking" 
-              element={
-                <ProtectedRoute>
-                  <Ranking />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/achievements" 
-              element={
-                <ProtectedRoute>
-                  <Achievements />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/products" 
-              element={
-                <ProtectedRoute>
-                  <Products />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/community" 
-              element={
-                <ProtectedRoute>
-                  <Community />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/settings" 
-              element={
-                <ProtectedRoute>
-                  <Settings />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/profile/:userId" 
-              element={
-                <ProtectedRoute>
-                  <Profile />
-                </ProtectedRoute>
-              } 
-            />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
-    </AuthProvider>
-  </ThemeProvider>
+      <BrowserRouter>
+        <AuthProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <Routes>
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/admin/setup" element={<AdminSetup />} />
+              <Route 
+                path="/admin" 
+                element={
+                  <ProtectedRoute>
+                    <AdminPanel />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/" 
+                element={
+                  <ProtectedRoute>
+                    <Index />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/ranking" 
+                element={
+                  <ProtectedRoute>
+                    <Ranking />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/achievements" 
+                element={
+                  <ProtectedRoute>
+                    <Achievements />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/products" 
+                element={
+                  <ProtectedRoute>
+                    <Products />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/community" 
+                element={
+                  <ProtectedRoute>
+                    <Community />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/settings" 
+                element={
+                  <ProtectedRoute>
+                    <Settings />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/profile/:userId" 
+                element={
+                  <ProtectedRoute>
+                    <Profile />
+                  </ProtectedRoute>
+                } 
+              />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </TooltipProvider>
+        </AuthProvider>
+      </BrowserRouter>
+    </ThemeProvider>
   </QueryClientProvider>
 );
 
