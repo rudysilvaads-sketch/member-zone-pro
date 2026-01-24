@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { 
-  Users, MessageSquare, Heart, TrendingUp, UserPlus, Send, Clock, 
+  Users, MessageSquare, Heart, TrendingUp, Send, Clock, 
   MoreHorizontal, Trash2, Loader2, ImagePlus, X
 } from "lucide-react";
 import {
@@ -37,6 +37,9 @@ import {
 } from "@/lib/firebaseServices";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { OnlineIndicator } from "@/components/OnlineIndicator";
+import { ChatModal } from "@/components/ChatModal";
+import { usePresence } from "@/hooks/usePresence";
 
 const rankConfig: Record<string, { color: string; bg: string }> = {
   bronze: { color: "text-orange-400", bg: "bg-orange-500/20" },
@@ -48,6 +51,7 @@ const rankConfig: Record<string, { color: string; bg: string }> = {
 
 const Community = () => {
   const { userProfile } = useAuth();
+  const { isUserOnline, onlineCount } = usePresence();
   const [topUsers, setTopUsers] = useState<(UserProfile & { position: number })[]>([]);
   const [posts, setPosts] = useState<Post[]>([]);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -65,6 +69,16 @@ const Community = () => {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Chat state
+  const [chatOpen, setChatOpen] = useState(false);
+  const [chatTarget, setChatTarget] = useState<{ uid: string; displayName: string; photoURL: string | null } | null>(null);
+
+  const openChatWithUser = (user: { uid: string; displayName: string; photoURL: string | null }) => {
+    if (user.uid === userProfile?.uid) return; // Can't chat with yourself
+    setChatTarget(user);
+    setChatOpen(true);
+  };
 
   const fetchPosts = useCallback(async () => {
     try {
@@ -301,6 +315,7 @@ const Community = () => {
   };
 
   return (
+    <>
     <div className="min-h-screen bg-background">
       <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
       
@@ -489,6 +504,10 @@ const Community = () => {
                     <span className="font-semibold">{posts.length}</span>
                   </div>
                   <div className="flex justify-between">
+                    <span className="text-muted-foreground">Online agora</span>
+                    <span className="font-semibold text-green-500">{onlineCount}</span>
+                  </div>
+                  <div className="flex justify-between">
                     <span className="text-muted-foreground">Membros ativos</span>
                     <span className="font-semibold">{topUsers.length}+</span>
                   </div>
@@ -515,24 +534,45 @@ const Community = () => {
                       const rankStyle = rankConfig[user.rank] || rankConfig.bronze;
                       
                       return (
-                        <Link 
-                          key={user.uid} 
-                          to={`/profile/${user.uid}`}
+                        <div 
+                          key={user.uid}
                           className="flex items-center gap-3 hover:bg-muted/50 p-2 rounded-lg -mx-2 transition-colors"
                         >
-                          <Avatar className="h-10 w-10">
-                            <AvatarImage src={user.photoURL || undefined} />
-                            <AvatarFallback className={rankStyle.bg}>
-                              {user.displayName?.charAt(0).toUpperCase()}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="flex-1 min-w-0">
+                          <Link to={`/profile/${user.uid}`} className="relative">
+                            <Avatar className="h-10 w-10">
+                              <AvatarImage src={user.photoURL || undefined} />
+                              <AvatarFallback className={rankStyle.bg}>
+                                {user.displayName?.charAt(0).toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
+                            <OnlineIndicator 
+                              isOnline={isUserOnline(user.uid)} 
+                              size="sm"
+                              className="bottom-0 right-0"
+                            />
+                          </Link>
+                          <Link to={`/profile/${user.uid}`} className="flex-1 min-w-0">
                             <p className="font-medium truncate">{user.displayName}</p>
                             <Badge className={cn("text-xs", rankStyle.bg, rankStyle.color)}>
                               {user.rank?.charAt(0).toUpperCase() + user.rank?.slice(1)}
                             </Badge>
-                          </div>
-                        </Link>
+                          </Link>
+                          {user.uid !== userProfile?.uid && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => openChatWithUser({
+                                uid: user.uid,
+                                displayName: user.displayName,
+                                photoURL: user.photoURL,
+                              })}
+                              className="shrink-0"
+                              title="Enviar mensagem"
+                            >
+                              <MessageSquare className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
                       );
                     })}
                   </div>
@@ -650,7 +690,18 @@ const Community = () => {
 
       {/* Image Lightbox */}
       <ImageLightbox />
+      
+      {/* Chat Modal */}
+      <ChatModal 
+        open={chatOpen} 
+        onOpenChange={(open) => {
+          setChatOpen(open);
+          if (!open) setChatTarget(null);
+        }}
+        targetUser={chatTarget}
+      />
     </div>
+    </>
   );
 };
 
@@ -785,6 +836,11 @@ const PostCard = ({ post, currentUserId, onLike, onDelete, onOpenComments, forma
       </Dialog>
     </>
   );
+};
+
+// Add ChatModal at the end of Community component, before the closing </div>
+const CommunityPage = () => {
+  return <Community />;
 };
 
 export default Community;
