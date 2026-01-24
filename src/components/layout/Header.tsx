@@ -26,15 +26,15 @@ export function Header() {
 
   return (
     <>
-      <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-background/80 backdrop-blur-md px-6">
+      <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-[#BFFF00]/10 bg-[#0a0a0a]/95 backdrop-blur-xl px-6">
         {/* Search */}
         <div className="flex items-center gap-4 flex-1 max-w-xl">
           <div className="relative w-full">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" />
             <input
               type="text"
               placeholder="Buscar..."
-              className="h-10 w-full rounded-lg border border-input bg-secondary pl-10 pr-4 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              className="h-10 w-full rounded-xl border border-[#BFFF00]/10 bg-white/5 pl-10 pr-4 text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-1 focus:ring-[#BFFF00]/50 focus:border-[#BFFF00]/30 transition-all"
             />
           </div>
         </div>
@@ -49,11 +49,11 @@ export function Header() {
             variant="ghost"
             size="icon"
             onClick={() => setChatOpen(true)}
-            className="relative"
+            className="relative text-white/70 hover:text-[#BFFF00] hover:bg-[#BFFF00]/5"
           >
             <MessageCircle className="h-5 w-5" />
             {unreadCount > 0 && (
-              <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground">
+              <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#BFFF00] text-[10px] font-bold text-[#0a0a0a]">
                 {unreadCount > 99 ? '99+' : unreadCount}
               </span>
             )}
@@ -63,19 +63,19 @@ export function Header() {
           <NotificationsDropdown />
 
           {/* User Menu */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 pl-2 border-l border-[#BFFF00]/10">
             <div className="hidden md:block text-right">
-              <p className="text-sm font-medium">{userProfile?.displayName || 'Membro'}</p>
+              <p className="text-sm font-medium text-white">{userProfile?.displayName || 'Membro'}</p>
               <div className="flex items-center gap-1 justify-end">
                 <Badge variant={getBadgeVariant(userProfile?.rank || 'bronze') as any} className="text-[10px] px-1.5 py-0">
                   {userProfile?.rank?.toUpperCase() || 'BRONZE'}
                 </Badge>
-                <span className="text-xs text-muted-foreground">{userProfile?.points?.toLocaleString() || 0} pts</span>
+                <span className="text-xs text-white/50">{userProfile?.points?.toLocaleString() || 0} pts</span>
               </div>
             </div>
-            <Avatar className="h-10 w-10 border-2 border-primary">
+            <Avatar className="h-10 w-10 border-2 border-[#BFFF00] shadow-[0_0_10px_rgba(191,255,0,0.3)]">
               <AvatarImage src={userProfile?.photoURL || undefined} />
-              <AvatarFallback>{userProfile?.displayName?.[0] || 'M'}</AvatarFallback>
+              <AvatarFallback className="bg-[#BFFF00]/20 text-[#BFFF00]">{userProfile?.displayName?.[0] || 'M'}</AvatarFallback>
             </Avatar>
           </div>
         </div>

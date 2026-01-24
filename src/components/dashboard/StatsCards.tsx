@@ -16,7 +16,6 @@ export function StatsCards({ userRank, points, achievements, streakDays }: Stats
       change: userRank && userRank <= 10 ? "Top 10!" : "",
       changeType: "positive" as const,
       icon: Trophy,
-      iconColor: "text-primary",
     },
     {
       label: "Pontos Totais",
@@ -24,7 +23,6 @@ export function StatsCards({ userRank, points, achievements, streakDays }: Stats
       change: "",
       changeType: "positive" as const,
       icon: Star,
-      iconColor: "text-primary",
     },
     {
       label: "Conquistas",
@@ -32,7 +30,6 @@ export function StatsCards({ userRank, points, achievements, streakDays }: Stats
       change: "",
       changeType: "positive" as const,
       icon: Target,
-      iconColor: "text-accent",
     },
     {
       label: "Streak Atual",
@@ -40,7 +37,6 @@ export function StatsCards({ userRank, points, achievements, streakDays }: Stats
       change: streakDays >= 7 ? "Incrível!" : "",
       changeType: streakDays >= 7 ? "record" as const : "positive" as const,
       icon: TrendingUp,
-      iconColor: "text-success",
     },
   ];
 
@@ -50,30 +46,30 @@ export function StatsCards({ userRank, points, achievements, streakDays }: Stats
         <Card 
           key={stat.label} 
           variant="gradient"
-          className="animate-fade-in"
+          className="animate-fade-in group hover:border-[#BFFF00]/30 transition-all duration-300"
           style={{ animationDelay: `${index * 100}ms` }}
         >
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">{stat.label}</p>
-                <p className="text-3xl font-bold">{stat.value}</p>
+                <p className="text-sm text-white/50">{stat.label}</p>
+                <p className="text-3xl font-bold text-white">{stat.value}</p>
                 {stat.change && (
                   <p
                     className={
                       stat.changeType === "positive"
-                        ? "text-success text-sm font-medium"
+                        ? "text-[#BFFF00] text-sm font-medium"
                         : stat.changeType === "record"
-                        ? "text-primary text-sm font-medium"
-                        : "text-muted-foreground text-sm"
+                        ? "text-[#BFFF00] text-sm font-medium"
+                        : "text-white/50 text-sm"
                     }
                   >
                     {stat.change}
                   </p>
                 )}
               </div>
-              <div className={`h-12 w-12 rounded-lg bg-secondary flex items-center justify-center ${stat.iconColor}`}>
-                <stat.icon className="h-6 w-6" />
+              <div className="h-12 w-12 rounded-xl bg-[#BFFF00]/10 border border-[#BFFF00]/20 flex items-center justify-center group-hover:bg-[#BFFF00]/20 group-hover:shadow-[0_0_15px_rgba(191,255,0,0.2)] transition-all duration-300">
+                <stat.icon className="h-6 w-6 text-[#BFFF00]" />
               </div>
             </div>
           </CardContent>

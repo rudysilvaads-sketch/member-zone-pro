@@ -4,16 +4,17 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const cardVariants = cva(
-  "rounded-lg border text-card-foreground",
+  "rounded-xl border text-card-foreground",
   {
     variants: {
       variant: {
-        default: "bg-card shadow-sm",
-        gradient: "bg-gradient-card border-border/50 shadow-card",
-        glass: "glass",
-        gold: "bg-gradient-card border-gold/30 shadow-glow-gold",
-        accent: "bg-gradient-card border-accent/30 shadow-glow-accent",
-        interactive: "bg-gradient-card border-border/50 shadow-card hover:border-primary/50 hover:shadow-glow-gold transition-all duration-300 cursor-pointer",
+        default: "bg-[#0a0a0a]/80 border-[#BFFF00]/10 backdrop-blur-sm",
+        gradient: "bg-[#0a0a0a]/90 border-[#BFFF00]/10 backdrop-blur-sm shadow-[0_4px_24px_rgba(0,0,0,0.5)]",
+        glass: "bg-[#0a0a0a]/70 backdrop-blur-xl border-[#BFFF00]/10",
+        gold: "bg-[#0a0a0a]/90 border-[#BFFF00]/20 shadow-[0_0_20px_rgba(191,255,0,0.1)]",
+        accent: "bg-[#0a0a0a]/90 border-[#BFFF00]/20 shadow-[0_0_20px_rgba(191,255,0,0.1)]",
+        interactive: "bg-[#0a0a0a]/80 border-[#BFFF00]/10 hover:border-[#BFFF00]/30 hover:shadow-[0_0_30px_rgba(191,255,0,0.15)] transition-all duration-300 cursor-pointer",
+        elite: "bg-[#0a0a0a]/95 border-[#BFFF00]/20 shadow-[0_0_40px_rgba(191,255,0,0.1)] backdrop-blur-xl",
       },
     },
     defaultVariants: {

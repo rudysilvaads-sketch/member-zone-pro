@@ -41,29 +41,29 @@ export function StreakCard() {
 
   return (
     <Card className="overflow-hidden">
-      <div className="bg-gradient-to-r from-orange-500/20 via-red-500/20 to-yellow-500/20 p-1">
-        <CardContent className="bg-background rounded-lg p-4">
+      <div className="bg-gradient-to-r from-[#BFFF00]/20 via-[#9ACD32]/20 to-[#BFFF00]/20 p-[1px] rounded-xl">
+        <CardContent className="bg-[#0a0a0a] rounded-xl p-4">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <div className={cn(
                 "flex h-12 w-12 items-center justify-center rounded-full",
-                streakDays >= 7 ? "bg-gradient-to-br from-orange-500 to-red-500" : "bg-orange-500/20"
+                streakDays >= 7 ? "bg-gradient-to-br from-[#BFFF00] to-[#9ACD32] shadow-[0_0_20px_rgba(191,255,0,0.4)]" : "bg-[#BFFF00]/10"
               )}>
                 <Flame className={cn(
                   "h-6 w-6",
-                  streakDays >= 7 ? "text-white" : "text-orange-500"
+                  streakDays >= 7 ? "text-[#0a0a0a]" : "text-[#BFFF00]"
                 )} />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Sequência de Login</p>
-                <p className="text-2xl font-bold">
+                <p className="text-sm text-white/50">Sequência de Login</p>
+                <p className="text-2xl font-bold text-white">
                   {streakDays} {streakDays === 1 ? 'dia' : 'dias'}
                 </p>
               </div>
             </div>
             
             {currentBonus > 1 && (
-              <Badge className="bg-gradient-to-r from-orange-500 to-red-500 text-white border-0 text-sm px-3 py-1">
+              <Badge className="bg-[#BFFF00] text-[#0a0a0a] border-0 text-sm px-3 py-1 font-bold shadow-[0_0_10px_rgba(191,255,0,0.3)]">
                 +{Math.round((currentBonus - 1) * 100)}% XP
               </Badge>
             )}
@@ -72,17 +72,17 @@ export function StreakCard() {
           {/* Progress bar */}
           {nextMilestone && (
             <div className="space-y-2">
-              <div className="flex justify-between text-xs text-muted-foreground">
+              <div className="flex justify-between text-xs text-white/50">
                 <span>{prevMilestone?.label || 'Início'}</span>
                 <span>{nextMilestone.label}</span>
               </div>
-              <div className="h-2 bg-secondary rounded-full overflow-hidden">
+              <div className="h-2 bg-white/10 rounded-full overflow-hidden">
                 <div 
-                  className="h-full bg-gradient-to-r from-orange-500 to-red-500 transition-all duration-500"
+                  className="h-full bg-gradient-to-r from-[#BFFF00] to-[#9ACD32] transition-all duration-500 shadow-[0_0_10px_rgba(191,255,0,0.4)]"
                   style={{ width: `${progress}%` }}
                 />
               </div>
-              <p className="text-xs text-center text-muted-foreground">
+              <p className="text-xs text-center text-white/50">
                 Mais {daysToNext} {daysToNext === 1 ? 'dia' : 'dias'} para {Math.round((nextMilestone.bonus - 1) * 100)}% de bônus de XP
               </p>
             </div>
@@ -90,9 +90,9 @@ export function StreakCard() {
           
           {/* Max streak reached */}
           {!nextMilestone && streakDays >= 30 && (
-            <div className="flex items-center justify-center gap-2 p-2 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 rounded-lg">
-              <Trophy className="h-4 w-4 text-yellow-500" />
-              <span className="text-sm font-medium text-yellow-500">
+            <div className="flex items-center justify-center gap-2 p-2 bg-[#BFFF00]/10 rounded-lg border border-[#BFFF00]/20">
+              <Trophy className="h-4 w-4 text-[#BFFF00]" />
+              <span className="text-sm font-medium text-[#BFFF00]">
                 Bônus máximo alcançado!
               </span>
             </div>
@@ -109,8 +109,8 @@ export function StreakCard() {
                   className={cn(
                     "flex flex-col items-center gap-1 p-2 rounded-lg flex-1 transition-all",
                     isAchieved 
-                      ? "bg-orange-500/20 text-orange-500" 
-                      : "bg-secondary/50 text-muted-foreground"
+                      ? "bg-[#BFFF00]/10 text-[#BFFF00] border border-[#BFFF00]/20" 
+                      : "bg-white/5 text-white/40"
                   )}
                 >
                   <Icon className="h-4 w-4" />
