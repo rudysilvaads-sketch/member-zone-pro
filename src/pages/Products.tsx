@@ -289,7 +289,7 @@ const Products = () => {
             </Button>
             <Button 
               onClick={handlePurchase} 
-              disabled={purchasing || !canPurchase(selectedProduct!).allowed}
+              disabled={purchasing || !selectedProduct || !canPurchase(selectedProduct).allowed}
             >
               {purchasing ? 'Processando...' : 'Confirmar Compra'}
             </Button>
