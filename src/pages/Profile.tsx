@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   User, Trophy, Target, Flame, Star, Award, ArrowLeft,
   MessageSquare, Heart, Calendar, TrendingUp, Zap, Medal,
-  CheckCircle2, Lock, Share2, Loader2, ShoppingBag, Package, ExternalLink
+  CheckCircle2, Lock, Share2, Loader2, ShoppingBag, Package, ExternalLink, Pencil
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -29,6 +29,7 @@ import { collection, query, where, orderBy, limit, getDocs } from "firebase/fire
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/AuthContext";
 import { completeMission } from "@/lib/missionService";
+import { ProductReviewDialog } from "@/components/ProductReviewDialog";
 
 const rankConfig: Record<string, { color: string; bg: string; label: string }> = {
   bronze: { color: "text-orange-400", bg: "bg-orange-500/20", label: "Bronze" },
@@ -65,6 +66,8 @@ const Profile = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [loading, setLoading] = useState(true);
   const [sharing, setSharing] = useState(false);
+  const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
+  const [selectedPurchase, setSelectedPurchase] = useState<Purchase | null>(null);
 
   useEffect(() => {
     const fetchProfileData = async () => {
@@ -483,10 +486,33 @@ const Profile = () => {
                           </Badge>
                         </div>
                         {isOwnProfile && (
-                          <Button variant="outline" size="sm" className="w-full mt-3">
-                            <ExternalLink className="h-3 w-3 mr-2" />
-                            Acessar Produto
-                          </Button>
+                          <div className="flex gap-2 mt-3">
+                            <Button variant="outline" size="sm" className="flex-1">
+                              <ExternalLink className="h-3 w-3 mr-2" />
+                              Acessar
+                            </Button>
+                            {!purchase.reviewed && (
+                              <Button 
+                                variant="secondary" 
+                                size="sm" 
+                                className="flex-1"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedPurchase(purchase);
+                                  setReviewDialogOpen(true);
+                                }}
+                              >
+                                <Star className="h-3 w-3 mr-2" />
+                                Avaliar
+                              </Button>
+                            )}
+                            {purchase.reviewed && (
+                              <Badge variant="outline" className="flex-1 justify-center py-2">
+                                <CheckCircle2 className="h-3 w-3 mr-1 text-primary" />
+                                Avaliado
+                              </Badge>
+                            )}
+                          </div>
                         )}
                       </CardContent>
                     </Card>
@@ -559,6 +585,19 @@ const Profile = () => {
           </Tabs>
         </main>
       </div>
+
+      {/* Review Dialog */}
+      <ProductReviewDialog
+        open={reviewDialogOpen}
+        onOpenChange={setReviewDialogOpen}
+        purchase={selectedPurchase}
+        onReviewSubmitted={async () => {
+          if (userId) {
+            const updatedPurchases = await getUserPurchases(userId);
+            setPurchases(updatedPurchases);
+          }
+        }}
+      />
     </div>
   );
 };
