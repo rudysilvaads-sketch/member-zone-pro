@@ -20,6 +20,7 @@ import {
   exclusiveAvatars,
   getCategoryLabel,
   getCategoryColor,
+  getStyleLabel,
 } from "@/lib/avatarData";
 
 // Sparkle particles component for exclusive avatars
@@ -240,9 +241,16 @@ export function AvatarSelector({ currentAvatarId, onAvatarChange }: AvatarSelect
                     isLegendary && "text-gradient-gold"
                   )}>{avatar.name}</h4>
                   
-                  <Badge className={cn("px-2 py-0.5", getCategoryColor(avatar.category))}>
-                    {isLegendary ? '✨ Lendário' : getCategoryLabel(avatar.category)}
-                  </Badge>
+                  <div className="flex items-center gap-2">
+                    <Badge className={cn("px-2 py-0.5", getCategoryColor(avatar.category))}>
+                      {isLegendary ? '✨ Lendário' : getCategoryLabel(avatar.category)}
+                    </Badge>
+                    {avatar.style && (
+                      <Badge variant="outline" className="px-2 py-0.5 text-xs">
+                        {getStyleLabel(avatar.style)}
+                      </Badge>
+                    )}
+                  </div>
                   
                   {avatar.description && (
                     <p className="text-sm text-muted-foreground">{avatar.description}</p>
