@@ -41,6 +41,88 @@ const Products = () => {
   const [statusFilter, setStatusFilter] = useState<'all' | 'available' | 'purchased'>('all');
   const [categoryFilter, setCategoryFilter] = useState<ProductCategory | 'all'>('all');
 
+  // Default products for display when Firebase returns empty
+  const defaultProducts: Product[] = [
+    {
+      id: 'sample-1',
+      name: 'Avatar Ninja',
+      description: 'Avatar exclusivo estilo ninja com máscara e olhos brilhantes. Mostre sua determinação!',
+      price: 800,
+      image: 'https://images.unsplash.com/photo-1618336753974-aae8e04506aa?w=400&h=400&fit=crop',
+      available: true,
+      category: 'avatars',
+      featured: true,
+    },
+    {
+      id: 'sample-2',
+      name: 'Avatar Robô',
+      description: 'Avatar futurista com design de robô cyberpunk. Perfeito para amantes de tecnologia.',
+      price: 1200,
+      image: 'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=400&h=400&fit=crop',
+      available: true,
+      category: 'avatars',
+      requiredRank: 'silver',
+    },
+    {
+      id: 'sample-3',
+      name: 'Badge Campeão',
+      description: 'Badge dourada exclusiva para exibir no seu perfil. Mostra que você é um verdadeiro campeão!',
+      price: 500,
+      image: 'https://images.unsplash.com/photo-1618401471353-b98afee0b2eb?w=400&h=400&fit=crop',
+      available: true,
+      category: 'items',
+    },
+    {
+      id: 'sample-4',
+      name: 'Tema Neon',
+      description: 'Tema visual neon cyberpunk para seu dashboard. Cores vibrantes e futuristas.',
+      price: 750,
+      image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400&h=400&fit=crop',
+      available: true,
+      category: 'items',
+      featured: true,
+    },
+    {
+      id: 'sample-5',
+      name: 'Mentoria Individual',
+      description: '1 hora de mentoria individual com um especialista da área. Tire todas suas dúvidas!',
+      price: 3000,
+      image: 'https://images.unsplash.com/photo-1552581234-26160f608093?w=400&h=400&fit=crop',
+      available: true,
+      category: 'benefits',
+      requiredRank: 'platinum',
+      featured: true,
+    },
+    {
+      id: 'sample-6',
+      name: 'Certificado Premium',
+      description: 'Certificado personalizado com selo holográfico para impressão física.',
+      price: 1500,
+      image: 'https://images.unsplash.com/photo-1589330694653-ded6df03f754?w=400&h=400&fit=crop',
+      available: true,
+      category: 'benefits',
+    },
+    {
+      id: 'sample-7',
+      name: 'Curso Avançado de Produtividade',
+      description: 'Módulos exclusivos sobre técnicas avançadas de produtividade e gestão de tempo.',
+      price: 2500,
+      image: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&h=400&fit=crop',
+      available: true,
+      category: 'courses',
+      featured: true,
+    },
+    {
+      id: 'sample-8',
+      name: 'Workshop Criatividade',
+      description: 'Workshop interativo para desenvolver seu potencial criativo e inovador.',
+      price: 1800,
+      image: 'https://images.unsplash.com/photo-1456406644174-8ddd4cd52a06?w=400&h=400&fit=crop',
+      available: true,
+      category: 'courses',
+    },
+  ];
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -48,10 +130,13 @@ const Products = () => {
           getProducts(),
           userProfile ? getUserPurchases(userProfile.uid) : Promise.resolve([])
         ]);
-        setProducts(productsData);
+        // Use default products if Firebase returns empty
+        setProducts(productsData.length > 0 ? productsData : defaultProducts);
         setPurchases(purchasesData);
       } catch (error) {
         console.error('Error fetching products:', error);
+        // Fallback to default products on error
+        setProducts(defaultProducts);
       } finally {
         setLoading(false);
       }
