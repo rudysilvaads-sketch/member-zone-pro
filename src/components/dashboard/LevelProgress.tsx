@@ -22,12 +22,12 @@ const getLevelTitle = (level: number): string => {
 };
 
 const getLevelColor = (level: number): string => {
-  if (level >= 50) return 'from-amber-400 via-orange-500 to-red-500';
-  if (level >= 40) return 'from-purple-400 via-pink-500 to-red-500';
-  if (level >= 30) return 'from-blue-400 via-purple-500 to-pink-500';
-  if (level >= 20) return 'from-cyan-400 via-blue-500 to-purple-500';
-  if (level >= 10) return 'from-green-400 via-cyan-500 to-blue-500';
-  return 'from-gray-400 via-gray-500 to-gray-600';
+  if (level >= 50) return 'from-[#BFFF00] via-[#9ACD32] to-[#7CFC00]';
+  if (level >= 40) return 'from-[#BFFF00] via-[#DFFF00] to-[#9ACD32]';
+  if (level >= 30) return 'from-[#BFFF00] to-[#9ACD32]';
+  if (level >= 20) return 'from-[#BFFF00]/90 to-[#7CFC00]/90';
+  if (level >= 10) return 'from-[#BFFF00]/80 to-[#9ACD32]/80';
+  return 'from-[#BFFF00]/60 to-[#9ACD32]/60';
 };
 
 export function LevelProgress({ xp, points }: LevelProgressProps) {
@@ -37,11 +37,11 @@ export function LevelProgress({ xp, points }: LevelProgressProps) {
   const colorGradient = getLevelColor(level);
 
   return (
-    <Card variant="accent" className="animate-fade-in overflow-hidden">
-      <div className={`absolute inset-0 bg-gradient-to-br ${colorGradient} opacity-10`} />
+    <Card variant="gradient" className="animate-fade-in overflow-hidden relative">
+      <div className="absolute inset-0 bg-gradient-to-br from-[#BFFF00]/5 to-transparent" />
       <CardHeader className="relative">
-        <CardTitle className="flex items-center gap-2">
-          <Sparkles className="h-5 w-5 text-accent" />
+        <CardTitle className="flex items-center gap-2 text-white">
+          <Sparkles className="h-5 w-5 text-[#BFFF00]" />
           Seu Nível
         </CardTitle>
       </CardHeader>
@@ -49,40 +49,40 @@ export function LevelProgress({ xp, points }: LevelProgressProps) {
         {/* Level display */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div className={`relative flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br ${colorGradient} shadow-lg`}>
-              <span className="text-3xl font-bold text-white">{level}</span>
+            <div className={`relative flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br ${colorGradient} shadow-[0_0_30px_rgba(191,255,0,0.3)]`}>
+              <span className="text-3xl font-bold text-[#0a0a0a]">{level}</span>
               <div className="absolute -bottom-1 -right-1">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-background border-2 border-accent">
-                  <Star className="h-4 w-4 text-accent" />
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#0a0a0a] border-2 border-[#BFFF00]">
+                  <Star className="h-4 w-4 text-[#BFFF00]" />
                 </div>
               </div>
             </div>
             <div>
               <Badge variant="accent" className="mb-1">{title}</Badge>
-              <p className="text-2xl font-bold">Nível {level}</p>
-              <p className="text-sm text-muted-foreground">{xp.toLocaleString()} XP total</p>
+              <p className="text-2xl font-bold text-white">Nível {level}</p>
+              <p className="text-sm text-white/50">{xp.toLocaleString()} XP total</p>
             </div>
           </div>
           
           <div className="text-right">
-            <div className="flex items-center gap-1 text-success">
+            <div className="flex items-center gap-1 text-[#BFFF00]">
               <ArrowUp className="h-4 w-4" />
               <span className="text-sm font-medium">Ativo</span>
             </div>
-            <p className="text-2xl font-bold text-primary">{points.toLocaleString()}</p>
-            <p className="text-xs text-muted-foreground">pontos</p>
+            <p className="text-2xl font-bold text-[#BFFF00]">{points.toLocaleString()}</p>
+            <p className="text-xs text-white/50">pontos</p>
           </div>
         </div>
 
         {/* Progress to next level */}
         <div className="space-y-2">
           <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">Próximo nível</span>
-            <span className="font-medium">{current.toLocaleString()} / {needed.toLocaleString()} XP</span>
+            <span className="text-white/50">Próximo nível</span>
+            <span className="font-medium text-white">{current.toLocaleString()} / {needed.toLocaleString()} XP</span>
           </div>
           <Progress value={progress} className="h-3" />
-          <p className="text-center text-xs text-muted-foreground">
-            Faltam <span className="font-bold text-primary">{(needed - current).toLocaleString()}</span> XP para o nível {level + 1}
+          <p className="text-center text-xs text-white/50">
+            Faltam <span className="font-bold text-[#BFFF00]">{(needed - current).toLocaleString()}</span> XP para o nível {level + 1}
           </p>
         </div>
 
@@ -93,12 +93,12 @@ export function LevelProgress({ xp, points }: LevelProgressProps) {
               key={milestone}
               className={`flex flex-col items-center p-2 rounded-lg text-center transition-all ${
                 level >= milestone 
-                  ? 'bg-primary/20 border border-primary/30' 
-                  : 'bg-secondary/50 opacity-50'
+                  ? 'bg-[#BFFF00]/10 border border-[#BFFF00]/30' 
+                  : 'bg-white/5 opacity-50'
               }`}
             >
-              <span className="text-lg font-bold">{milestone}</span>
-              <span className="text-[10px] text-muted-foreground">
+              <span className={`text-lg font-bold ${level >= milestone ? 'text-[#BFFF00]' : 'text-white/50'}`}>{milestone}</span>
+              <span className="text-[10px] text-white/50">
                 {milestone === 5 ? 'Aprendiz' : 
                  milestone === 10 ? 'Inter.' : 
                  milestone === 20 ? 'Espec.' : 

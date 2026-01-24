@@ -76,19 +76,22 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
   return (
     <aside 
       className={cn(
-        "fixed left-0 top-0 z-40 h-screen bg-sidebar border-r border-sidebar-border transition-all duration-300",
+        "fixed left-0 top-0 z-40 h-screen bg-[#0a0a0a] border-r border-[#BFFF00]/10 transition-all duration-300",
         collapsed ? "w-20" : "w-64"
       )}
     >
       <div className="flex h-full flex-col">
-        {/* Logo */}
-        <div className="flex h-16 items-center justify-between border-b border-sidebar-border px-4">
+        {/* Logo - La Casa Elite */}
+        <div className="flex h-16 items-center justify-between border-b border-[#BFFF00]/10 px-4">
           <div className={cn("flex items-center gap-3", collapsed && "justify-center w-full")}>
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-gold">
-              <Crown className="h-5 w-5 text-primary-foreground" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#BFFF00] shadow-[0_0_20px_rgba(191,255,0,0.3)]">
+              <Crown className="h-5 w-5 text-[#0a0a0a]" />
             </div>
             {!collapsed && (
-              <span className="text-lg font-bold text-foreground">MemberHub</span>
+              <div className="flex flex-col">
+                <span className="text-lg font-bold italic text-white tracking-tight">LA CASA</span>
+                <span className="text-[8px] text-[#BFFF00] uppercase tracking-[0.3em] -mt-1">Members Club</span>
+              </div>
             )}
           </div>
         </div>
@@ -107,12 +110,12 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                     "flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-all duration-200",
                     collapsed && "justify-center px-0",
                     active
-                      ? "bg-sidebar-accent text-sidebar-primary shadow-glow-gold"
-                      : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-foreground",
-                    item.adminOnly && "text-accent"
+                      ? "bg-[#BFFF00]/10 text-[#BFFF00] border border-[#BFFF00]/20 shadow-[0_0_15px_rgba(191,255,0,0.1)]"
+                      : "text-white/70 hover:bg-white/5 hover:text-white",
+                    item.adminOnly && "text-[#BFFF00]/70"
                   )}
                 >
-                  <item.icon className={cn("h-5 w-5", active && "text-primary", item.adminOnly && "text-accent")} />
+                  <item.icon className={cn("h-5 w-5", active && "text-[#BFFF00]", item.adminOnly && "text-[#BFFF00]/70")} />
                   {!collapsed && <span>{item.label}</span>}
                 </Link>
               );
@@ -120,11 +123,11 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
         </nav>
 
         {/* Logout & Collapse */}
-        <div className="border-t border-sidebar-border p-4 space-y-2">
+        <div className="border-t border-[#BFFF00]/10 p-4 space-y-2">
           <Button
             variant="ghost"
             onClick={handleLogout}
-            className={cn("w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10", collapsed && "justify-center")}
+            className={cn("w-full justify-start text-red-400 hover:text-red-300 hover:bg-red-500/10", collapsed && "justify-center")}
           >
             <LogOut className="h-5 w-5" />
             {!collapsed && <span className="ml-3">Sair</span>}
@@ -134,7 +137,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
             variant="ghost"
             size="icon"
             onClick={onToggle}
-            className="w-full justify-center"
+            className="w-full justify-center text-white/50 hover:text-[#BFFF00] hover:bg-[#BFFF00]/5"
           >
             {collapsed ? (
               <ChevronRight className="h-5 w-5" />
