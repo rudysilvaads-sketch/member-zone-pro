@@ -454,4 +454,182 @@
                 0 2px 6px hsl(220, 30%, 20%, 0.06),
                 0 0 0 1px hsl(220, 13%, 88%);
   }
+
+  /* Avatar special effects */
+  .avatar-premium {
+    position: relative;
+  }
+
+  .avatar-premium::before {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--accent)) 50%, hsl(var(--primary)) 100%);
+    background-size: 200% 200%;
+    animation: avatar-border-rotate 3s linear infinite;
+    z-index: -1;
+  }
+
+  .avatar-exclusive {
+    position: relative;
+  }
+
+  .avatar-exclusive::before {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    background: conic-gradient(
+      from 0deg,
+      hsl(45, 100%, 60%),
+      hsl(38, 95%, 50%),
+      hsl(30, 100%, 45%),
+      hsl(280, 85%, 55%),
+      hsl(262, 90%, 60%),
+      hsl(199, 95%, 55%),
+      hsl(45, 100%, 60%)
+    );
+    animation: avatar-border-rotate 2s linear infinite;
+    z-index: -1;
+  }
+
+  .avatar-exclusive::after {
+    content: '';
+    position: absolute;
+    inset: -8px;
+    border-radius: 50%;
+    background: conic-gradient(
+      from 180deg,
+      transparent 0%,
+      hsl(45, 100%, 60%, 0.4) 25%,
+      transparent 50%,
+      hsl(262, 90%, 60%, 0.4) 75%,
+      transparent 100%
+    );
+    animation: avatar-glow-rotate 3s linear infinite;
+    z-index: -2;
+    filter: blur(8px);
+  }
+
+  @keyframes avatar-border-rotate {
+    0% {
+      transform: rotate(0deg);
+      background-position: 0% 50%;
+    }
+    100% {
+      transform: rotate(360deg);
+      background-position: 200% 50%;
+    }
+  }
+
+  @keyframes avatar-glow-rotate {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(-360deg);
+    }
+  }
+
+  .avatar-legendary {
+    position: relative;
+  }
+
+  .avatar-legendary::before {
+    content: '';
+    position: absolute;
+    inset: -5px;
+    border-radius: 50%;
+    background: linear-gradient(
+      45deg,
+      hsl(45, 100%, 55%) 0%,
+      hsl(38, 100%, 50%) 20%,
+      hsl(280, 85%, 55%) 40%,
+      hsl(199, 95%, 55%) 60%,
+      hsl(142, 76%, 45%) 80%,
+      hsl(45, 100%, 55%) 100%
+    );
+    background-size: 300% 300%;
+    animation: legendary-gradient 4s ease infinite;
+    z-index: -1;
+  }
+
+  .avatar-legendary::after {
+    content: '';
+    position: absolute;
+    inset: -12px;
+    border-radius: 50%;
+    background: radial-gradient(
+      circle,
+      hsl(45, 100%, 60%, 0.5) 0%,
+      hsl(45, 100%, 60%, 0.2) 40%,
+      transparent 70%
+    );
+    animation: legendary-pulse 2s ease-in-out infinite;
+    z-index: -2;
+  }
+
+  @keyframes legendary-gradient {
+    0%, 100% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+  }
+
+  @keyframes legendary-pulse {
+    0%, 100% {
+      transform: scale(1);
+      opacity: 0.6;
+    }
+    50% {
+      transform: scale(1.1);
+      opacity: 1;
+    }
+  }
+
+  /* Sparkle particles effect */
+  .avatar-sparkles {
+    position: relative;
+  }
+
+  .avatar-sparkles .sparkle {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    background: hsl(45, 100%, 70%);
+    border-radius: 50%;
+    animation: sparkle-float 2s ease-in-out infinite;
+    box-shadow: 0 0 6px hsl(45, 100%, 60%);
+  }
+
+  .avatar-sparkles .sparkle:nth-child(1) { top: -5px; left: 50%; animation-delay: 0s; }
+  .avatar-sparkles .sparkle:nth-child(2) { top: 20%; right: -5px; animation-delay: 0.3s; }
+  .avatar-sparkles .sparkle:nth-child(3) { bottom: -5px; left: 30%; animation-delay: 0.6s; }
+  .avatar-sparkles .sparkle:nth-child(4) { top: 30%; left: -5px; animation-delay: 0.9s; }
+  .avatar-sparkles .sparkle:nth-child(5) { bottom: 20%; right: -5px; animation-delay: 1.2s; }
+  .avatar-sparkles .sparkle:nth-child(6) { top: -5px; right: 30%; animation-delay: 1.5s; }
+
+  @keyframes sparkle-float {
+    0%, 100% {
+      transform: scale(0.5) translateY(0);
+      opacity: 0.3;
+    }
+    50% {
+      transform: scale(1.2) translateY(-4px);
+      opacity: 1;
+    }
+  }
+
+  /* Hover effects for avatars */
+  .avatar-hover-glow {
+    transition: all 0.3s ease;
+  }
+
+  .avatar-hover-glow:hover {
+    transform: scale(1.05);
+    filter: drop-shadow(0 0 12px hsl(var(--primary) / 0.5));
+  }
 }

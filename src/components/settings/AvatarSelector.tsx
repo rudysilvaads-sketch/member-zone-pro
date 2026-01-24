@@ -21,6 +21,15 @@ import {
   getCategoryColor,
 } from "@/lib/avatarData";
 
+// Sparkle particles component for exclusive avatars
+const SparkleParticles = () => (
+  <>
+    {[...Array(6)].map((_, i) => (
+      <span key={i} className="sparkle" />
+    ))}
+  </>
+);
+
 interface AvatarSelectorProps {
   currentAvatarId?: string;
   onAvatarChange?: (avatarUrl: string) => void;
@@ -108,13 +117,33 @@ export function AvatarSelector({ currentAvatarId, onAvatarChange }: AvatarSelect
     }
   };
 
+  // Get avatar effect classes based on category
+  const getAvatarEffectClasses = (avatar: AvatarType, unlocked: boolean) => {
+    if (!unlocked) return "";
+    
+    switch (avatar.category) {
+      case 'exclusive':
+        // Check for legendary (highest tier exclusive)
+        if (avatar.xpCost >= 5000) {
+          return "avatar-legendary avatar-sparkles avatar-hover-glow";
+        }
+        return "avatar-exclusive avatar-sparkles avatar-hover-glow";
+      case 'premium':
+        return "avatar-premium avatar-hover-glow";
+      default:
+        return "avatar-hover-glow";
+    }
+  };
+
   const renderAvatarGrid = (avatars: AvatarType[]) => (
-    <div className="grid grid-cols-3 gap-4 sm:grid-cols-4 md:grid-cols-5">
+    <div className="grid grid-cols-3 gap-6 sm:grid-cols-4 md:grid-cols-5">
       {avatars.map((avatar) => {
         const unlocked = isAvatarUnlocked(avatar);
         const canUnlock = canUnlockAvatar(avatar);
         const isCurrentAvatar = userProfile?.currentAvatarId === avatar.id || 
           (userProfile?.photoURL === avatar.url);
+        const effectClasses = getAvatarEffectClasses(avatar, unlocked);
+        const isLegendary = avatar.category === 'exclusive' && avatar.xpCost >= 5000;
 
         return (
           <div
@@ -133,10 +162,17 @@ export function AvatarSelector({ currentAvatarId, onAvatarChange }: AvatarSelect
                 canUnlock && "hover:ring-2 hover:ring-accent hover:ring-offset-2 hover:ring-offset-background"
               )}
             >
-              <Avatar className="h-16 w-16 mx-auto border-2 border-border">
-                <AvatarImage src={avatar.url} alt={avatar.name} />
-                <AvatarFallback>{avatar.name.charAt(0)}</AvatarFallback>
-              </Avatar>
+              <div className={cn("relative flex items-center justify-center", effectClasses)}>
+                {avatar.category === 'exclusive' && unlocked && <SparkleParticles />}
+                <Avatar className={cn(
+                  "h-16 w-16 border-2",
+                  unlocked && avatar.category === 'exclusive' ? "border-transparent" : "border-border",
+                  unlocked && avatar.category === 'premium' ? "border-transparent" : ""
+                )}>
+                  <AvatarImage src={avatar.url} alt={avatar.name} />
+                  <AvatarFallback>{avatar.name.charAt(0)}</AvatarFallback>
+                </Avatar>
+              </div>
 
               {/* Locked overlay */}
               {!unlocked && (
@@ -147,15 +183,23 @@ export function AvatarSelector({ currentAvatarId, onAvatarChange }: AvatarSelect
 
               {/* Selected check */}
               {isCurrentAvatar && (
-                <div className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-primary flex items-center justify-center">
+                <div className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-primary flex items-center justify-center z-10">
                   <Check className="h-3 w-3 text-primary-foreground" />
                 </div>
               )}
             </div>
 
             {/* Avatar info */}
-            <div className="mt-2 text-center">
-              <p className="text-xs font-medium truncate">{avatar.name}</p>
+            <div className="mt-3 text-center">
+              <p className={cn(
+                "text-xs font-medium truncate",
+                unlocked && isLegendary && "text-gradient-gold font-bold"
+              )}>{avatar.name}</p>
+              {unlocked && avatar.category !== 'default' && (
+                <Badge className={cn("text-[10px] px-1.5 py-0 mt-1", getCategoryColor(avatar.category))}>
+                  {isLegendary ? '✨ Lendário' : getCategoryLabel(avatar.category)}
+                </Badge>
+              )}
               {!unlocked && (
                 <div className="flex items-center justify-center gap-1 mt-1">
                   <Zap className="h-3 w-3 text-primary" />
