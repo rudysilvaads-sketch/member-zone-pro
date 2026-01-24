@@ -1,17 +1,39 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Header } from "@/components/layout/Header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, MessageSquare, Heart, Share2, TrendingUp, UserPlus, Send, Clock } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { 
+  Users, MessageSquare, Heart, TrendingUp, UserPlus, Send, Clock, 
+  MoreHorizontal, Trash2, Loader2 
+} from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
-import { getTopUsers, UserProfile } from "@/lib/firebaseServices";
+import { 
+  getTopUsers, 
+  UserProfile, 
+  Post, 
+  Comment,
+  getPosts, 
+  createPost, 
+  toggleLikePost, 
+  deletePost,
+  addComment,
+  getComments,
+  deleteComment
+} from "@/lib/firebaseServices";
 import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 const rankConfig: Record<string, { color: string; bg: string }> = {
   bronze: { color: "text-orange-400", bg: "bg-orange-500/20" },
@@ -21,46 +43,38 @@ const rankConfig: Record<string, { color: string; bg: string }> = {
   diamond: { color: "text-purple-400", bg: "bg-purple-500/20" },
 };
 
-// Mock data for community features
-const mockPosts = [
-  {
-    id: '1',
-    author: { name: 'Maria Silva', avatar: null, rank: 'gold', level: 15 },
-    content: 'Acabei de completar o módulo avançado! 🎉 Foi desafiador mas valeu cada minuto. Quem mais está fazendo?',
-    likes: 24,
-    comments: 8,
-    createdAt: new Date(Date.now() - 1000 * 60 * 30), // 30 min ago
-  },
-  {
-    id: '2',
-    author: { name: 'João Santos', avatar: null, rank: 'platinum', level: 22 },
-    content: 'Dica do dia: Façam as missões diárias logo cedo! Assim vocês garantem o streak e ainda começam o dia motivados 💪',
-    likes: 56,
-    comments: 12,
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
-  },
-  {
-    id: '3',
-    author: { name: 'Ana Costa', avatar: null, rank: 'diamond', level: 30 },
-    content: 'Finalmente alcancei o rank Diamond! 💎 Obrigada a todos que me ajudaram nessa jornada. A comunidade aqui é incrível!',
-    likes: 142,
-    comments: 35,
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 5), // 5 hours ago
-  },
-];
-
 const Community = () => {
   const { userProfile } = useAuth();
   const [topUsers, setTopUsers] = useState<(UserProfile & { position: number })[]>([]);
+  const [posts, setPosts] = useState<Post[]>([]);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [newPost, setNewPost] = useState("");
   const [loading, setLoading] = useState(true);
+  const [posting, setPosting] = useState(false);
+  const [selectedPost, setSelectedPost] = useState<Post | null>(null);
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [newComment, setNewComment] = useState("");
+  const [loadingComments, setLoadingComments] = useState(false);
+  const [postingComment, setPostingComment] = useState(false);
+
+  const fetchPosts = useCallback(async () => {
+    try {
+      const postsData = await getPosts(50);
+      setPosts(postsData);
+    } catch (error) {
+      console.error('Error fetching posts:', error);
+    }
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const users = await getTopUsers(10);
+        const [users, postsData] = await Promise.all([
+          getTopUsers(10),
+          getPosts(50)
+        ]);
         setTopUsers(users);
+        setPosts(postsData);
       } catch (error) {
         console.error('Error fetching community data:', error);
       } finally {
@@ -70,7 +84,113 @@ const Community = () => {
     fetchData();
   }, []);
 
-  const formatTimeAgo = (date: Date) => {
+  const handleCreatePost = async () => {
+    if (!newPost.trim() || !userProfile) return;
+    
+    setPosting(true);
+    try {
+      const result = await createPost(userProfile, newPost);
+      if (result.success) {
+        toast.success('Post publicado!');
+        setNewPost("");
+        await fetchPosts();
+      } else {
+        toast.error(result.error || 'Erro ao publicar');
+      }
+    } catch (error) {
+      toast.error('Erro ao publicar post');
+    } finally {
+      setPosting(false);
+    }
+  };
+
+  const handleLike = async (postId: string) => {
+    if (!userProfile) return;
+    
+    // Optimistic update
+    setPosts(prev => prev.map(post => {
+      if (post.id === postId) {
+        const isLiked = post.likes?.includes(userProfile.uid);
+        return {
+          ...post,
+          likes: isLiked 
+            ? post.likes.filter(id => id !== userProfile.uid)
+            : [...(post.likes || []), userProfile.uid]
+        };
+      }
+      return post;
+    }));
+    
+    await toggleLikePost(postId, userProfile.uid);
+  };
+
+  const handleDeletePost = async (postId: string) => {
+    if (!userProfile) return;
+    
+    const success = await deletePost(postId, userProfile.uid);
+    if (success) {
+      toast.success('Post excluído');
+      setPosts(prev => prev.filter(p => p.id !== postId));
+    } else {
+      toast.error('Erro ao excluir post');
+    }
+  };
+
+  const openComments = async (post: Post) => {
+    setSelectedPost(post);
+    setLoadingComments(true);
+    try {
+      const commentsData = await getComments(post.id);
+      setComments(commentsData);
+    } catch (error) {
+      console.error('Error loading comments:', error);
+    } finally {
+      setLoadingComments(false);
+    }
+  };
+
+  const handleAddComment = async () => {
+    if (!newComment.trim() || !userProfile || !selectedPost) return;
+    
+    setPostingComment(true);
+    try {
+      const result = await addComment(selectedPost.id, userProfile, newComment);
+      if (result.success && result.comment) {
+        setComments(prev => [...prev, result.comment!]);
+        setNewComment("");
+        // Update comments count in posts list
+        setPosts(prev => prev.map(p => 
+          p.id === selectedPost.id 
+            ? { ...p, commentsCount: (p.commentsCount || 0) + 1 }
+            : p
+        ));
+        toast.success('Comentário adicionado!');
+      }
+    } catch (error) {
+      toast.error('Erro ao comentar');
+    } finally {
+      setPostingComment(false);
+    }
+  };
+
+  const handleDeleteComment = async (commentId: string) => {
+    if (!userProfile || !selectedPost) return;
+    
+    const success = await deleteComment(selectedPost.id, commentId, userProfile.uid);
+    if (success) {
+      setComments(prev => prev.filter(c => c.id !== commentId));
+      setPosts(prev => prev.map(p => 
+        p.id === selectedPost.id 
+          ? { ...p, commentsCount: Math.max((p.commentsCount || 1) - 1, 0) }
+          : p
+      ));
+      toast.success('Comentário excluído');
+    }
+  };
+
+  const formatTimeAgo = (timestamp: any) => {
+    if (!timestamp) return 'Agora';
+    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
     const seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000);
     if (seconds < 60) return 'Agora';
     const minutes = Math.floor(seconds / 60);
@@ -117,11 +237,22 @@ const Community = () => {
                         placeholder="Compartilhe algo com a comunidade..."
                         value={newPost}
                         onChange={(e) => setNewPost(e.target.value)}
-                        className="resize-none"
+                        className="resize-none min-h-[80px]"
+                        maxLength={500}
                       />
-                      <div className="flex justify-end">
-                        <Button disabled={!newPost.trim()}>
-                          <Send className="h-4 w-4 mr-2" />
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs text-muted-foreground">
+                          {newPost.length}/500
+                        </span>
+                        <Button 
+                          onClick={handleCreatePost} 
+                          disabled={!newPost.trim() || posting}
+                        >
+                          {posting ? (
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          ) : (
+                            <Send className="h-4 w-4 mr-2" />
+                          )}
                           Publicar
                         </Button>
                       </div>
@@ -130,79 +261,72 @@ const Community = () => {
                 </CardContent>
               </Card>
 
-              {/* Feed Tabs */}
+              {/* Posts Feed */}
               <Tabs defaultValue="recent">
                 <TabsList>
                   <TabsTrigger value="recent">Recentes</TabsTrigger>
                   <TabsTrigger value="popular">Populares</TabsTrigger>
-                  <TabsTrigger value="following">Seguindo</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="recent" className="space-y-4 mt-4">
-                  {mockPosts.map((post) => {
-                    const rankStyle = rankConfig[post.author.rank] || rankConfig.bronze;
-                    
-                    return (
-                      <Card key={post.id}>
-                        <CardContent className="p-4">
-                          <div className="flex gap-4">
-                            <Avatar className="h-12 w-12">
-                              <AvatarImage src={post.author.avatar || undefined} />
-                              <AvatarFallback className={rankStyle.bg}>
-                                {post.author.name.charAt(0)}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <span className="font-semibold">{post.author.name}</span>
-                                <Badge className={cn("text-xs", rankStyle.bg, rankStyle.color)}>
-                                  {post.author.rank.charAt(0).toUpperCase() + post.author.rank.slice(1)}
-                                </Badge>
-                                <span className="text-xs text-muted-foreground">
-                                  Nível {post.author.level}
-                                </span>
-                                <span className="text-xs text-muted-foreground flex items-center gap-1">
-                                  <Clock className="h-3 w-3" />
-                                  {formatTimeAgo(post.createdAt)}
-                                </span>
+                  {loading ? (
+                    <div className="space-y-4">
+                      {[1, 2, 3].map(i => (
+                        <Card key={i}>
+                          <CardContent className="p-4">
+                            <div className="animate-pulse space-y-3">
+                              <div className="flex gap-4">
+                                <div className="h-12 w-12 rounded-full bg-muted" />
+                                <div className="flex-1 space-y-2">
+                                  <div className="h-4 w-32 bg-muted rounded" />
+                                  <div className="h-3 w-20 bg-muted rounded" />
+                                </div>
                               </div>
-                              <p className="mt-2 text-foreground">{post.content}</p>
-                              <div className="flex items-center gap-6 mt-4">
-                                <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-red-500">
-                                  <Heart className="h-4 w-4 mr-1" />
-                                  {post.likes}
-                                </Button>
-                                <Button variant="ghost" size="sm" className="text-muted-foreground">
-                                  <MessageSquare className="h-4 w-4 mr-1" />
-                                  {post.comments}
-                                </Button>
-                                <Button variant="ghost" size="sm" className="text-muted-foreground">
-                                  <Share2 className="h-4 w-4 mr-1" />
-                                  Compartilhar
-                                </Button>
-                              </div>
+                              <div className="h-16 bg-muted rounded" />
                             </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    );
-                  })}
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  ) : posts.length === 0 ? (
+                    <Card>
+                      <CardContent className="py-12 text-center">
+                        <MessageSquare className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                        <p className="text-muted-foreground">
+                          Nenhum post ainda. Seja o primeiro a compartilhar!
+                        </p>
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    posts.map((post) => (
+                      <PostCard
+                        key={post.id}
+                        post={post}
+                        currentUserId={userProfile?.uid}
+                        onLike={() => handleLike(post.id)}
+                        onDelete={() => handleDeletePost(post.id)}
+                        onOpenComments={() => openComments(post)}
+                        formatTimeAgo={formatTimeAgo}
+                      />
+                    ))
+                  )}
                 </TabsContent>
 
-                <TabsContent value="popular">
-                  <Card>
-                    <CardContent className="py-12 text-center text-muted-foreground">
-                      Posts populares em breve...
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-
-                <TabsContent value="following">
-                  <Card>
-                    <CardContent className="py-12 text-center text-muted-foreground">
-                      Siga membros para ver seus posts aqui
-                    </CardContent>
-                  </Card>
+                <TabsContent value="popular" className="space-y-4 mt-4">
+                  {posts
+                    .sort((a, b) => (b.likes?.length || 0) - (a.likes?.length || 0))
+                    .slice(0, 10)
+                    .map((post) => (
+                      <PostCard
+                        key={post.id}
+                        post={post}
+                        currentUserId={userProfile?.uid}
+                        onLike={() => handleLike(post.id)}
+                        onDelete={() => handleDeletePost(post.id)}
+                        onOpenComments={() => openComments(post)}
+                        formatTimeAgo={formatTimeAgo}
+                      />
+                    ))}
                 </TabsContent>
               </Tabs>
             </div>
@@ -219,16 +343,18 @@ const Community = () => {
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div className="flex justify-between">
+                    <span className="text-muted-foreground">Total de posts</span>
+                    <span className="font-semibold">{posts.length}</span>
+                  </div>
+                  <div className="flex justify-between">
                     <span className="text-muted-foreground">Membros ativos</span>
                     <span className="font-semibold">{topUsers.length}+</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Posts hoje</span>
-                    <span className="font-semibold">47</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Novos membros</span>
-                    <span className="font-semibold text-green-500">+12</span>
+                    <span className="text-muted-foreground">Seus posts</span>
+                    <span className="font-semibold">
+                      {posts.filter(p => p.authorId === userProfile?.uid).length}
+                    </span>
                   </div>
                 </CardContent>
               </Card>
@@ -269,29 +395,202 @@ const Community = () => {
                   </div>
                 </CardContent>
               </Card>
-
-              {/* Quick Links */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Links Rápidos</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  <Button variant="outline" className="w-full justify-start">
-                    📚 Guia da Comunidade
-                  </Button>
-                  <Button variant="outline" className="w-full justify-start">
-                    ❓ FAQ
-                  </Button>
-                  <Button variant="outline" className="w-full justify-start">
-                    🎯 Desafios Semanais
-                  </Button>
-                </CardContent>
-              </Card>
             </div>
           </div>
         </main>
       </div>
+
+      {/* Comments Dialog */}
+      <Dialog open={!!selectedPost} onOpenChange={() => setSelectedPost(null)}>
+        <DialogContent className="max-w-lg max-h-[80vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle>Comentários</DialogTitle>
+          </DialogHeader>
+          
+          {selectedPost && (
+            <>
+              {/* Original Post */}
+              <div className="border-b pb-4 mb-4">
+                <div className="flex gap-3">
+                  <Avatar className="h-10 w-10">
+                    <AvatarImage src={selectedPost.authorAvatar || undefined} />
+                    <AvatarFallback>
+                      {selectedPost.authorName?.charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <p className="font-semibold">{selectedPost.authorName}</p>
+                    <p className="text-sm text-foreground mt-1">{selectedPost.content}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Comments List */}
+              <div className="flex-1 overflow-y-auto space-y-4 min-h-[200px]">
+                {loadingComments ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                  </div>
+                ) : comments.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-8">
+                    Nenhum comentário ainda. Seja o primeiro!
+                  </p>
+                ) : (
+                  comments.map((comment) => {
+                    const rankStyle = rankConfig[comment.authorRank] || rankConfig.bronze;
+                    return (
+                      <div key={comment.id} className="flex gap-3 group">
+                        <Avatar className="h-8 w-8">
+                          <AvatarImage src={comment.authorAvatar || undefined} />
+                          <AvatarFallback className={rankStyle.bg}>
+                            {comment.authorName?.charAt(0).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 bg-muted/50 rounded-lg p-3">
+                          <div className="flex items-center justify-between">
+                            <p className="font-medium text-sm">{comment.authorName}</p>
+                            {comment.authorId === userProfile?.uid && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6 opacity-0 group-hover:opacity-100"
+                                onClick={() => handleDeleteComment(comment.id)}
+                              >
+                                <Trash2 className="h-3 w-3 text-destructive" />
+                              </Button>
+                            )}
+                          </div>
+                          <p className="text-sm mt-1">{comment.content}</p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {formatTimeAgo(comment.createdAt)}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+
+              {/* Add Comment */}
+              <div className="flex gap-2 pt-4 border-t">
+                <Textarea
+                  placeholder="Escreva um comentário..."
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                  className="resize-none min-h-[60px]"
+                  maxLength={300}
+                />
+                <Button
+                  onClick={handleAddComment}
+                  disabled={!newComment.trim() || postingComment}
+                  size="icon"
+                  className="shrink-0"
+                >
+                  {postingComment ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Send className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
+  );
+};
+
+// PostCard Component
+interface PostCardProps {
+  post: Post;
+  currentUserId?: string;
+  onLike: () => void;
+  onDelete: () => void;
+  onOpenComments: () => void;
+  formatTimeAgo: (timestamp: any) => string;
+}
+
+const PostCard = ({ post, currentUserId, onLike, onDelete, onOpenComments, formatTimeAgo }: PostCardProps) => {
+  const rankStyle = rankConfig[post.authorRank] || rankConfig.bronze;
+  const isLiked = post.likes?.includes(currentUserId || '');
+  const isAuthor = post.authorId === currentUserId;
+
+  return (
+    <Card>
+      <CardContent className="p-4">
+        <div className="flex gap-4">
+          <Avatar className="h-12 w-12">
+            <AvatarImage src={post.authorAvatar || undefined} />
+            <AvatarFallback className={rankStyle.bg}>
+              {post.authorName?.charAt(0).toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex-1">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="font-semibold">{post.authorName}</span>
+                <Badge className={cn("text-xs", rankStyle.bg, rankStyle.color)}>
+                  {post.authorRank?.charAt(0).toUpperCase() + post.authorRank?.slice(1)}
+                </Badge>
+                <span className="text-xs text-muted-foreground">
+                  Nível {post.authorLevel}
+                </span>
+                <span className="text-xs text-muted-foreground flex items-center gap-1">
+                  <Clock className="h-3 w-3" />
+                  {formatTimeAgo(post.createdAt)}
+                </span>
+              </div>
+              
+              {isAuthor && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem 
+                      className="text-destructive focus:text-destructive"
+                      onClick={onDelete}
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Excluir post
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+            </div>
+            
+            <p className="mt-2 text-foreground whitespace-pre-wrap">{post.content}</p>
+            
+            <div className="flex items-center gap-6 mt-4">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className={cn(
+                  "text-muted-foreground",
+                  isLiked && "text-red-500 hover:text-red-600"
+                )}
+                onClick={onLike}
+              >
+                <Heart className={cn("h-4 w-4 mr-1", isLiked && "fill-current")} />
+                {post.likes?.length || 0}
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="text-muted-foreground"
+                onClick={onOpenComments}
+              >
+                <MessageSquare className="h-4 w-4 mr-1" />
+                {post.commentsCount || 0}
+              </Button>
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 

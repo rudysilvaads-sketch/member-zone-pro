@@ -4,14 +4,18 @@ import {
   getDocs, 
   getDoc, 
   setDoc, 
-  updateDoc, 
+  updateDoc,
+  deleteDoc,
+  addDoc,
   query, 
   orderBy, 
   limit,
   where,
   increment,
   serverTimestamp,
-  Timestamp
+  Timestamp,
+  arrayUnion,
+  arrayRemove
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
@@ -315,5 +319,212 @@ export const initializeDefaultData = async () => {
   for (const product of products) {
     const docRef = doc(db, 'products', product.name.toLowerCase().replace(/\s+/g, '-'));
     await setDoc(docRef, product, { merge: true });
+  }
+};
+
+// ============ COMMUNITY POSTS ============
+
+export interface Post {
+  id: string;
+  authorId: string;
+  authorName: string;
+  authorAvatar: string | null;
+  authorRank: string;
+  authorLevel: number;
+  content: string;
+  likes: string[]; // array of user IDs who liked
+  commentsCount: number;
+  createdAt: Timestamp;
+  updatedAt?: Timestamp;
+}
+
+export interface Comment {
+  id: string;
+  postId: string;
+  authorId: string;
+  authorName: string;
+  authorAvatar: string | null;
+  authorRank: string;
+  content: string;
+  createdAt: Timestamp;
+}
+
+// Create a new post
+export const createPost = async (
+  user: { uid: string; displayName: string; photoURL: string | null; rank: string; level?: number },
+  content: string
+): Promise<{ success: boolean; postId?: string; error?: string }> => {
+  try {
+    const postsRef = collection(db, 'posts');
+    const postData = {
+      authorId: user.uid,
+      authorName: user.displayName,
+      authorAvatar: user.photoURL,
+      authorRank: user.rank,
+      authorLevel: user.level || 1,
+      content: content.trim(),
+      likes: [],
+      commentsCount: 0,
+      createdAt: serverTimestamp(),
+    };
+    
+    const docRef = await addDoc(postsRef, postData);
+    return { success: true, postId: docRef.id };
+  } catch (error) {
+    console.error('Error creating post:', error);
+    return { success: false, error: 'Erro ao criar post' };
+  }
+};
+
+// Get posts with pagination
+export const getPosts = async (limitCount: number = 20): Promise<Post[]> => {
+  try {
+    const postsRef = collection(db, 'posts');
+    const q = query(postsRef, orderBy('createdAt', 'desc'), limit(limitCount));
+    const snapshot = await getDocs(q);
+    
+    return snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+    })) as Post[];
+  } catch (error) {
+    console.error('Error fetching posts:', error);
+    return [];
+  }
+};
+
+// Toggle like on a post
+export const toggleLikePost = async (
+  postId: string, 
+  userId: string
+): Promise<{ success: boolean; liked: boolean }> => {
+  try {
+    const postRef = doc(db, 'posts', postId);
+    const postSnap = await getDoc(postRef);
+    
+    if (!postSnap.exists()) {
+      return { success: false, liked: false };
+    }
+    
+    const post = postSnap.data() as Post;
+    const isLiked = post.likes?.includes(userId);
+    
+    await updateDoc(postRef, {
+      likes: isLiked ? arrayRemove(userId) : arrayUnion(userId),
+    });
+    
+    return { success: true, liked: !isLiked };
+  } catch (error) {
+    console.error('Error toggling like:', error);
+    return { success: false, liked: false };
+  }
+};
+
+// Delete a post
+export const deletePost = async (postId: string, userId: string): Promise<boolean> => {
+  try {
+    const postRef = doc(db, 'posts', postId);
+    const postSnap = await getDoc(postRef);
+    
+    if (!postSnap.exists()) return false;
+    
+    const post = postSnap.data() as Post;
+    if (post.authorId !== userId) return false;
+    
+    // Delete all comments for this post
+    const commentsRef = collection(db, 'posts', postId, 'comments');
+    const commentsSnap = await getDocs(commentsRef);
+    for (const commentDoc of commentsSnap.docs) {
+      await deleteDoc(commentDoc.ref);
+    }
+    
+    await deleteDoc(postRef);
+    return true;
+  } catch (error) {
+    console.error('Error deleting post:', error);
+    return false;
+  }
+};
+
+// Add a comment to a post
+export const addComment = async (
+  postId: string,
+  user: { uid: string; displayName: string; photoURL: string | null; rank: string },
+  content: string
+): Promise<{ success: boolean; comment?: Comment; error?: string }> => {
+  try {
+    const commentsRef = collection(db, 'posts', postId, 'comments');
+    const commentData = {
+      postId,
+      authorId: user.uid,
+      authorName: user.displayName,
+      authorAvatar: user.photoURL,
+      authorRank: user.rank,
+      content: content.trim(),
+      createdAt: serverTimestamp(),
+    };
+    
+    const docRef = await addDoc(commentsRef, commentData);
+    
+    // Increment comments count on post
+    const postRef = doc(db, 'posts', postId);
+    await updateDoc(postRef, {
+      commentsCount: increment(1),
+    });
+    
+    return { 
+      success: true, 
+      comment: { id: docRef.id, ...commentData, createdAt: Timestamp.now() } as Comment 
+    };
+  } catch (error) {
+    console.error('Error adding comment:', error);
+    return { success: false, error: 'Erro ao adicionar comentário' };
+  }
+};
+
+// Get comments for a post
+export const getComments = async (postId: string): Promise<Comment[]> => {
+  try {
+    const commentsRef = collection(db, 'posts', postId, 'comments');
+    const q = query(commentsRef, orderBy('createdAt', 'asc'));
+    const snapshot = await getDocs(q);
+    
+    return snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+    })) as Comment[];
+  } catch (error) {
+    console.error('Error fetching comments:', error);
+    return [];
+  }
+};
+
+// Delete a comment
+export const deleteComment = async (
+  postId: string, 
+  commentId: string, 
+  userId: string
+): Promise<boolean> => {
+  try {
+    const commentRef = doc(db, 'posts', postId, 'comments', commentId);
+    const commentSnap = await getDoc(commentRef);
+    
+    if (!commentSnap.exists()) return false;
+    
+    const comment = commentSnap.data() as Comment;
+    if (comment.authorId !== userId) return false;
+    
+    await deleteDoc(commentRef);
+    
+    // Decrement comments count
+    const postRef = doc(db, 'posts', postId);
+    await updateDoc(postRef, {
+      commentsCount: increment(-1),
+    });
+    
+    return true;
+  } catch (error) {
+    console.error('Error deleting comment:', error);
+    return false;
   }
 };
