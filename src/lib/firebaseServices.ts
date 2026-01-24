@@ -22,10 +22,13 @@ export interface UserProfile {
   displayName: string;
   photoURL: string | null;
   points: number;
+  xp: number;
+  level: number;
   rank: string;
   achievements: string[];
   streakDays: number;
   completedModules: number;
+  lastActiveDate?: string;
   createdAt: Timestamp;
 }
 
@@ -59,6 +62,63 @@ export interface Purchase {
   price: number;
   purchasedAt: Timestamp;
 }
+
+export interface Mission {
+  id: string;
+  title: string;
+  description: string;
+  xpReward: number;
+  pointsReward: number;
+  type: 'daily' | 'weekly' | 'special';
+  requirement: number;
+  icon: string;
+}
+
+export interface UserMission {
+  missionId: string;
+  progress: number;
+  completed: boolean;
+  completedAt?: Timestamp;
+  claimedAt?: Timestamp;
+}
+
+// Level system helpers
+export const calculateLevel = (xp: number): number => {
+  // XP needed per level increases: Level 1 = 100, Level 2 = 200, etc.
+  let level = 1;
+  let xpNeeded = 100;
+  let totalXp = 0;
+  
+  while (totalXp + xpNeeded <= xp) {
+    totalXp += xpNeeded;
+    level++;
+    xpNeeded = level * 100;
+  }
+  
+  return level;
+};
+
+export const getXpForLevel = (level: number): number => {
+  let totalXp = 0;
+  for (let i = 1; i < level; i++) {
+    totalXp += i * 100;
+  }
+  return totalXp;
+};
+
+export const getXpToNextLevel = (currentXp: number): { current: number; needed: number; progress: number } => {
+  const level = calculateLevel(currentXp);
+  const xpForCurrentLevel = getXpForLevel(level);
+  const xpForNextLevel = getXpForLevel(level + 1);
+  const xpNeededForNext = xpForNextLevel - xpForCurrentLevel;
+  const currentProgress = currentXp - xpForCurrentLevel;
+  
+  return {
+    current: currentProgress,
+    needed: xpNeededForNext,
+    progress: (currentProgress / xpNeededForNext) * 100
+  };
+};
 
 // Users
 export const getTopUsers = async (limitCount: number = 10): Promise<(UserProfile & { position: number })[]> => {

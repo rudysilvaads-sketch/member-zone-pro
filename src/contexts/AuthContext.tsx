@@ -8,8 +8,9 @@ import {
   GoogleAuthProvider,
   signInWithPopup
 } from 'firebase/auth';
-import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, getDoc, serverTimestamp, updateDoc, increment } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
+import { calculateLevel } from '@/lib/firebaseServices';
 
 interface UserProfile {
   uid: string;
@@ -17,10 +18,13 @@ interface UserProfile {
   displayName: string;
   photoURL: string | null;
   points: number;
+  xp: number;
+  level: number;
   rank: string;
   achievements: string[];
   streakDays: number;
   completedModules: number;
+  lastActiveDate?: string;
   createdAt: Date;
 }
 
@@ -33,6 +37,8 @@ interface AuthContextType {
   signInWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
   updateUserPoints: (points: number) => Promise<void>;
+  addXp: (xp: number) => Promise<boolean | undefined>;
+  refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -63,7 +69,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const docSnap = await getDoc(docRef);
     
     if (docSnap.exists()) {
-      setUserProfile(docSnap.data() as UserProfile);
+      const data = docSnap.data();
+      setUserProfile({
+        ...data,
+        xp: data.xp || 0,
+        level: data.level || calculateLevel(data.xp || 0),
+      } as UserProfile);
+    }
+  };
+
+  const refreshProfile = async () => {
+    if (user) {
+      await fetchUserProfile(user.uid);
     }
   };
 
@@ -91,10 +108,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       displayName: displayName || user.displayName || 'Novo Membro',
       photoURL: user.photoURL,
       points: 0,
+      xp: 0,
+      level: 1,
       rank: 'bronze',
       achievements: ['welcome'],
-      streakDays: 0,
+      streakDays: 1,
       completedModules: 0,
+      lastActiveDate: new Date().toISOString().split('T')[0],
       createdAt: new Date(),
     };
     
@@ -107,7 +127,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signIn = async (email: string, password: string) => {
-    await signInWithEmailAndPassword(auth, email, password);
+    const result = await signInWithEmailAndPassword(auth, email, password);
+    
+    // Update streak on login
+    const userRef = doc(db, 'users', result.user.uid);
+    const userSnap = await getDoc(userRef);
+    
+    if (userSnap.exists()) {
+      const userData = userSnap.data();
+      const today = new Date().toISOString().split('T')[0];
+      const lastActive = userData.lastActiveDate;
+      
+      if (lastActive !== today) {
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        const yesterdayStr = yesterday.toISOString().split('T')[0];
+        
+        const newStreak = lastActive === yesterdayStr ? (userData.streakDays || 0) + 1 : 1;
+        
+        await updateDoc(userRef, {
+          lastActiveDate: today,
+          streakDays: newStreak,
+        });
+      }
+    }
   };
 
   const signUp = async (email: string, password: string, displayName: string) => {
@@ -119,7 +162,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const provider = new GoogleAuthProvider();
     const result = await signInWithPopup(auth, provider);
     
-    // Check if user profile exists, if not create one
     const docRef = doc(db, 'users', result.user.uid);
     const docSnap = await getDoc(docRef);
     
@@ -140,17 +182,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const newRank = getRankFromPoints(newPoints);
     
     const userRef = doc(db, 'users', user.uid);
-    await setDoc(userRef, {
-      ...userProfile,
-      points: newPoints,
+    await updateDoc(userRef, {
+      points: increment(points),
       rank: newRank,
-    }, { merge: true });
+    });
     
     setUserProfile({
       ...userProfile,
       points: newPoints,
       rank: newRank,
     });
+  };
+
+  const addXp = async (xp: number) => {
+    if (!user || !userProfile) return;
+    
+    const newXp = (userProfile.xp || 0) + xp;
+    const newLevel = calculateLevel(newXp);
+    const leveledUp = newLevel > (userProfile.level || 1);
+    
+    const userRef = doc(db, 'users', user.uid);
+    await updateDoc(userRef, {
+      xp: increment(xp),
+      level: newLevel,
+    });
+    
+    setUserProfile({
+      ...userProfile,
+      xp: newXp,
+      level: newLevel,
+    });
+    
+    return leveledUp;
   };
 
   const value = {
@@ -162,6 +225,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     signInWithGoogle,
     logout,
     updateUserPoints,
+    addXp,
+    refreshProfile,
   };
 
   return (
