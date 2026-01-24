@@ -6,6 +6,8 @@ import { ProgressSection } from "@/components/dashboard/ProgressSection";
 import { RankingCard } from "@/components/dashboard/RankingCard";
 import { AchievementsCard } from "@/components/dashboard/AchievementsCard";
 import { ProductsShowcase } from "@/components/dashboard/ProductsShowcase";
+import { DailyMissions } from "@/components/dashboard/DailyMissions";
+import { LevelProgress } from "@/components/dashboard/LevelProgress";
 import { useAuth } from "@/contexts/AuthContext";
 import { getTopUsers, UserProfile } from "@/lib/firebaseServices";
 
@@ -21,7 +23,6 @@ const Index = () => {
         const users = await getTopUsers(100);
         setTopUsers(users.slice(0, 5));
         
-        // Find current user's rank
         if (userProfile) {
           const userIndex = users.findIndex(u => u.uid === userProfile.uid);
           if (userIndex !== -1) {
@@ -60,19 +61,28 @@ const Index = () => {
           <StatsCards 
             userRank={userRank} 
             points={userProfile?.points || 0}
-            achievements={userProfile?.achievements.length || 0}
+            achievements={userProfile?.achievements?.length || 0}
             streakDays={userProfile?.streakDays || 0}
           />
 
+          {/* Level & Missions Row */}
+          <div className="mt-8 grid gap-6 lg:grid-cols-2">
+            <LevelProgress 
+              xp={userProfile?.xp || 0} 
+              points={userProfile?.points || 0} 
+            />
+            <DailyMissions />
+          </div>
+
           {/* Main Grid */}
-          <div className="mt-8 grid gap-6 lg:grid-cols-3">
+          <div className="mt-6 grid gap-6 lg:grid-cols-3">
             {/* Left Column - Progress */}
             <div className="lg:col-span-1">
               <ProgressSection 
                 currentPoints={userProfile?.points || 0}
                 currentRank={userProfile?.rank || 'bronze'}
                 completedModules={userProfile?.completedModules || 0}
-                achievements={userProfile?.achievements.length || 0}
+                achievements={userProfile?.achievements?.length || 0}
                 streakDays={userProfile?.streakDays || 0}
               />
             </div>
