@@ -1,9 +1,9 @@
-import { Bell, Search } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Search } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { NotificationsDropdown } from "@/components/NotificationsDropdown";
 
 const getBadgeVariant = (rank: string) => {
   switch (rank?.toLowerCase()) {
@@ -38,12 +38,7 @@ export function Header() {
         <ThemeToggle />
         
         {/* Notifications */}
-        <Button variant="ghost" size="icon" className="relative">
-          <Bell className="h-5 w-5" />
-          <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
-            3
-          </span>
-        </Button>
+        <NotificationsDropdown />
 
         {/* User Menu */}
         <div className="flex items-center gap-3">

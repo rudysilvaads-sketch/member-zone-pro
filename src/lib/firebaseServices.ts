@@ -15,7 +15,10 @@ import {
   serverTimestamp,
   Timestamp,
   arrayUnion,
-  arrayRemove
+  arrayRemove,
+  onSnapshot,
+  writeBatch,
+  Unsubscribe
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { db, storage } from '@/lib/firebase';
@@ -585,6 +588,159 @@ export const deleteComment = async (
     return true;
   } catch (error) {
     console.error('Error deleting comment:', error);
+    return false;
+  }
+};
+
+// ============ NOTIFICATIONS ============
+
+export interface Notification {
+  id: string;
+  userId: string; // recipient
+  fromUserId: string;
+  fromUserName: string;
+  fromUserAvatar: string | null;
+  type: 'like' | 'comment';
+  postId: string;
+  postContent?: string; // first 50 chars of post
+  commentContent?: string; // for comment notifications
+  read: boolean;
+  createdAt: Timestamp;
+}
+
+// Create notification
+export const createNotification = async (
+  notification: Omit<Notification, 'id' | 'read' | 'createdAt'>
+): Promise<boolean> => {
+  try {
+    // Don't create notification for own actions
+    if (notification.userId === notification.fromUserId) return false;
+    
+    const notificationsRef = collection(db, 'notifications');
+    await addDoc(notificationsRef, {
+      ...notification,
+      read: false,
+      createdAt: serverTimestamp(),
+    });
+    return true;
+  } catch (error) {
+    console.error('Error creating notification:', error);
+    return false;
+  }
+};
+
+// Get notifications for a user
+export const getNotifications = async (
+  userId: string, 
+  limitCount: number = 20
+): Promise<Notification[]> => {
+  try {
+    const notificationsRef = collection(db, 'notifications');
+    const q = query(
+      notificationsRef, 
+      where('userId', '==', userId),
+      orderBy('createdAt', 'desc'), 
+      limit(limitCount)
+    );
+    const snapshot = await getDocs(q);
+    
+    return snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+    })) as Notification[];
+  } catch (error) {
+    console.error('Error fetching notifications:', error);
+    return [];
+  }
+};
+
+// Subscribe to real-time notifications
+export const subscribeToNotifications = (
+  userId: string,
+  callback: (notifications: Notification[]) => void
+): Unsubscribe => {
+  const notificationsRef = collection(db, 'notifications');
+  const q = query(
+    notificationsRef,
+    where('userId', '==', userId),
+    orderBy('createdAt', 'desc'),
+    limit(50)
+  );
+  
+  return onSnapshot(q, (snapshot) => {
+    const notifications = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+    })) as Notification[];
+    callback(notifications);
+  }, (error) => {
+    console.error('Error subscribing to notifications:', error);
+  });
+};
+
+// Mark notification as read
+export const markNotificationAsRead = async (notificationId: string): Promise<boolean> => {
+  try {
+    const notificationRef = doc(db, 'notifications', notificationId);
+    await updateDoc(notificationRef, { read: true });
+    return true;
+  } catch (error) {
+    console.error('Error marking notification as read:', error);
+    return false;
+  }
+};
+
+// Mark all notifications as read
+export const markAllNotificationsAsRead = async (userId: string): Promise<boolean> => {
+  try {
+    const notificationsRef = collection(db, 'notifications');
+    const q = query(
+      notificationsRef,
+      where('userId', '==', userId),
+      where('read', '==', false)
+    );
+    const snapshot = await getDocs(q);
+    
+    const batch = writeBatch(db);
+    snapshot.docs.forEach(doc => {
+      batch.update(doc.ref, { read: true });
+    });
+    
+    await batch.commit();
+    return true;
+  } catch (error) {
+    console.error('Error marking all notifications as read:', error);
+    return false;
+  }
+};
+
+// Delete notification
+export const deleteNotification = async (notificationId: string): Promise<boolean> => {
+  try {
+    await deleteDoc(doc(db, 'notifications', notificationId));
+    return true;
+  } catch (error) {
+    console.error('Error deleting notification:', error);
+    return false;
+  }
+};
+
+// Clear all notifications for a user
+export const clearAllNotifications = async (userId: string): Promise<boolean> => {
+  try {
+    const notificationsRef = collection(db, 'notifications');
+    const q = query(notificationsRef, where('userId', '==', userId));
+    const snapshot = await getDocs(q);
+    
+    const batch = writeBatch(db);
+    snapshot.docs.forEach(doc => {
+      batch.delete(doc.ref);
+    });
+    
+    await batch.commit();
+    return true;
+  } catch (error) {
+    console.error('Error clearing notifications:', error);
     return false;
   }
 };

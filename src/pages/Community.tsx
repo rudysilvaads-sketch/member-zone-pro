@@ -31,7 +31,8 @@ import {
   addComment,
   getComments,
   deleteComment,
-  uploadPostImage
+  uploadPostImage,
+  createNotification
 } from "@/lib/firebaseServices";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -170,21 +171,38 @@ const Community = () => {
   const handleLike = async (postId: string) => {
     if (!userProfile) return;
     
+    const post = posts.find(p => p.id === postId);
+    if (!post) return;
+    
+    const isAlreadyLiked = post.likes?.includes(userProfile.uid);
+    
     // Optimistic update
-    setPosts(prev => prev.map(post => {
-      if (post.id === postId) {
-        const isLiked = post.likes?.includes(userProfile.uid);
+    setPosts(prev => prev.map(p => {
+      if (p.id === postId) {
         return {
-          ...post,
-          likes: isLiked 
-            ? post.likes.filter(id => id !== userProfile.uid)
-            : [...(post.likes || []), userProfile.uid]
+          ...p,
+          likes: isAlreadyLiked 
+            ? p.likes.filter(id => id !== userProfile.uid)
+            : [...(p.likes || []), userProfile.uid]
         };
       }
-      return post;
+      return p;
     }));
     
-    await toggleLikePost(postId, userProfile.uid);
+    const result = await toggleLikePost(postId, userProfile.uid);
+    
+    // Create notification if liking (not unliking) and successful
+    if (result.success && result.liked && post.authorId !== userProfile.uid) {
+      await createNotification({
+        userId: post.authorId,
+        fromUserId: userProfile.uid,
+        fromUserName: userProfile.displayName,
+        fromUserAvatar: userProfile.photoURL,
+        type: 'like',
+        postId: postId,
+        postContent: post.content?.substring(0, 50) || '',
+      });
+    }
   };
 
   const handleDeletePost = async (postId: string) => {
@@ -220,13 +238,30 @@ const Community = () => {
       const result = await addComment(selectedPost.id, userProfile, newComment);
       if (result.success && result.comment) {
         setComments(prev => [...prev, result.comment!]);
+        const commentText = newComment;
         setNewComment("");
+        
         // Update comments count in posts list
         setPosts(prev => prev.map(p => 
           p.id === selectedPost.id 
             ? { ...p, commentsCount: (p.commentsCount || 0) + 1 }
             : p
         ));
+        
+        // Create notification for post author
+        if (selectedPost.authorId !== userProfile.uid) {
+          await createNotification({
+            userId: selectedPost.authorId,
+            fromUserId: userProfile.uid,
+            fromUserName: userProfile.displayName,
+            fromUserAvatar: userProfile.photoURL,
+            type: 'comment',
+            postId: selectedPost.id,
+            postContent: selectedPost.content?.substring(0, 50) || '',
+            commentContent: commentText.substring(0, 100),
+          });
+        }
+        
         toast.success('Comentário adicionado!');
       }
     } catch (error) {
