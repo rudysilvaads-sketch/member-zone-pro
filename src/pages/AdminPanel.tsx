@@ -14,7 +14,8 @@ import {
   BarChart3,
   MessageSquare,
   Key,
-  FileCheck
+  FileCheck,
+  Wrench
 } from 'lucide-react';
 import { AdminStats } from '@/components/admin/AdminStats';
 import { AdminUsers } from '@/components/admin/AdminUsers';
@@ -23,6 +24,7 @@ import { AdminMissions } from '@/components/admin/AdminMissions';
 import { AdminChats } from '@/components/admin/AdminChats';
 import { AdminAccessRequests } from '@/components/admin/AdminAccessRequests';
 import { AdminPostModeration } from '@/components/admin/AdminPostModeration';
+import { AdminToolsModeration } from '@/components/admin/AdminToolsModeration';
 
 // Fallback admin emails (main check uses Firestore role)
 const ADMIN_EMAILS = ['rudysilvaads@gmail.com'];
@@ -113,35 +115,45 @@ export default function AdminPanel() {
       {/* Content */}
       <main className="container mx-auto px-6 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-7 lg:w-auto lg:inline-grid">
-            <TabsTrigger value="stats" className="flex items-center gap-2">
-              <BarChart3 className="h-4 w-4" />
-              <span className="hidden sm:inline">Estatísticas</span>
-            </TabsTrigger>
+          <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8 lg:w-auto lg:inline-grid">
+            {isAdmin && (
+              <TabsTrigger value="stats" className="flex items-center gap-2">
+                <BarChart3 className="h-4 w-4" />
+                <span className="hidden sm:inline">Estatísticas</span>
+              </TabsTrigger>
+            )}
             <TabsTrigger value="posts" className="flex items-center gap-2">
               <FileCheck className="h-4 w-4" />
               <span className="hidden sm:inline">Posts</span>
             </TabsTrigger>
-            <TabsTrigger value="users" className="flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              <span className="hidden sm:inline">Usuários</span>
+            <TabsTrigger value="tools" className="flex items-center gap-2">
+              <Wrench className="h-4 w-4" />
+              <span className="hidden sm:inline">Ferramentas</span>
             </TabsTrigger>
-            <TabsTrigger value="products" className="flex items-center gap-2">
-              <ShoppingBag className="h-4 w-4" />
-              <span className="hidden sm:inline">Produtos</span>
-            </TabsTrigger>
-            <TabsTrigger value="access" className="flex items-center gap-2">
-              <Key className="h-4 w-4" />
-              <span className="hidden sm:inline">Acessos</span>
-            </TabsTrigger>
-            <TabsTrigger value="missions" className="flex items-center gap-2">
-              <Target className="h-4 w-4" />
-              <span className="hidden sm:inline">Missões</span>
-            </TabsTrigger>
-            <TabsTrigger value="chats" className="flex items-center gap-2">
-              <MessageSquare className="h-4 w-4" />
-              <span className="hidden sm:inline">Chats</span>
-            </TabsTrigger>
+            {isAdmin && (
+              <>
+                <TabsTrigger value="users" className="flex items-center gap-2">
+                  <Users className="h-4 w-4" />
+                  <span className="hidden sm:inline">Usuários</span>
+                </TabsTrigger>
+                <TabsTrigger value="products" className="flex items-center gap-2">
+                  <ShoppingBag className="h-4 w-4" />
+                  <span className="hidden sm:inline">Produtos</span>
+                </TabsTrigger>
+                <TabsTrigger value="access" className="flex items-center gap-2">
+                  <Key className="h-4 w-4" />
+                  <span className="hidden sm:inline">Acessos</span>
+                </TabsTrigger>
+                <TabsTrigger value="missions" className="flex items-center gap-2">
+                  <Target className="h-4 w-4" />
+                  <span className="hidden sm:inline">Missões</span>
+                </TabsTrigger>
+                <TabsTrigger value="chats" className="flex items-center gap-2">
+                  <MessageSquare className="h-4 w-4" />
+                  <span className="hidden sm:inline">Chats</span>
+                </TabsTrigger>
+              </>
+            )}
           </TabsList>
 
           <TabsContent value="stats">
@@ -150,6 +162,10 @@ export default function AdminPanel() {
 
           <TabsContent value="posts">
             <AdminPostModeration />
+          </TabsContent>
+
+          <TabsContent value="tools">
+            <AdminToolsModeration isAdmin={isAdmin} />
           </TabsContent>
 
           <TabsContent value="users">
