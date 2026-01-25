@@ -559,74 +559,115 @@ interface FeaturedProductCardProps {
 const FeaturedProductCard = ({ product, canPurchase, isPurchased, onSelect, formatName }: FeaturedProductCardProps) => {
   const isUnavailable = !product.available;
   
+  // Format name with first word styled
+  const getStyledName = (name: string) => {
+    const words = name.split(' ');
+    if (words.length === 1) return { first: name, rest: '' };
+    return { first: words[0], rest: words.slice(1).join(' ') };
+  };
+  
+  const { first, rest } = getStyledName(product.name);
+  
   return (
     <div 
       className="group cursor-pointer"
       onClick={onSelect}
     >
-      {/* Landscape Card Container */}
-      <div className="relative aspect-[21/9] rounded-2xl overflow-hidden bg-secondary/50 border border-border/50 group-hover:border-primary/50 transition-all duration-300 shadow-xl">
+      {/* Hero Banner Container */}
+      <div className="relative aspect-[21/9] md:aspect-[3/1] rounded-2xl overflow-hidden bg-[#0a0a0a] border border-white/10 group-hover:border-[#BFFF00]/30 transition-all duration-500 shadow-2xl">
+        {/* Background Image */}
         <img 
           src={product.image} 
           alt={product.name}
           className={cn(
-            "w-full h-full object-cover transition-all duration-500",
+            "absolute inset-0 w-full h-full object-cover transition-all duration-700",
             "group-hover:scale-105",
-            (isUnavailable || (!canPurchase.allowed && !isPurchased)) && "opacity-60"
+            (isUnavailable || (!canPurchase.allowed && !isPurchased)) && "opacity-50"
           )}
         />
         
         {/* Gradient Overlays */}
-        <div className="absolute inset-0 bg-gradient-to-r from-background/95 via-background/40 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#0a0a0a] via-[#0a0a0a]/60 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a]/80 via-transparent to-transparent" />
         
-        {/* Top Badges */}
-        <div className="absolute top-4 left-4 flex items-center gap-2">
-          <Badge className="bg-primary text-primary-foreground text-xs px-3 py-1 h-7 shadow-lg font-bold">
-            <Star className="h-3 w-3 mr-1.5 fill-current" />
-            DESTAQUE
-          </Badge>
-          {isPurchased && (
-            <Badge className="bg-primary/90 text-primary-foreground text-xs px-3 py-1 h-7 shadow-lg">
-              <CheckCircle className="h-3 w-3 mr-1.5" />
-              LIBERADO
+        {/* Content - Left Side */}
+        <div className="absolute inset-0 p-6 md:p-8 flex flex-col justify-between">
+          {/* Top Badges */}
+          <div className="flex items-center gap-2">
+            <Badge className="bg-[#BFFF00] text-black text-[10px] md:text-xs px-2.5 py-1 h-6 md:h-7 font-bold rounded-md shadow-lg">
+              <Star className="h-3 w-3 mr-1 fill-current" />
+              EM DESTAQUE
             </Badge>
-          )}
-          {product.requiredRank && !isPurchased && (
-            <Badge variant="secondary" className="text-xs px-3 py-1 h-7 bg-background/70 backdrop-blur-sm border border-white/10">
-              <Crown className="h-3 w-3 mr-1.5 text-primary" />
-              VIP {product.requiredRank.toUpperCase()}
-            </Badge>
-          )}
-        </div>
-
-        {/* Content Overlay - Left Side */}
-        <div className="absolute bottom-0 left-0 right-0 p-6 flex flex-col justify-end">
-          <h3 className="text-2xl md:text-3xl font-black leading-tight mb-2 text-foreground drop-shadow-lg">
-            {formatName(product.name)}
-          </h3>
-          <p className="text-sm text-white/70 line-clamp-1 max-w-md mb-4">
-            {product.description}
-          </p>
-          <div className="flex items-center gap-4">
-            <Button
-              variant={isPurchased ? "secondary" : "gold"}
-              size="lg"
-              className="rounded-xl font-bold shadow-lg"
-            >
-              {isPurchased ? (
-                <>Acessar</>
-              ) : (
-                <>{product.price.toLocaleString()} pts</>
-              )}
-            </Button>
+            {isPurchased && (
+              <Badge className="bg-[#BFFF00]/90 text-black text-[10px] md:text-xs px-2.5 py-1 h-6 md:h-7 font-bold rounded-md">
+                <CheckCircle className="h-3 w-3 mr-1" />
+                LIBERADO
+              </Badge>
+            )}
+            {product.requiredRank && !isPurchased && (
+              <Badge className="bg-white/10 text-white text-[10px] md:text-xs px-2.5 py-1 h-6 md:h-7 font-medium rounded-md border border-white/20 backdrop-blur-sm">
+                <Crown className="h-3 w-3 mr-1 text-[#BFFF00]" />
+                VIP
+              </Badge>
+            )}
+          </div>
+          
+          {/* Bottom Content */}
+          <div className="max-w-lg space-y-3 md:space-y-4">
+            {/* Title */}
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black leading-[1.1] tracking-tight">
+              <span className="text-[#BFFF00] italic">{first}</span>
+              {rest && <span className="text-white"> {rest.toUpperCase()}</span>}
+            </h2>
+            
+            {/* Description */}
+            <p className="text-sm md:text-base text-white/60 line-clamp-2 max-w-md">
+              {product.description}
+            </p>
+            
+            {/* Action Buttons */}
+            <div className="flex items-center gap-3 pt-1">
+              <Button
+                variant="gold"
+                size="default"
+                className="rounded-lg font-bold shadow-lg text-sm md:text-base px-4 md:px-6 h-9 md:h-11"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onSelect();
+                }}
+              >
+                {isPurchased ? (
+                  <>
+                    <Play className="h-4 w-4 mr-2" />
+                    Acessar Conteúdo
+                  </>
+                ) : (
+                  <>
+                    <ShoppingBag className="h-4 w-4 mr-2" />
+                    {product.price.toLocaleString()} pts
+                  </>
+                )}
+              </Button>
+              <Button
+                variant="outline"
+                size="default"
+                className="rounded-lg font-medium border-white/20 bg-white/5 hover:bg-white/10 text-white text-sm md:text-base px-4 md:px-6 h-9 md:h-11"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onSelect();
+                }}
+              >
+                <Sparkles className="h-4 w-4 mr-2" />
+                Mais Informações
+              </Button>
+            </div>
           </div>
         </div>
 
         {/* Unavailable Overlay */}
         {isUnavailable && (
-          <div className="absolute inset-0 bg-background/70 backdrop-blur-sm flex items-center justify-center">
-            <Badge variant="secondary" className="text-sm px-4 py-2">
+          <div className="absolute inset-0 bg-[#0a0a0a]/80 backdrop-blur-sm flex items-center justify-center">
+            <Badge variant="secondary" className="text-sm px-4 py-2 bg-white/10 border border-white/20">
               <Wrench className="h-4 w-4 mr-2" />
               Em Manutenção
             </Badge>
