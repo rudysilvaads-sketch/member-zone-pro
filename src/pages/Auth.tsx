@@ -94,11 +94,24 @@ export default function Auth() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] flex flex-col items-center justify-center p-4 relative overflow-hidden">
-      {/* Background Image */}
+      {/* Background Image with Zoom Animation */}
       <div 
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: `url(${authBackground})` }}
+        style={{ 
+          backgroundImage: `url(${authBackground})`,
+          animation: 'zoom-in-out 20s ease-in-out infinite',
+        }}
       />
+      <style>{`
+        @keyframes zoom-in-out {
+          0%, 100% {
+            transform: scale(1);
+          }
+          50% {
+            transform: scale(1.1);
+          }
+        }
+      `}</style>
       <div className="absolute inset-0 bg-gradient-to-br from-black/70 via-black/50 to-black/70" />
       
       {/* Ambient glow effects */}
