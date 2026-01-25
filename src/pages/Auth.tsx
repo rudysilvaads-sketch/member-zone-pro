@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { Mail, Lock, User, AlertCircle, Gift, Sparkles, Loader2, CheckCircle, Shield, Eye, EyeOff } from 'lucide-react';
+import { Mail, Lock, User, AlertCircle, Gift, Sparkles, Loader2, CheckCircle, Shield, Eye, EyeOff, ArrowRight, Zap } from 'lucide-react';
 import { toast } from 'sonner';
 import { LaCasaLogo } from '@/components/LaCasaLogo';
 import authBackground from '@/assets/auth-background.jpg';
@@ -99,7 +99,11 @@ export default function Auth() {
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{ backgroundImage: `url(${authBackground})` }}
       />
-      <div className="absolute inset-0 bg-black/40" />
+      <div className="absolute inset-0 bg-gradient-to-br from-black/70 via-black/50 to-black/70" />
+      
+      {/* Ambient glow effects */}
+      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#F5A623]/10 rounded-full blur-[150px]" />
+      <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-[#F5A623]/5 rounded-full blur-[120px]" />
       
       {/* Logo */}
       <div className="relative z-10 mb-8">
@@ -108,20 +112,20 @@ export default function Auth() {
       
       {/* Glass Card with Animated Border */}
       <div className="relative z-10 w-full max-w-md">
-        {/* Animated gradient border - thin line */}
+        {/* Animated gradient border - orange theme */}
         <div 
           className="absolute -inset-[1px] rounded-2xl"
           style={{
-            background: 'conic-gradient(from var(--border-angle, 0deg), #BFFF00 0%, transparent 25%, transparent 75%, #BFFF00 100%)',
+            background: 'conic-gradient(from var(--border-angle, 0deg), #F5A623 0%, transparent 25%, transparent 75%, #F5A623 100%)',
             animation: 'border-rotate 3s linear infinite',
           }}
         />
-        <div className="relative backdrop-blur-xl bg-[#0a0a0a] border-0 rounded-2xl p-8 shadow-2xl">
+        <div className="relative backdrop-blur-xl bg-[#0a0a0a]/95 border-0 rounded-2xl p-8 shadow-2xl">
           {/* Badge */}
           <div className="flex justify-center mb-6">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#BFFF00]/10 border border-[#BFFF00]/20">
-              <Sparkles className="h-4 w-4 text-[#BFFF00]" />
-              <span className="text-sm text-[#BFFF00] font-medium">Área de Membros</span>
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#F5A623]/10 border border-[#F5A623]/30">
+              <Zap className="h-4 w-4 text-[#F5A623]" />
+              <span className="text-sm text-[#F5A623] font-medium">Área de Membros</span>
             </div>
           </div>
           
@@ -133,12 +137,12 @@ export default function Auth() {
             <p className="text-white/60 mt-2 text-sm">
               {isLogin ? (
                 <>
-                  <span className="text-[#BFFF00]">Estratégias, ferramentas</span> e <span className="text-[#BFFF00]">automação</span>: tudo para criar <span className="text-white">canais dark lucrativos</span>
+                  <span className="text-[#F5A623]">Estratégias, ferramentas</span> e <span className="text-[#F5A623]">automação</span>: tudo para criar <span className="text-white font-medium">canais dark lucrativos</span>
                 </>
               ) : referralCode ? (
-                'Você foi convidado para dominar o YouTube!'
+                <>Você foi convidado para <span className="text-[#F5A623]">dominar o YouTube</span>!</>
               ) : (
-                'Aprenda a criar canais dark de sucesso'
+                <>Aprenda a criar <span className="text-[#F5A623]">canais dark</span> de sucesso</>
               )}
             </p>
             <p className="text-white/40 text-xs mt-1">
@@ -148,9 +152,9 @@ export default function Auth() {
           
           {/* Referral Badge */}
           {referralCode && !isLogin && (
-            <div className="flex items-center justify-center gap-2 p-3 rounded-xl bg-[#BFFF00]/10 border border-[#BFFF00]/20 mb-6">
-              <Gift className="h-5 w-5 text-[#BFFF00]" />
-              <span className="text-sm text-[#BFFF00] font-medium">
+            <div className="flex items-center justify-center gap-2 p-3 rounded-xl bg-[#F5A623]/10 border border-[#F5A623]/30 mb-6">
+              <Gift className="h-5 w-5 text-[#F5A623]" />
+              <span className="text-sm text-[#F5A623] font-medium">
                 Convite especial aplicado!
               </span>
             </div>
@@ -177,7 +181,7 @@ export default function Auth() {
                     placeholder="Digite seu nome"
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value)}
-                    className="pl-12 h-12 rounded-xl bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-[#BFFF00]/50 focus:ring-[#BFFF00]/20"
+                    className="pl-12 h-12 rounded-xl bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-[#F5A623]/50 focus:ring-[#F5A623]/20"
                   />
                 </div>
               </div>
@@ -193,7 +197,7 @@ export default function Auth() {
                   placeholder="seu@email.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="pl-12 h-12 rounded-xl bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-[#BFFF00]/50 focus:ring-[#BFFF00]/20"
+                  className="pl-12 h-12 rounded-xl bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-[#F5A623]/50 focus:ring-[#F5A623]/20"
                   required
                 />
               </div>
@@ -205,7 +209,7 @@ export default function Auth() {
                 {isLogin && (
                   <button 
                     type="button" 
-                    className="text-xs text-[#BFFF00] hover:underline"
+                    className="text-xs text-[#F5A623] hover:underline"
                     onClick={() => {
                       setResetEmail(email);
                       setResetDialogOpen(true);
@@ -224,7 +228,7 @@ export default function Auth() {
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="pl-12 pr-12 h-12 rounded-xl bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-[#BFFF00]/50 focus:ring-[#BFFF00]/20"
+                  className="pl-12 pr-12 h-12 rounded-xl bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-[#F5A623]/50 focus:ring-[#F5A623]/20"
                   required
                   minLength={6}
                 />
@@ -244,18 +248,18 @@ export default function Auth() {
                   id="terms"
                   checked={acceptedTerms}
                   onCheckedChange={(checked) => setAcceptedTerms(checked === true)}
-                  className="mt-0.5 border-white/20 data-[state=checked]:bg-[#BFFF00] data-[state=checked]:border-[#BFFF00]"
+                  className="mt-0.5 border-white/20 data-[state=checked]:bg-[#F5A623] data-[state=checked]:border-[#F5A623]"
                 />
                 <label
                   htmlFor="terms"
                   className="text-sm text-white/60 leading-relaxed cursor-pointer"
                 >
                   Li e aceito os{' '}
-                  <Link to="/terms" className="text-[#BFFF00] hover:underline" target="_blank">
+                  <Link to="/terms" className="text-[#F5A623] hover:underline" target="_blank">
                     Termos de Uso
                   </Link>{' '}
                   e a{' '}
-                  <Link to="/privacy" className="text-[#BFFF00] hover:underline" target="_blank">
+                  <Link to="/privacy" className="text-[#F5A623] hover:underline" target="_blank">
                     Política de Privacidade
                   </Link>
                 </label>
@@ -264,7 +268,7 @@ export default function Auth() {
             
             <Button
               type="submit" 
-              className="w-full h-12 rounded-xl text-base font-semibold bg-[#BFFF00] hover:bg-[#BFFF00]/90 text-black transition-all duration-300 shadow-[0_0_30px_rgba(191,255,0,0.3)] hover:shadow-[0_0_40px_rgba(191,255,0,0.5)]" 
+              className="w-full h-12 rounded-xl text-base font-semibold bg-[#F5A623] hover:bg-[#F5A623]/90 text-black transition-all duration-300 shadow-[0_0_30px_rgba(245,166,35,0.3)] hover:shadow-[0_0_40px_rgba(245,166,35,0.5)] group" 
               disabled={loading}
             >
               {loading ? (
@@ -273,9 +277,15 @@ export default function Auth() {
                   Carregando...
                 </div>
               ) : isLogin ? (
-                'Entrar'
+                <div className="flex items-center gap-2">
+                  Entrar
+                  <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                </div>
               ) : (
-                'Criar conta'
+                <div className="flex items-center gap-2">
+                  Criar conta
+                  <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                </div>
               )}
             </Button>
           </form>
@@ -289,7 +299,7 @@ export default function Auth() {
                 setIsLogin(!isLogin);
                 setError('');
               }}
-              className="text-[#BFFF00] hover:underline font-semibold"
+              className="text-[#F5A623] hover:underline font-semibold"
             >
               {isLogin ? 'Criar conta' : 'Fazer login'}
             </button>
@@ -313,7 +323,7 @@ export default function Auth() {
         <DialogContent className="sm:max-w-md bg-[#1a1a1a] border-white/10">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-white">
-              <Mail className="h-5 w-5 text-[#BFFF00]" />
+              <Mail className="h-5 w-5 text-[#F5A623]" />
               Recuperar Senha
             </DialogTitle>
             <DialogDescription className="text-white/60">
@@ -326,8 +336,8 @@ export default function Auth() {
 
           {resetSent ? (
             <div className="py-8 text-center">
-              <div className="mx-auto w-16 h-16 rounded-full bg-[#BFFF00]/10 flex items-center justify-center mb-4">
-                <CheckCircle className="h-8 w-8 text-[#BFFF00]" />
+              <div className="mx-auto w-16 h-16 rounded-full bg-[#F5A623]/10 flex items-center justify-center mb-4">
+                <CheckCircle className="h-8 w-8 text-[#F5A623]" />
               </div>
               <h3 className="font-semibold text-lg mb-2 text-white">Email Enviado!</h3>
               <p className="text-sm text-white/60 mb-4">
@@ -337,7 +347,7 @@ export default function Auth() {
               </p>
               <Button 
                 onClick={() => setResetDialogOpen(false)} 
-                className="w-full bg-[#BFFF00] hover:bg-[#BFFF00]/90 text-black"
+                className="w-full bg-[#F5A623] hover:bg-[#F5A623]/90 text-black"
               >
                 Voltar ao Login
               </Button>
@@ -355,7 +365,7 @@ export default function Auth() {
                       placeholder="seu@email.com"
                       value={resetEmail}
                       onChange={(e) => setResetEmail(e.target.value)}
-                      className="pl-12 h-12 rounded-xl bg-white/5 border-white/10 text-white placeholder:text-white/30"
+                      className="pl-12 h-12 rounded-xl bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-[#F5A623]/50 focus:ring-[#F5A623]/20"
                       required
                     />
                   </div>
@@ -389,7 +399,7 @@ export default function Auth() {
                     }
                   }}
                   disabled={resetLoading}
-                  className="bg-[#BFFF00] hover:bg-[#BFFF00]/90 text-black"
+                  className="bg-[#F5A623] hover:bg-[#F5A623]/90 text-black"
                 >
                   {resetLoading ? (
                     <>
@@ -405,6 +415,21 @@ export default function Auth() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* CSS Animation */}
+      <style>{`
+        @property --border-angle {
+          syntax: '<angle>';
+          initial-value: 0deg;
+          inherits: false;
+        }
+        
+        @keyframes border-rotate {
+          to {
+            --border-angle: 360deg;
+          }
+        }
+      `}</style>
     </div>
   );
 }

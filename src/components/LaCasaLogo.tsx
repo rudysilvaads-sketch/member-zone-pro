@@ -18,7 +18,7 @@ export function LaCasaLogo({ size = "md", className }: LaCasaLogoProps) {
       <span 
         className={cn(
           sizeClasses[size].sub,
-          "text-[#BFFF00] uppercase tracking-[0.4em] font-medium mb-1"
+          "text-[#F5A623] uppercase tracking-[0.4em] font-medium mb-1 drop-shadow-[0_0_20px_rgba(245,166,35,0.4)]"
         )}
       >
         Members Club
@@ -27,7 +27,7 @@ export function LaCasaLogo({ size = "md", className }: LaCasaLogoProps) {
         <span 
           className={cn(
             sizeClasses[size].main,
-            "font-black italic text-[#BFFF00] drop-shadow-[0_0_30px_rgba(191,255,0,0.4)]"
+            "font-black italic text-white drop-shadow-[0_0_30px_rgba(255,255,255,0.3)]"
           )}
           style={{ 
             fontFamily: "'Inter', sans-serif",
