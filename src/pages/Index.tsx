@@ -10,6 +10,8 @@ import { DailyMissions } from "@/components/dashboard/DailyMissions";
 import { LevelProgress } from "@/components/dashboard/LevelProgress";
 import { StreakCard } from "@/components/dashboard/StreakCard";
 import { LevelUpAnimation } from "@/components/dashboard/LevelUpAnimation";
+import { OnlineMembersList } from "@/components/community/OnlineMembersList";
+import { ChatModal } from "@/components/ChatModal";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLevelUpDetection } from "@/hooks/useLevelUpDetection";
 import { UserProfile } from "@/lib/firebaseServices";
@@ -21,6 +23,16 @@ const Index = () => {
   const [topUsers, setTopUsers] = useState<(UserProfile & { position: number })[]>([]);
   const [userRank, setUserRank] = useState<number | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  
+  // Chat state
+  const [chatOpen, setChatOpen] = useState(false);
+  const [chatTarget, setChatTarget] = useState<{ uid: string; displayName: string; photoURL: string | null } | null>(null);
+
+  const openChatWithUser = (user: { uid: string; displayName: string; photoURL: string | null }) => {
+    if (user.uid === userProfile?.uid) return;
+    setChatTarget(user);
+    setChatOpen(true);
+  };
   
   // Level up detection
   const { showLevelUp, previousLevel, newLevel, closeLevelUp } = useLevelUpDetection({
@@ -97,8 +109,8 @@ const Index = () => {
 
           {/* Main Grid */}
           <div className="mt-6 grid gap-6 lg:grid-cols-3">
-            {/* Left Column - Progress */}
-            <div className="lg:col-span-1">
+            {/* Left Column - Progress & Online Members */}
+            <div className="lg:col-span-1 space-y-6">
               <ProgressSection 
                 currentPoints={userProfile?.points || 0}
                 currentRank={userProfile?.rank || 'bronze'}
@@ -106,6 +118,9 @@ const Index = () => {
                 achievements={userProfile?.achievements?.length || 0}
                 streakDays={userProfile?.streakDays || 0}
               />
+              
+              {/* Online Members */}
+              <OnlineMembersList onMemberClick={openChatWithUser} />
             </div>
 
             {/* Right Column - Ranking */}
@@ -134,6 +149,16 @@ const Index = () => {
           onClose={closeLevelUp}
         />
       )}
+
+      {/* Chat Modal */}
+      <ChatModal 
+        open={chatOpen} 
+        onOpenChange={(open) => {
+          setChatOpen(open);
+          if (!open) setChatTarget(null);
+        }}
+        targetUser={chatTarget}
+      />
     </div>
   );
 };
