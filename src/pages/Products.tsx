@@ -575,7 +575,7 @@ const FeaturedProductCard = ({ product, canPurchase, isPurchased, onSelect, form
       onClick={onSelect}
     >
       {/* Hero Banner Container */}
-      <div className="relative aspect-[21/9] md:aspect-[3/1] rounded-2xl overflow-hidden bg-[#0a0a0a] border border-white/10 group-hover:border-[#BFFF00]/30 transition-all duration-500 shadow-2xl">
+      <div className="relative aspect-[21/7] md:aspect-[4/1] rounded-2xl overflow-hidden bg-[#0a0a0a] border border-white/10 group-hover:border-[#BFFF00]/30 transition-all duration-500 shadow-2xl">
         {/* Featured Image (custom) or Default Background */}
         {product.featuredImage ? (
           <img 
