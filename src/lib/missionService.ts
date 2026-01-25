@@ -63,7 +63,7 @@ export const getUserDailyMissions = async (
 export const initializeUserDailyMissions = async (
   userId: string,
   missionIds: string[]
-): Promise<UserMissionsDoc> => {
+): Promise<{ missionsDoc: UserMissionsDoc; loginRewardGranted: boolean }> => {
   const today = getTodayDateString();
   const missionDocRef = doc(db, 'users', userId, 'dailyMissions', today);
   
@@ -71,18 +71,19 @@ export const initializeUserDailyMissions = async (
   const existingDoc = await getDoc(missionDocRef);
   
   if (existingDoc.exists()) {
-    return existingDoc.data() as UserMissionsDoc;
+    return { missionsDoc: existingDoc.data() as UserMissionsDoc, loginRewardGranted: false };
   }
   
   // Create new missions for today
   const missions: Record<string, UserDailyMission> = {};
   
   missionIds.forEach(missionId => {
+    const isLogin = missionId === 'daily-login';
     missions[missionId] = {
       missionId,
-      progress: missionId === 'daily-login' ? 1 : 0, // Login is auto-completed
-      completed: missionId === 'daily-login',
-      claimed: false,
+      progress: isLogin ? 1 : 0,
+      completed: isLogin,
+      claimed: isLogin, // Auto-claim login reward
     };
   });
   
@@ -94,7 +95,17 @@ export const initializeUserDailyMissions = async (
   
   await setDoc(missionDocRef, newDoc);
   
-  return newDoc;
+  // Auto-award login reward
+  const loginReward = MISSION_REWARDS['daily-login'];
+  if (loginReward) {
+    const userDocRef = doc(db, 'users', userId);
+    await updateDoc(userDocRef, {
+      xp: increment(loginReward.xp),
+      points: increment(loginReward.points),
+    });
+  }
+  
+  return { missionsDoc: newDoc, loginRewardGranted: true };
 };
 
 // Update mission progress

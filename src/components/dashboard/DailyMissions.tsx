@@ -20,8 +20,7 @@ import { toast } from 'sonner';
 import { 
   getUserDailyMissions, 
   initializeUserDailyMissions, 
-  claimMissionReward,
-  UserDailyMission 
+  MISSION_REWARDS
 } from '@/lib/missionService';
 
 interface DailyMission {
@@ -78,9 +77,8 @@ const missionConfigs: Omit<DailyMission, 'progress' | 'completed' | 'claimed'>[]
 ];
 
 export function DailyMissions() {
-  const { user, userProfile, updateUserPoints } = useAuth();
+  const { user } = useAuth();
   const [missions, setMissions] = useState<DailyMission[]>([]);
-  const [claimingId, setClaimingId] = useState<string | null>(null);
   const [timeUntilReset, setTimeUntilReset] = useState<string>('');
   const [loading, setLoading] = useState(true);
 
@@ -94,10 +92,25 @@ export function DailyMissions() {
       
       // Try to get existing missions for today
       let userMissions = await getUserDailyMissions(user.uid);
+      let loginRewardGranted = false;
       
       // If no missions for today, initialize them
       if (!userMissions) {
-        userMissions = await initializeUserDailyMissions(user.uid, missionIds);
+        const result = await initializeUserDailyMissions(user.uid, missionIds);
+        userMissions = result.missionsDoc;
+        loginRewardGranted = result.loginRewardGranted;
+        
+        // Show login reward toast
+        if (loginRewardGranted) {
+          const loginReward = MISSION_REWARDS['daily-login'];
+          toast.success(
+            <div className="flex flex-col">
+              <span className="font-bold">🎯 Missão Completada!</span>
+              <span className="text-sm text-muted-foreground">{loginReward.title}</span>
+              <span className="text-xs text-primary">+{loginReward.xp} XP | +{loginReward.points} pts</span>
+            </div>
+          );
+        }
       }
       
       // Merge mission configs with user progress
@@ -119,7 +132,7 @@ export function DailyMissions() {
         ...mission,
         progress: mission.id === 'daily-login' ? 1 : 0,
         completed: mission.id === 'daily-login',
-        claimed: false,
+        claimed: mission.id === 'daily-login',
       }));
       setMissions(fallbackMissions);
     } finally {
@@ -150,41 +163,6 @@ export function DailyMissions() {
     const interval = setInterval(updateTimer, 60000);
     return () => clearInterval(interval);
   }, []);
-
-  const handleClaimReward = async (mission: DailyMission) => {
-    if (!mission.completed || mission.claimed || !user) return;
-    
-    setClaimingId(mission.id);
-    
-    try {
-      // Save to Firebase first
-      const success = await claimMissionReward(user.uid, mission.id);
-      
-      if (!success) {
-        throw new Error('Failed to save claim');
-      }
-      
-      // Update points
-      await updateUserPoints(mission.pointsReward);
-      
-      // Update local state
-      setMissions(prev => prev.map(m => 
-        m.id === mission.id ? { ...m, claimed: true } : m
-      ));
-      
-      toast.success(
-        <div className="flex flex-col">
-          <span className="font-bold">Recompensa Resgatada!</span>
-          <span className="text-sm">+{mission.xpReward} XP | +{mission.pointsReward} pontos</span>
-        </div>
-      );
-    } catch (error) {
-      console.error('Error claiming reward:', error);
-      toast.error('Erro ao resgatar recompensa');
-    } finally {
-      setClaimingId(null);
-    }
-  };
 
   const completedCount = missions.filter(m => m.completed).length;
   const totalXp = missions.reduce((sum, m) => sum + (m.claimed ? m.xpReward : 0), 0);
@@ -296,19 +274,11 @@ export function DailyMissions() {
                     <p className="text-xs text-muted-foreground">+{mission.pointsReward} pts</p>
                   </div>
                   
-                  {mission.completed && !mission.claimed && (
-                    <Button
-                      size="sm"
-                      variant="gold"
-                      onClick={() => handleClaimReward(mission)}
-                      disabled={claimingId === mission.id}
-                    >
-                      {claimingId === mission.id ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        'Resgatar'
-                      )}
-                    </Button>
+                  {mission.completed && mission.claimed && (
+                    <Badge variant="outline" className="text-[10px] text-success border-success/30">
+                      <CheckCircle className="h-3 w-3 mr-1" />
+                      Resgatado
+                    </Badge>
                   )}
                 </div>
               </div>
