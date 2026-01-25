@@ -182,41 +182,48 @@ export const initializeUserDailyMissions = async (
   // Auto-award login reward and update level
   const loginReward = MISSION_REWARDS['daily-login'];
   if (loginReward) {
-    const userDocRef = doc(db, 'users', userId);
-    
-    // First get current XP to calculate new level
-    const userDoc = await getDoc(userDocRef);
-    
-    if (!userDoc.exists()) {
-      console.error('User document not found for userId:', userId);
+    try {
+      const userDocRef = doc(db, 'users', userId);
+      
+      // First get current XP to calculate new level
+      const userDoc = await getDoc(userDocRef);
+      
+      if (!userDoc.exists()) {
+        console.error('User document not found for userId:', userId);
+        return { missionsDoc: newDoc, loginRewardGranted: false };
+      }
+      
+      const userData = userDoc.data();
+      const currentXp = userData.xp || 0;
+      const currentPoints = userData.points || 0;
+      const newXp = currentXp + loginReward.xp;
+      const newPoints = currentPoints + loginReward.points;
+      const newLevel = calculateLevel(newXp);
+      
+      console.log('🎯 Awarding login reward:', {
+        userId,
+        currentXp,
+        currentPoints,
+        newXp,
+        newPoints,
+        newLevel,
+        reward: loginReward
+      });
+      
+      // Update user document with new XP and points
+      await updateDoc(userDocRef, {
+        xp: newXp,
+        points: newPoints,
+        level: newLevel,
+      });
+      
+      console.log('✅ Login reward applied successfully! New XP:', newXp);
+      
+      return { missionsDoc: newDoc, loginRewardGranted: true };
+    } catch (error) {
+      console.error('❌ Error awarding login reward:', error);
       return { missionsDoc: newDoc, loginRewardGranted: false };
     }
-    
-    const userData = userDoc.data();
-    const currentXp = userData.xp || 0;
-    const currentPoints = userData.points || 0;
-    const newXp = currentXp + loginReward.xp;
-    const newPoints = currentPoints + loginReward.points;
-    const newLevel = calculateLevel(newXp);
-    
-    console.log('Awarding login reward:', {
-      userId,
-      currentXp,
-      currentPoints,
-      newXp,
-      newPoints,
-      newLevel,
-      reward: loginReward
-    });
-    
-    // Use set with merge instead of increment to ensure values are set correctly
-    await updateDoc(userDocRef, {
-      xp: newXp,
-      points: newPoints,
-      level: newLevel,
-    });
-    
-    console.log('Login reward applied successfully');
   }
   
   return { missionsDoc: newDoc, loginRewardGranted: true };

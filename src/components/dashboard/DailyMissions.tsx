@@ -83,7 +83,7 @@ const missionConfigs: Omit<DailyMission, 'progress' | 'completed' | 'claimed'>[]
 ];
 
 export function DailyMissions() {
-  const { user } = useAuth();
+  const { user, refreshProfile } = useAuth();
   const [missions, setMissions] = useState<DailyMission[]>([]);
   const [timeUntilReset, setTimeUntilReset] = useState<string>('');
   const [loading, setLoading] = useState(true);
@@ -99,10 +99,11 @@ export function DailyMissions() {
       const success = await resetDailyMissions(user.uid);
       if (success) {
         toast.success('Missões resetadas! Recarregando...');
-        // Reload missions after reset
-        setTimeout(() => {
-          loadMissions();
-        }, 500);
+        // Wait a bit and then reload missions
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        await loadMissions();
+        // Refresh user profile to show updated XP
+        await refreshProfile();
       } else {
         toast.error('Erro ao resetar missões');
       }
@@ -139,7 +140,7 @@ export function DailyMissions() {
         }
       }
       
-      // Show login reward toast
+      // Show login reward toast and refresh profile
       if (loginRewardGranted) {
         const loginReward = MISSION_REWARDS['daily-login'];
         toast.success(
@@ -149,6 +150,8 @@ export function DailyMissions() {
             <span className="text-xs text-primary">+{loginReward.xp} XP | +{loginReward.points} pts</span>
           </div>
         );
+        // Refresh profile to update XP display
+        refreshProfile();
       }
       
       // Merge mission configs with user progress
