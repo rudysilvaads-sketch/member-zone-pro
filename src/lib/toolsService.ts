@@ -1,0 +1,293 @@
+import { 
+  collection, 
+  addDoc, 
+  query, 
+  orderBy, 
+  limit,
+  where,
+  onSnapshot,
+  serverTimestamp,
+  Timestamp,
+  getDocs,
+  deleteDoc,
+  updateDoc,
+  doc,
+  increment,
+  arrayUnion,
+  arrayRemove,
+  getDoc
+} from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+
+// Helper to update user XP and points
+const updateUserXpAndPoints = async (userId: string, xpAmount: number, pointsAmount: number): Promise<void> => {
+  try {
+    const userRef = doc(db, 'users', userId);
+    await updateDoc(userRef, {
+      xp: increment(xpAmount),
+      points: increment(pointsAmount),
+    });
+  } catch (error) {
+    console.error('Error updating user xp and points:', error);
+  }
+};
+
+export type ToolCategory = 'prompt' | 'code' | 'tool' | 'tutorial';
+
+export interface Tool {
+  id: string;
+  userId: string;
+  userName: string;
+  userAvatar: string | null;
+  userLevel: number;
+  userRank: string;
+  title: string;
+  description: string;
+  content: string;
+  category: ToolCategory;
+  tags: string[];
+  likes: string[];
+  saves: string[];
+  views: number;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+export interface ToolComment {
+  id: string;
+  toolId: string;
+  userId: string;
+  userName: string;
+  userAvatar: string | null;
+  content: string;
+  createdAt: Timestamp;
+}
+
+// XP rewards for tool actions
+const XP_REWARDS = {
+  CREATE_TOOL: 50,
+  RECEIVE_LIKE: 5,
+  RECEIVE_SAVE: 10,
+};
+
+// Create a new tool/resource
+export const createTool = async (
+  userId: string,
+  userName: string,
+  userAvatar: string | null,
+  userLevel: number,
+  userRank: string,
+  title: string,
+  description: string,
+  content: string,
+  category: ToolCategory,
+  tags: string[]
+): Promise<{ success: boolean; toolId?: string; error?: string }> => {
+  try {
+    const toolsRef = collection(db, 'tools');
+    
+    const toolData = {
+      userId,
+      userName,
+      userAvatar,
+      userLevel,
+      userRank,
+      title: title.trim(),
+      description: description.trim(),
+      content: content.trim(),
+      category,
+      tags: tags.map(t => t.toLowerCase().trim()),
+      likes: [],
+      saves: [],
+      views: 0,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    };
+    
+    const docRef = await addDoc(toolsRef, toolData);
+    
+    // Award XP for creating a tool
+    await updateUserXpAndPoints(userId, XP_REWARDS.CREATE_TOOL, 10);
+    
+    return { success: true, toolId: docRef.id };
+  } catch (error) {
+    console.error('Error creating tool:', error);
+    return { success: false, error: 'Erro ao criar recurso' };
+  }
+};
+
+// Subscribe to tools (realtime)
+export const subscribeToTools = (
+  callback: (tools: Tool[]) => void,
+  category?: ToolCategory,
+  limitCount: number = 50
+) => {
+  const toolsRef = collection(db, 'tools');
+  let q;
+  
+  if (category) {
+    q = query(
+      toolsRef, 
+      where('category', '==', category),
+      orderBy('createdAt', 'desc'), 
+      limit(limitCount)
+    );
+  } else {
+    q = query(toolsRef, orderBy('createdAt', 'desc'), limit(limitCount));
+  }
+  
+  return onSnapshot(q, (snapshot) => {
+    const tools = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+    })) as Tool[];
+    callback(tools);
+  });
+};
+
+// Get tools (non-realtime)
+export const getTools = async (
+  category?: ToolCategory,
+  limitCount: number = 50
+): Promise<Tool[]> => {
+  const toolsRef = collection(db, 'tools');
+  let q;
+  
+  if (category) {
+    q = query(
+      toolsRef, 
+      where('category', '==', category),
+      orderBy('createdAt', 'desc'), 
+      limit(limitCount)
+    );
+  } else {
+    q = query(toolsRef, orderBy('createdAt', 'desc'), limit(limitCount));
+  }
+  
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map(docSnap => ({
+    id: docSnap.id,
+    ...(docSnap.data() as Omit<Tool, 'id'>),
+  })) as Tool[];
+};
+
+// Toggle like on a tool
+export const toggleLikeTool = async (
+  toolId: string,
+  odId: string,
+  toolOwnerId: string
+): Promise<boolean> => {
+  try {
+    const toolRef = doc(db, 'tools', toolId);
+    const toolDoc = await getDocs(query(collection(db, 'tools'), where('__name__', '==', toolId)));
+    
+    if (toolDoc.empty) return false;
+    
+    const toolData = toolDoc.docs[0].data();
+    const likes = toolData.likes || [];
+    const hasLiked = likes.includes(odId);
+    
+    if (hasLiked) {
+      await updateDoc(toolRef, {
+        likes: arrayRemove(odId)
+      });
+    } else {
+      await updateDoc(toolRef, {
+        likes: arrayUnion(odId)
+      });
+      
+      // Award XP to tool owner for receiving a like
+      if (toolOwnerId !== odId) {
+        await updateUserXpAndPoints(toolOwnerId, XP_REWARDS.RECEIVE_LIKE, 1);
+      }
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error toggling like:', error);
+    return false;
+  }
+};
+
+// Toggle save on a tool
+export const toggleSaveTool = async (
+  toolId: string,
+  odId: string,
+  toolOwnerId: string
+): Promise<boolean> => {
+  try {
+    const toolRef = doc(db, 'tools', toolId);
+    const toolDoc = await getDocs(query(collection(db, 'tools'), where('__name__', '==', toolId)));
+    
+    if (toolDoc.empty) return false;
+    
+    const toolData = toolDoc.docs[0].data();
+    const saves = toolData.saves || [];
+    const hasSaved = saves.includes(odId);
+    
+    if (hasSaved) {
+      await updateDoc(toolRef, {
+        saves: arrayRemove(odId)
+      });
+    } else {
+      await updateDoc(toolRef, {
+        saves: arrayUnion(odId)
+      });
+      
+      // Award XP to tool owner for receiving a save
+      if (toolOwnerId !== odId) {
+        await updateUserXpAndPoints(toolOwnerId, XP_REWARDS.RECEIVE_SAVE, 2);
+      }
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error toggling save:', error);
+    return false;
+  }
+};
+
+// Increment view count
+export const incrementToolViews = async (toolId: string): Promise<void> => {
+  try {
+    const toolRef = doc(db, 'tools', toolId);
+    await updateDoc(toolRef, {
+      views: increment(1)
+    });
+  } catch (error) {
+    console.error('Error incrementing views:', error);
+  }
+};
+
+// Delete a tool (owner or admin only)
+export const deleteTool = async (toolId: string): Promise<boolean> => {
+  try {
+    await deleteDoc(doc(db, 'tools', toolId));
+    return true;
+  } catch (error) {
+    console.error('Error deleting tool:', error);
+    return false;
+  }
+};
+
+// Get category label
+export const getCategoryLabel = (category: ToolCategory): string => {
+  const labels: Record<ToolCategory, string> = {
+    prompt: 'Prompt',
+    code: 'Código',
+    tool: 'Ferramenta',
+    tutorial: 'Tutorial',
+  };
+  return labels[category] || category;
+};
+
+// Get category color
+export const getCategoryColor = (category: ToolCategory): string => {
+  const colors: Record<ToolCategory, string> = {
+    prompt: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
+    code: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+    tool: 'bg-green-500/20 text-green-400 border-green-500/30',
+    tutorial: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
+  };
+  return colors[category] || 'bg-muted text-muted-foreground';
+};
