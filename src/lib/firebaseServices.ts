@@ -22,6 +22,7 @@ import {
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { db, storage } from '@/lib/firebase';
+import { supabase } from '@/integrations/supabase/client';
 
 // Types
 export interface UserProfile {
@@ -516,7 +517,7 @@ export interface Comment {
   createdAt: Timestamp;
 }
 
-// Upload image to Firebase Storage with timeout
+// Upload image to Supabase Storage
 export const uploadPostImage = async (
   userId: string,
   file: File
@@ -533,57 +534,50 @@ export const uploadPostImage = async (
       return { success: false, error: 'Tipo de arquivo não suportado. Use JPG, PNG, GIF ou WebP.' };
     }
     
-    // Generate unique filename
+    // Generate unique filename - path format: userId/timestamp.ext
     const timestamp = Date.now();
     const extension = file.name.split('.').pop() || 'jpg';
-    const path = `posts/${userId}/${timestamp}.${extension}`;
+    const filePath = `${userId}/${timestamp}.${extension}`;
     
-    console.log('[uploadPostImage] Starting upload:', { userId, path, fileSize: file.size, fileType: file.type });
+    console.log('[uploadPostImage] Starting Supabase upload:', { userId, filePath, fileSize: file.size, fileType: file.type });
     
-    const storageRef = ref(storage, path);
+    const { data, error } = await supabase.storage
+      .from('community-posts')
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: false
+      });
     
-    // Create a timeout promise
-    const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(() => reject(new Error('Upload timeout - a operação demorou muito')), 30000);
-    });
+    if (error) {
+      console.error('[uploadPostImage] Supabase error:', error);
+      return { success: false, error: error.message };
+    }
     
-    // Race between upload and timeout
-    const uploadPromise = uploadBytes(storageRef, file);
-    await Promise.race([uploadPromise, timeoutPromise]);
+    // Get public URL
+    const { data: urlData } = supabase.storage
+      .from('community-posts')
+      .getPublicUrl(filePath);
     
-    console.log('[uploadPostImage] Upload completed, getting download URL...');
+    console.log('[uploadPostImage] Success:', { url: urlData.publicUrl, path: filePath });
     
-    const url = await getDownloadURL(storageRef);
-    
-    console.log('[uploadPostImage] Success:', { url, path });
-    
-    return { success: true, url, path };
+    return { success: true, url: urlData.publicUrl, path: filePath };
   } catch (error: any) {
     console.error('[uploadPostImage] Error:', error);
-    
-    // Provide more specific error messages
-    if (error?.code === 'storage/unauthorized') {
-      return { success: false, error: 'Sem permissão para fazer upload. Verifique se está logado.' };
-    }
-    if (error?.code === 'storage/canceled') {
-      return { success: false, error: 'Upload cancelado.' };
-    }
-    if (error?.code === 'storage/quota-exceeded') {
-      return { success: false, error: 'Limite de armazenamento excedido.' };
-    }
-    if (error?.message?.includes('timeout')) {
-      return { success: false, error: 'Upload demorou muito. Tente com uma imagem menor.' };
-    }
-    
     return { success: false, error: error?.message || 'Erro ao fazer upload da imagem' };
   }
 };
 
-// Delete image from Firebase Storage
+// Delete image from Supabase Storage
 export const deletePostImage = async (path: string): Promise<boolean> => {
   try {
-    const storageRef = ref(storage, path);
-    await deleteObject(storageRef);
+    const { error } = await supabase.storage
+      .from('community-posts')
+      .remove([path]);
+    
+    if (error) {
+      console.error('Error deleting image:', error);
+      return false;
+    }
     return true;
   } catch (error) {
     console.error('Error deleting image:', error);
