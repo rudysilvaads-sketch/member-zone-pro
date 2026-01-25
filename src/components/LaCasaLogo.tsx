@@ -45,7 +45,7 @@ export function LaCasaLogo({ size = "md", className }: LaCasaLogoProps) {
         <span 
           className={cn(
             darkSizeClasses[size],
-            "text-[#F5A623] uppercase tracking-[0.3em] font-bold -mt-1 mr-0.5 drop-shadow-[0_0_15px_rgba(245,166,35,0.5)]"
+            "text-[#F5A623] uppercase tracking-[0.3em] font-bold italic -mt-1 mr-0.5 drop-shadow-[0_0_15px_rgba(245,166,35,0.5)]"
           )}
         >
           Dark
