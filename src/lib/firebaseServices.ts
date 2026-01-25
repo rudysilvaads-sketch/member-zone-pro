@@ -23,6 +23,7 @@ import {
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { db, storage } from '@/lib/firebase';
 import { supabase } from '@/integrations/supabase/client';
+import { compressImage, formatFileSize } from '@/lib/imageCompression';
 
 // Types
 export interface UserProfile {
@@ -517,33 +518,61 @@ export interface Comment {
   createdAt: Timestamp;
 }
 
-// Upload image to Supabase Storage
+// Upload image to Supabase Storage with automatic compression
 export const uploadPostImage = async (
   userId: string,
   file: File
 ): Promise<{ success: boolean; url?: string; path?: string; error?: string }> => {
   try {
-    // Validate file
-    const maxSize = 5 * 1024 * 1024; // 5MB
-    if (file.size > maxSize) {
-      return { success: false, error: 'Imagem muito grande. Máximo 5MB.' };
-    }
-    
+    // Validate file type first
     const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
     if (!allowedTypes.includes(file.type)) {
       return { success: false, error: 'Tipo de arquivo não suportado. Use JPG, PNG, GIF ou WebP.' };
     }
     
+    // Validate original file size (max 10MB before compression)
+    const maxOriginalSize = 10 * 1024 * 1024;
+    if (file.size > maxOriginalSize) {
+      return { success: false, error: 'Imagem muito grande. Máximo 10MB.' };
+    }
+    
+    console.log('[uploadPostImage] Original file:', formatFileSize(file.size));
+    
+    // Compress image before upload
+    let fileToUpload = file;
+    try {
+      fileToUpload = await compressImage(file, {
+        maxWidth: 1920,
+        maxHeight: 1920,
+        quality: 0.85,
+        maxSizeMB: 1,
+      });
+    } catch (compressionError) {
+      console.warn('[uploadPostImage] Compression failed, using original:', compressionError);
+    }
+    
+    // Final size check after compression
+    const maxFinalSize = 5 * 1024 * 1024;
+    if (fileToUpload.size > maxFinalSize) {
+      return { success: false, error: 'Imagem ainda muito grande após compressão. Tente uma imagem menor.' };
+    }
+    
     // Generate unique filename - path format: userId/timestamp.ext
     const timestamp = Date.now();
-    const extension = file.name.split('.').pop() || 'jpg';
+    const extension = fileToUpload.name.split('.').pop()?.toLowerCase() || 'jpg';
     const filePath = `${userId}/${timestamp}.${extension}`;
     
-    console.log('[uploadPostImage] Starting Supabase upload:', { userId, filePath, fileSize: file.size, fileType: file.type });
+    console.log('[uploadPostImage] Starting Supabase upload:', { 
+      userId, 
+      filePath, 
+      originalSize: formatFileSize(file.size),
+      compressedSize: formatFileSize(fileToUpload.size),
+      fileType: fileToUpload.type 
+    });
     
     const { data, error } = await supabase.storage
       .from('community-posts')
-      .upload(filePath, file, {
+      .upload(filePath, fileToUpload, {
         cacheControl: '3600',
         upsert: false
       });
