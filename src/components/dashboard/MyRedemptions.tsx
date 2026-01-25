@@ -106,7 +106,7 @@ export function MyRedemptions({ purchases, onRefresh }: MyRedemptionsProps) {
 
   return (
     <>
-      <div className="grid gap-3 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+      <div className="grid gap-2 grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7">
         {purchases.map((purchase) => {
           const status = getAccessStatus(purchase);
           const config = statusConfig[status];
@@ -120,93 +120,61 @@ export function MyRedemptions({ purchases, onRefresh }: MyRedemptionsProps) {
             >
               {/* Product Image */}
               {purchase.productImage && (
-                <div className="relative aspect-[4/3] overflow-hidden">
+                <div className="relative aspect-square overflow-hidden">
                   <img 
                     src={purchase.productImage} 
                     alt={purchase.productName}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-transparent to-transparent" />
                   
                   {/* Status Badge */}
-                  <Badge className={`absolute top-2 right-2 text-[10px] px-1.5 py-0.5 ${config.color}`}>
-                    <StatusIcon className="h-2.5 w-2.5 mr-0.5" />
-                    {config.label}
+                  <Badge className={`absolute top-1 right-1 text-[8px] px-1 py-0 ${config.color}`}>
+                    <StatusIcon className="h-2 w-2" />
                   </Badge>
                 </div>
               )}
 
-              <CardContent className="p-2.5 space-y-2">
-                <div>
-                  <h3 className="font-bold text-white text-sm truncate">{purchase.productName}</h3>
-                  <p className="text-[10px] text-white/40">
-                    {purchase.purchasedAt?.toDate?.() 
-                      ? new Intl.DateTimeFormat('pt-BR', { 
-                          day: '2-digit',
-                          month: 'short',
-                        }).format(purchase.purchasedAt.toDate())
-                      : '-'
-                    }
-                  </p>
-                </div>
+              <CardContent className="p-1.5 space-y-1">
+                <h3 className="font-semibold text-white text-[10px] leading-tight truncate">{purchase.productName}</h3>
 
                 {/* Access Info or Action */}
                 {status === 'delivered' && purchase.accessData ? (
-                  <div className="space-y-1.5 p-2 rounded-md bg-[#BFFF00]/5 border border-[#BFFF00]/20">
-                    <div className="flex items-center gap-1.5 text-[#BFFF00]">
-                      <Key className="h-3 w-3" />
-                      <span className="text-xs font-medium">Dados de Acesso</span>
-                    </div>
-                    
+                  <div className="flex gap-1">
                     {purchase.accessData.link && (
                       <a 
                         href={purchase.accessData.link}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-1.5 text-xs text-white/80 hover:text-[#BFFF00] transition-colors"
+                        className="flex-1 flex items-center justify-center gap-1 text-[9px] py-1 rounded bg-[#BFFF00]/10 text-[#BFFF00] hover:bg-[#BFFF00]/20 transition-colors"
                       >
-                        <ExternalLink className="h-3 w-3" />
+                        <ExternalLink className="h-2.5 w-2.5" />
                         Acessar
                       </a>
                     )}
-                    
                     {purchase.accessData.credentials && (
-                      <div className="flex items-center gap-1">
-                        <code className="flex-1 text-[10px] bg-black/30 px-1.5 py-0.5 rounded truncate">
-                          {purchase.accessData.credentials}
-                        </code>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-5 w-5"
-                          onClick={() => copyToClipboard(purchase.accessData.credentials!)}
-                        >
-                          <Copy className="h-2.5 w-2.5" />
-                        </Button>
-                      </div>
-                    )}
-
-                    {purchase.accessData.instructions && (
-                      <p className="text-[10px] text-white/60 line-clamp-2">
-                        {purchase.accessData.instructions}
-                      </p>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-5 w-5 bg-white/5"
+                        onClick={() => copyToClipboard(purchase.accessData.credentials!)}
+                      >
+                        <Copy className="h-2.5 w-2.5" />
+                      </Button>
                     )}
                   </div>
                 ) : status === 'requested' ? (
-                  <div className="p-2 rounded-md bg-blue-500/5 border border-blue-500/20">
-                    <div className="flex items-center gap-1.5 text-blue-400">
-                      <AlertCircle className="h-3 w-3" />
-                      <span className="text-xs">Aguardando</span>
-                    </div>
+                  <div className="flex items-center justify-center gap-1 py-1 rounded bg-blue-500/10 text-blue-400">
+                    <Clock className="h-2.5 w-2.5" />
+                    <span className="text-[9px]">Aguardando</span>
                   </div>
                 ) : (
                   <Button 
                     variant="gold" 
                     size="sm"
-                    className="w-full h-7 text-xs"
+                    className="w-full h-5 text-[9px] px-1"
                     onClick={() => setSelectedPurchase(purchase)}
                   >
-                    <MessageSquare className="h-3 w-3 mr-1" />
                     Solicitar
                   </Button>
                 )}
