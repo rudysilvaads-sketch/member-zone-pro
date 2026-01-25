@@ -33,7 +33,6 @@ const App = () => {
             <TooltipProvider>
               <Toaster />
               <Sonner />
-              <GlobalChatWidget />
               <Routes>
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/terms" element={<Terms />} />
@@ -107,6 +106,7 @@ const App = () => {
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
+              <GlobalChatWidget />
             </TooltipProvider>
           </AuthProvider>
         </BrowserRouter>
