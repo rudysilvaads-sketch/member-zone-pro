@@ -211,9 +211,15 @@ const Community = () => {
         await fetchPosts();
         
         // Complete engage-community mission
-        const missionCompleted = await completeMission(userProfile.uid, 'engage-community');
-        if (missionCompleted) {
-          toast.success('🎯 Missão "Membro Ativo" completada!');
+        const missionResult = await completeMission(userProfile.uid, 'engage-community');
+        if (missionResult.completed && missionResult.rewards) {
+          toast.success(
+            <div className="flex flex-col">
+              <span className="font-bold">🎯 Missão Completada!</span>
+              <span className="text-sm text-muted-foreground">{missionResult.rewards.title}</span>
+              <span className="text-xs text-primary">+{missionResult.rewards.xp} XP | +{missionResult.rewards.points} pts</span>
+            </div>
+          );
         }
       } else {
         toast.error(result.error || 'Erro ao publicar');
@@ -321,9 +327,15 @@ const Community = () => {
         }
         
         // Complete engage-community mission
-        const missionCompleted = await completeMission(userProfile.uid, 'engage-community');
-        if (missionCompleted) {
-          toast.success('🎯 Missão "Membro Ativo" completada!');
+        const missionResult = await completeMission(userProfile.uid, 'engage-community');
+        if (missionResult.completed && missionResult.rewards) {
+          toast.success(
+            <div className="flex flex-col">
+              <span className="font-bold">🎯 Missão Completada!</span>
+              <span className="text-sm text-muted-foreground">{missionResult.rewards.title}</span>
+              <span className="text-xs text-primary">+{missionResult.rewards.xp} XP | +{missionResult.rewards.points} pts</span>
+            </div>
+          );
         }
         
         toast.success('Comentário adicionado!');
@@ -794,6 +806,8 @@ const PostCard = ({ post, currentUserId, onLike, onDelete, onOpenComments, forma
       ? `${post.authorName}: "${post.content.substring(0, 100)}${post.content.length > 100 ? '...' : ''}"`
       : `Post de ${post.authorName} na comunidade La Casa`;
     
+    let shared = false;
+    
     // Try native share API first (mobile)
     if (navigator.share) {
       try {
@@ -803,7 +817,7 @@ const PostCard = ({ post, currentUserId, onLike, onDelete, onOpenComments, forma
           url: shareUrl,
         });
         toast.success('Post compartilhado!');
-        return;
+        shared = true;
       } catch (error) {
         // User cancelled or error - fall back to clipboard
         if ((error as Error).name === 'AbortError') return;
@@ -811,11 +825,29 @@ const PostCard = ({ post, currentUserId, onLike, onDelete, onOpenComments, forma
     }
     
     // Fallback: copy to clipboard
-    try {
-      await navigator.clipboard.writeText(shareUrl);
-      toast.success('Link copiado para a área de transferência!');
-    } catch {
-      toast.error('Não foi possível copiar o link');
+    if (!shared) {
+      try {
+        await navigator.clipboard.writeText(shareUrl);
+        toast.success('Link copiado para a área de transferência!');
+        shared = true;
+      } catch {
+        toast.error('Não foi possível copiar o link');
+        return;
+      }
+    }
+    
+    // Complete share-progress mission if shared successfully
+    if (shared && currentUserId) {
+      const missionResult = await completeMission(currentUserId, 'share-progress');
+      if (missionResult.completed && missionResult.rewards) {
+        toast.success(
+          <div className="flex flex-col">
+            <span className="font-bold">🎯 Missão Completada!</span>
+            <span className="text-sm text-muted-foreground">{missionResult.rewards.title}</span>
+            <span className="text-xs text-primary">+{missionResult.rewards.xp} XP | +{missionResult.rewards.points} pts</span>
+          </div>
+        );
+      }
     }
   };
 

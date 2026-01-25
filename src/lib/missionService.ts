@@ -4,10 +4,19 @@ import {
   getDoc, 
   setDoc, 
   updateDoc,
+  increment,
   serverTimestamp,
   Timestamp,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+
+// Mission rewards configuration
+export const MISSION_REWARDS: Record<string, { xp: number; points: number; title: string }> = {
+  'daily-login': { xp: 50, points: 25, title: 'Login Diário' },
+  'engage-community': { xp: 75, points: 35, title: 'Membro Ativo' },
+  'share-progress': { xp: 50, points: 25, title: 'Compartilhador' },
+  'visit-store': { xp: 25, points: 15, title: 'Explorador' },
+};
 
 export interface UserDailyMission {
   missionId: string;
@@ -137,12 +146,12 @@ export const claimMissionReward = async (
   }
 };
 
-// Complete a specific mission type (called when user performs an action)
+// Complete a specific mission type AND auto-claim rewards
 export const completeMission = async (
   userId: string,
   missionId: string,
   requirement: number = 1
-): Promise<boolean> => {
+): Promise<{ completed: boolean; rewards?: { xp: number; points: number; title: string } }> => {
   try {
     const today = getTodayDateString();
     const missionDocRef = doc(db, 'users', userId, 'dailyMissions', today);
@@ -150,29 +159,45 @@ export const completeMission = async (
     const missionDoc = await getDoc(missionDocRef);
     
     if (!missionDoc.exists()) {
-      return false;
+      return { completed: false };
     }
     
     const data = missionDoc.data() as UserMissionsDoc;
     const mission = data.missions[missionId];
     
     if (!mission || mission.completed) {
-      return false; // Already completed or doesn't exist
+      return { completed: false }; // Already completed or doesn't exist
     }
     
     const newProgress = Math.min(mission.progress + 1, requirement);
     const completed = newProgress >= requirement;
     
+    // Update mission progress
     await updateDoc(missionDocRef, {
       [`missions.${missionId}.progress`]: newProgress,
       [`missions.${missionId}.completed`]: completed,
       [`missions.${missionId}.completedAt`]: completed ? serverTimestamp() : null,
+      [`missions.${missionId}.claimed`]: completed, // Auto-claim when completed
+      [`missions.${missionId}.claimedAt`]: completed ? serverTimestamp() : null,
       updatedAt: serverTimestamp(),
     });
     
-    return completed;
+    // If completed, auto-award XP and points
+    if (completed) {
+      const rewards = MISSION_REWARDS[missionId];
+      if (rewards) {
+        const userDocRef = doc(db, 'users', userId);
+        await updateDoc(userDocRef, {
+          xp: increment(rewards.xp),
+          points: increment(rewards.points),
+        });
+        return { completed: true, rewards };
+      }
+    }
+    
+    return { completed };
   } catch (error) {
     console.error('Error completing mission:', error);
-    return false;
+    return { completed: false };
   }
 };
