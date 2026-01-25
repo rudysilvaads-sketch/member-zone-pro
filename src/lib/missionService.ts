@@ -50,13 +50,36 @@ export const getTodayDateString = (): string => {
   return now.toISOString().split('T')[0];
 };
 
-// Reset daily missions for testing (deletes today's mission document)
+// Reset daily missions for testing (overwrites today's mission document with fresh data)
 export const resetDailyMissions = async (userId: string): Promise<boolean> => {
   try {
     const today = getTodayDateString();
     const missionDocRef = doc(db, 'users', userId, 'dailyMissions', today);
-    const { deleteDoc } = await import('firebase/firestore');
-    await deleteDoc(missionDocRef);
+    
+    // Instead of deleting (which may be blocked by Firebase rules),
+    // we'll overwrite with a "reset" flag that will trigger re-initialization
+    const missionIds = Object.keys(MISSION_REWARDS);
+    const missions: Record<string, UserDailyMission> = {};
+    
+    missionIds.forEach(missionId => {
+      missions[missionId] = {
+        missionId,
+        progress: 0,
+        completed: false,
+        claimed: false,
+      };
+    });
+    
+    // Set fresh document without the login mission completed
+    await setDoc(missionDocRef, {
+      date: today,
+      missions,
+      updatedAt: serverTimestamp(),
+      xpVerified: false, // Allow XP to be credited again
+      allMissionsBonusClaimed: false,
+      wasReset: true, // Flag indicating this was a reset
+    });
+    
     console.log('Daily missions reset for user:', userId);
     return true;
   } catch (error) {
