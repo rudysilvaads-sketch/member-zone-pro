@@ -223,8 +223,9 @@ export function ProductsShowcase({ userRank, userPoints }: ProductsShowcaseProps
                               alt={product.name}
                               className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                             />
-                            {/* Bottom gradient */}
-                            <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-[#0a0a0a] to-transparent" />
+                            {/* Premium bottom gradient overlay */}
+                            <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a]/80 to-transparent" />
+                            <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-[#BFFF00]/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                           </div>
                           
                           {/* Product info */}
