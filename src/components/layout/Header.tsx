@@ -8,6 +8,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { NotificationsDropdown } from "@/components/NotificationsDropdown";
 import { ChatModal } from "@/components/ChatModal";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
+import { MissionProgressIndicator } from "@/components/layout/MissionProgressIndicator";
 
 const getBadgeVariant = (rank: string) => {
   switch (rank?.toLowerCase()) {
@@ -41,6 +42,9 @@ export function Header() {
 
         {/* Right Section */}
         <div className="flex items-center gap-4">
+          {/* Mission Progress */}
+          <MissionProgressIndicator />
+          
           {/* Theme Toggle */}
           <ThemeToggle />
           
