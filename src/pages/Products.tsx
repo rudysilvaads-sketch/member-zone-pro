@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import Autoplay from "embla-carousel-autoplay";
 import Fade from "embla-carousel-fade";
 import { MyRedemptions } from "@/components/dashboard/MyRedemptions";
+import { completeMission } from "@/lib/missionService";
 import featuredHeroBg from "@/assets/featured-hero-wide.jpg";
 import bannerChatGPT from "@/assets/banner-chatgpt.jpg";
 import bannerGoogleVO3 from "@/assets/banner-google-vo3.jpg";
@@ -182,6 +183,20 @@ const Products = () => {
       category: 'items',
     },
   ];
+
+  // Track visit-store mission
+  useEffect(() => {
+    const trackStoreVisit = async () => {
+      if (userProfile?.uid) {
+        try {
+          await completeMission(userProfile.uid, 'visit-store', 1);
+        } catch (error) {
+          console.error('Error tracking store visit mission:', error);
+        }
+      }
+    };
+    trackStoreVisit();
+  }, [userProfile?.uid]);
 
   useEffect(() => {
     const fetchData = async () => {
