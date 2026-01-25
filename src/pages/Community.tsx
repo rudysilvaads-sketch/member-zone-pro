@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { 
   Users, MessageSquare, Heart, TrendingUp, Send, Clock, 
-  MoreHorizontal, Trash2, Loader2, ImagePlus, X
+  MoreHorizontal, Trash2, Loader2, ImagePlus, X, Share2
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -746,6 +746,37 @@ const PostCard = ({ post, currentUserId, onLike, onDelete, onOpenComments, forma
   const isAuthor = post.authorId === currentUserId;
   const [imageExpanded, setImageExpanded] = useState(false);
 
+  const handleShare = async () => {
+    const shareUrl = `${window.location.origin}/community?post=${post.id}`;
+    const shareText = post.content 
+      ? `${post.authorName}: "${post.content.substring(0, 100)}${post.content.length > 100 ? '...' : ''}"`
+      : `Post de ${post.authorName} na comunidade La Casa`;
+    
+    // Try native share API first (mobile)
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'La Casa - Comunidade',
+          text: shareText,
+          url: shareUrl,
+        });
+        toast.success('Post compartilhado!');
+        return;
+      } catch (error) {
+        // User cancelled or error - fall back to clipboard
+        if ((error as Error).name === 'AbortError') return;
+      }
+    }
+    
+    // Fallback: copy to clipboard
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      toast.success('Link copiado para a área de transferência!');
+    } catch {
+      toast.error('Não foi possível copiar o link');
+    }
+  };
+
   return (
     <>
       <Card>
@@ -816,13 +847,13 @@ const PostCard = ({ post, currentUserId, onLike, onDelete, onOpenComments, forma
                 </div>
               )}
               
-              <div className="flex items-center gap-6 mt-4">
+              <div className="flex items-center gap-4 mt-4">
                 <Button 
                   variant="ghost" 
                   size="sm" 
                   className={cn(
                     "text-muted-foreground",
-                    isLiked && "text-red-500 hover:text-red-600"
+                    isLiked && "text-destructive hover:text-destructive/80"
                   )}
                   onClick={onLike}
                 >
@@ -837,6 +868,15 @@ const PostCard = ({ post, currentUserId, onLike, onDelete, onOpenComments, forma
                 >
                   <MessageSquare className="h-4 w-4 mr-1" />
                   {post.commentsCount || 0}
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="text-muted-foreground hover:text-primary"
+                  onClick={handleShare}
+                >
+                  <Share2 className="h-4 w-4 mr-1" />
+                  Compartilhar
                 </Button>
               </div>
             </div>
