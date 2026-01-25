@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef } from "react";
-import { X, MessageCircle, Send } from "lucide-react";
+import { X, Send, Mic, Square, Loader2 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
-import { Conversation, sendMessage, getOrCreateConversation, markMessagesAsRead } from "@/lib/chatService";
+import { Conversation, sendMessage, markMessagesAsRead } from "@/lib/chatService";
+import { useAudioRecorder, formatRecordingTime } from "@/hooks/useAudioRecorder";
 import { cn } from "@/lib/utils";
 
 interface ChatWidgetProps {
@@ -20,6 +21,15 @@ export function ChatWidget({ conversations }: ChatWidgetProps) {
   const [dismissedConversations, setDismissedConversations] = useState<Set<string>>(new Set());
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const previousUnreadRef = useRef<Record<string, number>>({});
+  
+  const { 
+    isRecording, 
+    recordingTime, 
+    startRecording, 
+    stopRecording, 
+    cancelRecording,
+    uploadAudio 
+  } = useAudioRecorder();
 
   // Find conversations with new unread messages (not dismissed)
   const conversationsWithNewMessages = conversations.filter(convo => {
@@ -82,8 +92,8 @@ export function ChatWidget({ conversations }: ChatWidgetProps) {
     }
   };
 
-  const handleSend = async () => {
-    if (!newMessage.trim() || !expandedChat || !user || !userProfile) return;
+  const handleSend = async (audioUrl?: string) => {
+    if ((!newMessage.trim() && !audioUrl) || !expandedChat || !user || !userProfile) return;
 
     setSending(true);
     try {
@@ -94,13 +104,41 @@ export function ChatWidget({ conversations }: ChatWidgetProps) {
         userProfile.displayName,
         userProfile.photoURL,
         newMessage,
-        other.oderId
+        other.oderId,
+        audioUrl
       );
       setNewMessage("");
       // Close the widget after sending
       handleDismiss(expandedChat.id);
     } catch (error) {
       console.error("Error sending message:", error);
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const handleStartRecording = async () => {
+    try {
+      await startRecording();
+    } catch (error) {
+      console.error("Error starting recording:", error);
+    }
+  };
+
+  const handleStopRecording = async () => {
+    if (!expandedChat || !user) return;
+    
+    setSending(true);
+    try {
+      const audioBlob = await stopRecording();
+      if (audioBlob) {
+        const audioUrl = await uploadAudio(audioBlob, expandedChat.id);
+        if (audioUrl) {
+          await handleSend(audioUrl);
+        }
+      }
+    } catch (error) {
+      console.error("Error sending audio:", error);
     } finally {
       setSending(false);
     }
@@ -152,21 +190,61 @@ export function ChatWidget({ conversations }: ChatWidgetProps) {
 
           {/* Quick Reply */}
           <div className="p-3 border-t flex gap-2">
-            <Input
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              placeholder="Responder..."
-              className="text-sm h-9"
-              onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
-            />
-            <Button
-              size="icon"
-              className="h-9 w-9 shrink-0"
-              onClick={handleSend}
-              disabled={!newMessage.trim() || sending}
-            >
-              <Send className="h-4 w-4" />
-            </Button>
+            {isRecording ? (
+              <>
+                <div className="flex-1 flex items-center gap-2 px-3 bg-destructive/10 rounded-md">
+                  <span className="animate-pulse text-destructive">●</span>
+                  <span className="text-sm font-medium">{formatRecordingTime(recordingTime)}</span>
+                </div>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-9 w-9 shrink-0"
+                  onClick={cancelRecording}
+                  disabled={sending}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+                <Button
+                  size="icon"
+                  className="h-9 w-9 shrink-0 bg-destructive hover:bg-destructive/90"
+                  onClick={handleStopRecording}
+                  disabled={sending}
+                >
+                  {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Square className="h-4 w-4" />}
+                </Button>
+              </>
+            ) : (
+              <>
+                <Input
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  placeholder="Responder..."
+                  className="text-sm h-9"
+                  onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
+                />
+                {newMessage.trim() ? (
+                  <Button
+                    size="icon"
+                    className="h-9 w-9 shrink-0"
+                    onClick={() => handleSend()}
+                    disabled={sending}
+                  >
+                    {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                  </Button>
+                ) : (
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    className="h-9 w-9 shrink-0"
+                    onClick={handleStartRecording}
+                    disabled={sending}
+                  >
+                    <Mic className="h-4 w-4" />
+                  </Button>
+                )}
+              </>
+            )}
           </div>
         </Card>
       )}
