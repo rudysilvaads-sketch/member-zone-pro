@@ -106,7 +106,7 @@ export function MyRedemptions({ purchases, onRefresh }: MyRedemptionsProps) {
 
   return (
     <>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-3 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
         {purchases.map((purchase) => {
           const status = getAccessStatus(purchase);
           const config = statusConfig[status];
@@ -120,7 +120,7 @@ export function MyRedemptions({ purchases, onRefresh }: MyRedemptionsProps) {
             >
               {/* Product Image */}
               {purchase.productImage && (
-                <div className="relative aspect-video overflow-hidden">
+                <div className="relative aspect-[4/3] overflow-hidden">
                   <img 
                     src={purchase.productImage} 
                     alt={purchase.productName}
@@ -129,34 +129,33 @@ export function MyRedemptions({ purchases, onRefresh }: MyRedemptionsProps) {
                   <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] to-transparent" />
                   
                   {/* Status Badge */}
-                  <Badge className={`absolute top-3 right-3 ${config.color}`}>
-                    <StatusIcon className="h-3 w-3 mr-1" />
+                  <Badge className={`absolute top-2 right-2 text-[10px] px-1.5 py-0.5 ${config.color}`}>
+                    <StatusIcon className="h-2.5 w-2.5 mr-0.5" />
                     {config.label}
                   </Badge>
                 </div>
               )}
 
-              <CardContent className="p-4 space-y-3">
+              <CardContent className="p-2.5 space-y-2">
                 <div>
-                  <h3 className="font-bold text-white truncate">{purchase.productName}</h3>
-                  <p className="text-xs text-white/40 mt-1">
-                    Resgatado em {purchase.purchasedAt?.toDate?.() 
+                  <h3 className="font-bold text-white text-sm truncate">{purchase.productName}</h3>
+                  <p className="text-[10px] text-white/40">
+                    {purchase.purchasedAt?.toDate?.() 
                       ? new Intl.DateTimeFormat('pt-BR', { 
                           day: '2-digit',
                           month: 'short',
-                          year: 'numeric',
                         }).format(purchase.purchasedAt.toDate())
-                      : 'Data não disponível'
+                      : '-'
                     }
                   </p>
                 </div>
 
                 {/* Access Info or Action */}
                 {status === 'delivered' && purchase.accessData ? (
-                  <div className="space-y-2 p-3 rounded-lg bg-[#BFFF00]/5 border border-[#BFFF00]/20">
-                    <div className="flex items-center gap-2 text-[#BFFF00]">
-                      <Key className="h-4 w-4" />
-                      <span className="text-sm font-medium">Dados de Acesso</span>
+                  <div className="space-y-1.5 p-2 rounded-md bg-[#BFFF00]/5 border border-[#BFFF00]/20">
+                    <div className="flex items-center gap-1.5 text-[#BFFF00]">
+                      <Key className="h-3 w-3" />
+                      <span className="text-xs font-medium">Dados de Acesso</span>
                     </div>
                     
                     {purchase.accessData.link && (
@@ -164,56 +163,51 @@ export function MyRedemptions({ purchases, onRefresh }: MyRedemptionsProps) {
                         href={purchase.accessData.link}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-2 text-sm text-white/80 hover:text-[#BFFF00] transition-colors"
+                        className="flex items-center gap-1.5 text-xs text-white/80 hover:text-[#BFFF00] transition-colors"
                       >
-                        <ExternalLink className="h-3.5 w-3.5" />
+                        <ExternalLink className="h-3 w-3" />
                         Acessar
                       </a>
                     )}
                     
                     {purchase.accessData.credentials && (
-                      <div className="space-y-1">
-                        <p className="text-xs text-white/60">Credenciais:</p>
-                        <div className="flex items-center gap-2">
-                          <code className="flex-1 text-xs bg-black/30 px-2 py-1 rounded truncate">
-                            {purchase.accessData.credentials}
-                          </code>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-6 w-6"
-                            onClick={() => copyToClipboard(purchase.accessData.credentials!)}
-                          >
-                            <Copy className="h-3 w-3" />
-                          </Button>
-                        </div>
+                      <div className="flex items-center gap-1">
+                        <code className="flex-1 text-[10px] bg-black/30 px-1.5 py-0.5 rounded truncate">
+                          {purchase.accessData.credentials}
+                        </code>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-5 w-5"
+                          onClick={() => copyToClipboard(purchase.accessData.credentials!)}
+                        >
+                          <Copy className="h-2.5 w-2.5" />
+                        </Button>
                       </div>
                     )}
 
                     {purchase.accessData.instructions && (
-                      <p className="text-xs text-white/60 mt-2">
+                      <p className="text-[10px] text-white/60 line-clamp-2">
                         {purchase.accessData.instructions}
                       </p>
                     )}
                   </div>
                 ) : status === 'requested' ? (
-                  <div className="p-3 rounded-lg bg-blue-500/5 border border-blue-500/20">
-                    <div className="flex items-center gap-2 text-blue-400">
-                      <AlertCircle className="h-4 w-4" />
-                      <span className="text-sm">Aguardando liberação</span>
+                  <div className="p-2 rounded-md bg-blue-500/5 border border-blue-500/20">
+                    <div className="flex items-center gap-1.5 text-blue-400">
+                      <AlertCircle className="h-3 w-3" />
+                      <span className="text-xs">Aguardando</span>
                     </div>
-                    <p className="text-xs text-white/40 mt-1">
-                      O admin está processando sua solicitação
-                    </p>
                   </div>
                 ) : (
                   <Button 
                     variant="gold" 
-                    className="w-full"
+                    size="sm"
+                    className="w-full h-7 text-xs"
                     onClick={() => setSelectedPurchase(purchase)}
                   >
-                    <MessageSquare className="h-4 w-4 mr-2" />
-                    Solicitar Acesso
+                    <MessageSquare className="h-3 w-3 mr-1" />
+                    Solicitar
                   </Button>
                 )}
               </CardContent>
