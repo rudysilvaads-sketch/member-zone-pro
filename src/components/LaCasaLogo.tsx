@@ -13,6 +13,13 @@ export function LaCasaLogo({ size = "md", className }: LaCasaLogoProps) {
     xl: { main: "text-6xl", sub: "text-sm" },
   };
 
+  const darkSizeClasses = {
+    sm: "text-[6px]",
+    md: "text-[8px]",
+    lg: "text-[10px]",
+    xl: "text-xs",
+  };
+
   return (
     <div className={cn("flex flex-col items-center", className)}>
       <span 
@@ -23,7 +30,7 @@ export function LaCasaLogo({ size = "md", className }: LaCasaLogoProps) {
       >
         Members Club
       </span>
-      <div className="flex items-baseline">
+      <div className="flex flex-col items-center">
         <span 
           className={cn(
             sizeClasses[size].main,
@@ -34,6 +41,14 @@ export function LaCasaLogo({ size = "md", className }: LaCasaLogoProps) {
           }}
         >
           LA CASA
+        </span>
+        <span 
+          className={cn(
+            darkSizeClasses[size],
+            "text-[#F5A623] uppercase tracking-[0.5em] font-bold -mt-1 drop-shadow-[0_0_15px_rgba(245,166,35,0.5)]"
+          )}
+        >
+          Dark
         </span>
       </div>
     </div>
