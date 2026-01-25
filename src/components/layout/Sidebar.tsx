@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { 
   LayoutDashboard, 
   Trophy, 
@@ -9,13 +10,16 @@ import {
   ChevronLeft,
   ChevronRight,
   LogOut,
-  Shield
+  Shield,
+  Menu,
+  X
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { toast } from "sonner";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 // Admin emails list
 const ADMIN_EMAILS = ['rudysilvaads@gmail.com'];
@@ -46,6 +50,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const { user, userProfile, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [mobileOpen, setMobileOpen] = useState(false);
   
   // Check both email list AND Firestore role for admin/moderator access
   const isAdmin = user && (
@@ -73,71 +78,80 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
     return location.pathname.startsWith(href);
   };
 
-  return (
-    <aside 
-      className={cn(
-        "fixed left-0 top-0 z-40 h-screen bg-[#0a0a0a] border-r border-[#BFFF00]/10 transition-all duration-300",
-        collapsed ? "w-20" : "w-64"
-      )}
-    >
-      <div className="flex h-full flex-col">
-        {/* Logo - La Casa Elite */}
-        <div className="flex h-16 items-center justify-between border-b border-[#BFFF00]/10 px-4">
-          <div className={cn("flex items-center gap-3", collapsed && "justify-center w-full")}>
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#BFFF00] shadow-[0_0_20px_rgba(191,255,0,0.3)]">
-              <Crown className="h-5 w-5 text-[#0a0a0a]" />
-            </div>
-            {!collapsed && (
-              <div className="flex flex-col">
-                <span className="text-lg font-bold italic text-white tracking-tight">LA CASA</span>
-                <span className="text-[8px] text-[#BFFF00] uppercase tracking-[0.3em] -mt-1">Members Club</span>
-              </div>
-            )}
+  const NavContent = ({ isMobile = false }: { isMobile?: boolean }) => (
+    <div className="flex h-full flex-col">
+      {/* Logo - La Casa Elite */}
+      <div className="flex h-14 sm:h-16 items-center justify-between border-b border-[#BFFF00]/10 px-4">
+        <div className={cn("flex items-center gap-3", !isMobile && collapsed && "justify-center w-full")}>
+          <div className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-lg bg-[#BFFF00] shadow-[0_0_20px_rgba(191,255,0,0.3)]">
+            <Crown className="h-4 w-4 sm:h-5 sm:w-5 text-[#0a0a0a]" />
           </div>
+          {(isMobile || !collapsed) && (
+            <div className="flex flex-col">
+              <span className="text-base sm:text-lg font-bold italic text-white tracking-tight">LA CASA</span>
+              <span className="text-[7px] sm:text-[8px] text-[#BFFF00] uppercase tracking-[0.3em] -mt-1">Members Club</span>
+            </div>
+          )}
         </div>
-
-        {/* Navigation */}
-        <nav className="flex-1 space-y-1 p-4">
-          {navItems
-            .filter(item => !item.adminOnly || hasAdminAccess)
-            .map((item) => {
-              const active = isActive(item.href);
-              return (
-                <Link
-                  key={item.label}
-                  to={item.href}
-                  className={cn(
-                    "flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-all duration-200",
-                    collapsed && "justify-center px-0",
-                    active
-                      ? "bg-[#BFFF00]/10 text-[#BFFF00] border border-[#BFFF00]/20 shadow-[0_0_15px_rgba(191,255,0,0.1)]"
-                      : "text-white/70 hover:bg-white/5 hover:text-white",
-                    item.adminOnly && "text-[#BFFF00]/70"
-                  )}
-                >
-                  <item.icon className={cn("h-5 w-5", active && "text-[#BFFF00]", item.adminOnly && "text-[#BFFF00]/70")} />
-                  {!collapsed && <span>{item.label}</span>}
-                </Link>
-              );
-            })}
-        </nav>
-
-        {/* Logout & Collapse */}
-        <div className="border-t border-[#BFFF00]/10 p-4 space-y-2">
+        {isMobile && (
           <Button
             variant="ghost"
-            onClick={handleLogout}
-            className={cn("w-full justify-start text-red-400 hover:text-red-300 hover:bg-red-500/10", collapsed && "justify-center")}
+            size="icon"
+            onClick={() => setMobileOpen(false)}
+            className="text-white/50 hover:text-white"
           >
-            <LogOut className="h-5 w-5" />
-            {!collapsed && <span className="ml-3">Sair</span>}
+            <X className="h-5 w-5" />
           </Button>
-          
+        )}
+      </div>
+
+      {/* Navigation */}
+      <nav className="flex-1 space-y-1 p-3 sm:p-4 overflow-y-auto">
+        {navItems
+          .filter(item => !item.adminOnly || hasAdminAccess)
+          .map((item) => {
+            const active = isActive(item.href);
+            return (
+              <Link
+                key={item.label}
+                to={item.href}
+                onClick={() => isMobile && setMobileOpen(false)}
+                className={cn(
+                  "flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-all duration-200 min-h-[48px]",
+                  !isMobile && collapsed && "justify-center px-0",
+                  active
+                    ? "bg-[#BFFF00]/10 text-[#BFFF00] border border-[#BFFF00]/20 shadow-[0_0_15px_rgba(191,255,0,0.1)]"
+                    : "text-white/70 hover:bg-white/5 hover:text-white active:bg-white/10",
+                  item.adminOnly && "text-[#BFFF00]/70"
+                )}
+              >
+                <item.icon className={cn("h-5 w-5 shrink-0", active && "text-[#BFFF00]", item.adminOnly && "text-[#BFFF00]/70")} />
+                {(isMobile || !collapsed) && <span>{item.label}</span>}
+              </Link>
+            );
+          })}
+      </nav>
+
+      {/* Logout & Collapse */}
+      <div className="border-t border-[#BFFF00]/10 p-3 sm:p-4 space-y-2 safe-area-inset">
+        <Button
+          variant="ghost"
+          onClick={handleLogout}
+          className={cn(
+            "w-full justify-start text-red-400 hover:text-red-300 hover:bg-red-500/10 min-h-[48px]", 
+            !isMobile && collapsed && "justify-center"
+          )}
+        >
+          <LogOut className="h-5 w-5 shrink-0" />
+          {(isMobile || !collapsed) && <span className="ml-3">Sair</span>}
+        </Button>
+        
+        {!isMobile && (
           <Button
             variant="ghost"
             size="icon"
             onClick={onToggle}
-            className="w-full justify-center text-white/50 hover:text-[#BFFF00] hover:bg-[#BFFF00]/5"
+            className="w-full justify-center text-white/50 hover:text-[#BFFF00] hover:bg-[#BFFF00]/5 min-h-[48px]"
           >
             {collapsed ? (
               <ChevronRight className="h-5 w-5" />
@@ -145,8 +159,38 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
               <ChevronLeft className="h-5 w-5" />
             )}
           </Button>
-        </div>
+        )}
       </div>
-    </aside>
+    </div>
+  );
+
+  return (
+    <>
+      {/* Mobile Menu Button */}
+      <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+        <SheetTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="fixed left-3 top-3 z-50 md:hidden bg-[#0a0a0a]/90 border border-[#BFFF00]/20 text-white hover:bg-[#BFFF00]/10 hover:text-[#BFFF00] h-10 w-10"
+          >
+            <Menu className="h-5 w-5" />
+          </Button>
+        </SheetTrigger>
+        <SheetContent side="left" className="w-[280px] p-0 bg-[#0a0a0a] border-r border-[#BFFF00]/10">
+          <NavContent isMobile />
+        </SheetContent>
+      </Sheet>
+
+      {/* Desktop Sidebar */}
+      <aside 
+        className={cn(
+          "fixed left-0 top-0 z-40 h-screen bg-[#0a0a0a] border-r border-[#BFFF00]/10 transition-all duration-300 hidden md:block",
+          collapsed ? "w-20" : "w-64"
+        )}
+      >
+        <NavContent />
+      </aside>
+    </>
   );
 }
