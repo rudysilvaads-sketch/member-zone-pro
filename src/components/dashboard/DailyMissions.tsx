@@ -20,6 +20,7 @@ import { toast } from 'sonner';
 import { 
   getUserDailyMissions, 
   initializeUserDailyMissions, 
+  verifyAndFixLoginReward,
   MISSION_REWARDS
 } from '@/lib/missionService';
 
@@ -99,18 +100,24 @@ export function DailyMissions() {
         const result = await initializeUserDailyMissions(user.uid, missionIds);
         userMissions = result.missionsDoc;
         loginRewardGranted = result.loginRewardGranted;
-        
-        // Show login reward toast
-        if (loginRewardGranted) {
-          const loginReward = MISSION_REWARDS['daily-login'];
-          toast.success(
-            <div className="flex flex-col">
-              <span className="font-bold">🎯 Missão Completada!</span>
-              <span className="text-sm text-muted-foreground">{loginReward.title}</span>
-              <span className="text-xs text-primary">+{loginReward.xp} XP | +{loginReward.points} pts</span>
-            </div>
-          );
+      } else {
+        // Verify XP was credited correctly (fixes old missions that didn't credit XP)
+        const wasFixed = await verifyAndFixLoginReward(user.uid);
+        if (wasFixed) {
+          loginRewardGranted = true;
         }
+      }
+      
+      // Show login reward toast
+      if (loginRewardGranted) {
+        const loginReward = MISSION_REWARDS['daily-login'];
+        toast.success(
+          <div className="flex flex-col">
+            <span className="font-bold">🎯 Missão Completada!</span>
+            <span className="text-sm text-muted-foreground">{loginReward.title}</span>
+            <span className="text-xs text-primary">+{loginReward.xp} XP | +{loginReward.points} pts</span>
+          </div>
+        );
       }
       
       // Merge mission configs with user progress
