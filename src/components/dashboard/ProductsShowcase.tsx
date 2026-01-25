@@ -7,6 +7,7 @@ import { getProducts, purchaseProduct, Product } from "@/lib/firebaseServices";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import Autoplay from "embla-carousel-autoplay";
+import { ProductDetailModal } from "./ProductDetailModal";
 
 interface ProductsShowcaseProps {
   userRank: string;
@@ -60,6 +61,8 @@ export function ProductsShowcase({ userRank, userPoints }: ProductsShowcaseProps
   const [products, setProducts] = useState<Product[]>(defaultProducts);
   const [loading, setLoading] = useState(false);
   const [purchasingId, setPurchasingId] = useState<string | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -76,6 +79,11 @@ export function ProductsShowcase({ userRank, userPoints }: ProductsShowcaseProps
 
     fetchProducts();
   }, []);
+
+  const handleCardClick = (product: Product) => {
+    setSelectedProduct(product);
+    setModalOpen(true);
+  };
 
   const handlePurchase = async (product: Product) => {
     if (!user) {
@@ -100,6 +108,7 @@ export function ProductsShowcase({ userRank, userPoints }: ProductsShowcaseProps
       
       if (result.success) {
         toast.success(`${product.name} resgatado com sucesso!`);
+        setModalOpen(false);
       } else {
         toast.error(result.error || 'Erro ao processar compra');
       }
@@ -179,7 +188,7 @@ export function ProductsShowcase({ userRank, userPoints }: ProductsShowcaseProps
                         
                         <div 
                           className="relative overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-sm transition-all duration-500 group-hover:border-[#BFFF00]/30 group-hover:shadow-[0_0_30px_rgba(191,255,0,0.1)] cursor-pointer"
-                          onClick={() => isAvailable && canAfford && !purchasingId && handlePurchase(product)}
+                          onClick={() => handleCardClick(product)}
                         >
                           {/* Featured badge */}
                           {product.featured && (
@@ -284,6 +293,17 @@ export function ProductsShowcase({ userRank, userPoints }: ProductsShowcaseProps
           </div>
         </div>
       </div>
+
+      {/* Product Detail Modal */}
+      <ProductDetailModal
+        product={selectedProduct}
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+        userRank={userRank}
+        userPoints={userPoints}
+        onPurchase={handlePurchase}
+        purchasing={purchasingId === selectedProduct?.id}
+      />
     </div>
   );
 }
