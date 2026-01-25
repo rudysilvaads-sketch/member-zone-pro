@@ -172,7 +172,7 @@ export function ProductsShowcase({ userRank, userPoints }: ProductsShowcaseProps
                   const isAvailable = product.available && hasAccess;
                   
                   return (
-                    <CarouselItem key={product.id} className="pl-3 basis-1/3 sm:basis-1/4 lg:basis-1/5">
+                    <CarouselItem key={product.id} className="pl-3 basis-[45%] sm:basis-[30%] lg:basis-[22%]">
                       <div className="group relative">
                         {/* Card glow on hover */}
                         <div className="absolute -inset-0.5 bg-gradient-to-r from-[#BFFF00]/0 via-[#BFFF00]/20 to-[#BFFF00]/0 rounded-2xl opacity-0 group-hover:opacity-100 blur-sm transition-opacity duration-500" />
@@ -203,33 +203,33 @@ export function ProductsShowcase({ userRank, userPoints }: ProductsShowcaseProps
                           )}
                           
                           {/* Product image with overlay gradient */}
-                          <div className="relative aspect-[4/3] overflow-hidden bg-gradient-to-br from-white/5 to-transparent">
+                          <div className="relative aspect-[3/4] overflow-hidden bg-gradient-to-br from-white/5 to-transparent">
                             <img
                               src={product.image}
                               alt={product.name}
-                              className="h-full w-full object-contain p-4 transition-transform duration-500 group-hover:scale-110"
+                              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                             />
                             {/* Bottom gradient */}
-                            <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-[#0a0a0a] to-transparent" />
+                            <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-[#0a0a0a] to-transparent" />
                           </div>
                           
                           {/* Product info */}
-                          <div className="relative p-3 -mt-6">
-                            <h4 className="font-bold text-xs text-white truncate group-hover:text-[#BFFF00] transition-colors">
+                          <div className="relative p-3 -mt-4">
+                            <h4 className="font-bold text-sm text-white truncate group-hover:text-[#BFFF00] transition-colors">
                               {product.name}
                             </h4>
-                            <p className="mt-0.5 text-[10px] text-white/40 line-clamp-1">
+                            <p className="mt-1 text-xs text-white/50 line-clamp-1">
                               {product.description}
                             </p>
                             
                             {/* Price and action */}
-                            <div className="mt-2 flex items-center justify-between gap-2">
-                              <div className="flex items-baseline gap-0.5">
-                                <Crown className={`h-3 w-3 ${canAfford ? 'text-[#BFFF00]' : 'text-red-400'}`} />
-                                <span className={`text-sm font-black ${canAfford ? 'text-[#BFFF00]' : 'text-red-400'}`}>
+                            <div className="mt-3 flex items-center justify-between gap-2">
+                              <div className="flex items-baseline gap-1">
+                                <Crown className={`h-3.5 w-3.5 ${canAfford ? 'text-[#BFFF00]' : 'text-red-400'}`} />
+                                <span className={`text-base font-black ${canAfford ? 'text-[#BFFF00]' : 'text-red-400'}`}>
                                   {product.price.toLocaleString()}
                                 </span>
-                                <span className="text-[9px] text-white/30 font-medium">pts</span>
+                                <span className="text-[10px] text-white/40 font-medium">pts</span>
                               </div>
                               <Button
                                 size="sm"
