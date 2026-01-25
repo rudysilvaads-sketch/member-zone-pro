@@ -133,20 +133,16 @@ export default function Auth() {
             animation: 'border-rotate 4s linear infinite',
           }}
         />
-        {/* Animated border - using pseudo-element technique */}
+        {/* Animated border wrapper */}
         <div 
-          className="absolute inset-0 rounded-2xl"
+          className="rounded-2xl p-[2px]"
           style={{
-            padding: '2px',
             background: 'conic-gradient(from var(--border-angle, 0deg), #F5A623 0%, #FFB347 15%, transparent 30%, transparent 70%, #FFB347 85%, #F5A623 100%)',
             animation: 'border-rotate 4s linear infinite',
-            WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
-            WebkitMaskComposite: 'xor',
-            maskComposite: 'exclude',
           }}
-        />
-        {/* Card content - transparent glassmorphism */}
-        <div className="relative backdrop-blur-2xl bg-black/30 rounded-2xl p-8 shadow-[0_8px_32px_rgba(0,0,0,0.5)]">
+        >
+          {/* Card content - transparent glassmorphism */}
+          <div className="backdrop-blur-2xl bg-black/40 rounded-[14px] p-8 shadow-[0_8px_32px_rgba(0,0,0,0.5)]">
           {/* Badge */}
           <div className="flex justify-center mb-6">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#F5A623]/10 border border-[#F5A623]/30">
@@ -330,6 +326,7 @@ export default function Auth() {
               {isLogin ? 'Criar conta' : 'Fazer login'}
             </button>
           </p>
+          </div>
         </div>
       </div>
       
