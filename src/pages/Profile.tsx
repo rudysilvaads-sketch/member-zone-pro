@@ -174,16 +174,16 @@ const Profile = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-[#0a0a0a]">
         <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
         <div className={`transition-all duration-300 ${sidebarCollapsed ? 'pl-20' : 'pl-64'}`}>
           <Header />
           <main className="p-6">
             <div className="animate-pulse space-y-6">
-              <div className="h-48 bg-muted rounded-lg" />
+              <div className="h-48 bg-white/5 rounded-xl" />
               <div className="grid gap-4 md:grid-cols-4">
                 {[1, 2, 3, 4].map(i => (
-                  <div key={i} className="h-24 bg-muted rounded-lg" />
+                  <div key={i} className="h-24 bg-white/5 rounded-xl" />
                 ))}
               </div>
             </div>
@@ -195,19 +195,19 @@ const Profile = () => {
 
   if (!profile) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-[#0a0a0a]">
         <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
         <div className={`transition-all duration-300 ${sidebarCollapsed ? 'pl-20' : 'pl-64'}`}>
           <Header />
           <main className="p-6">
-            <Card>
+            <Card variant="gradient">
               <CardContent className="py-12 text-center">
-                <User className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <h2 className="text-xl font-bold mb-2">Usuário não encontrado</h2>
-                <p className="text-muted-foreground mb-4">
+                <User className="h-12 w-12 mx-auto text-white/30 mb-4" />
+                <h2 className="text-xl font-bold mb-2 text-white">Usuário não encontrado</h2>
+                <p className="text-white/50 mb-4">
                   O perfil que você está procurando não existe.
                 </p>
-                <Button onClick={() => navigate(-1)}>
+                <Button variant="gold" onClick={() => navigate(-1)}>
                   <ArrowLeft className="h-4 w-4 mr-2" />
                   Voltar
                 </Button>
@@ -225,7 +225,7 @@ const Profile = () => {
   const isOwnProfile = currentUser?.uid === profile.uid;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-[#0a0a0a]">
       <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
       
       <div className={`transition-all duration-300 ${sidebarCollapsed ? 'pl-20' : 'pl-64'}`}>
@@ -233,36 +233,36 @@ const Profile = () => {
         
         <main className="p-6">
           {/* Back Button */}
-          <Button variant="ghost" onClick={() => navigate(-1)} className="mb-4">
+          <Button variant="ghost" onClick={() => navigate(-1)} className="mb-4 text-white/70 hover:text-white">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Voltar
           </Button>
 
           {/* Profile Header */}
-          <Card className="mb-6 overflow-hidden">
-            <div className={cn("h-24 bg-gradient-to-r", rank.bg.replace('bg-', 'from-'), "to-primary/20")} />
+          <Card variant="gradient" className="mb-6 overflow-hidden">
+            <div className="h-24 bg-gradient-to-r from-[#BFFF00]/20 to-transparent" />
             <CardContent className="relative pb-6">
               <div className="flex flex-col md:flex-row md:items-end gap-4 -mt-12">
-                <Avatar className="h-24 w-24 border-4 border-background shadow-lg">
+                <Avatar className="h-24 w-24 border-4 border-[#0a0a0a] shadow-lg ring-2 ring-[#BFFF00]/30">
                   <AvatarImage src={profile.photoURL || undefined} />
-                  <AvatarFallback className={cn("text-2xl", rank.bg)}>
+                  <AvatarFallback className="text-2xl bg-[#BFFF00]/20 text-[#BFFF00]">
                     {profile.displayName?.charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 
                 <div className="flex-1 pt-2 md:pt-0">
                   <div className="flex flex-wrap items-center gap-3">
-                    <h1 className="text-2xl font-bold">{profile.displayName}</h1>
+                    <h1 className="text-2xl font-bold text-white">{profile.displayName}</h1>
                     <Badge className={cn(rank.bg, rank.color, "border-0")}>
                       <Trophy className="h-3 w-3 mr-1" />
                       {rank.label}
                     </Badge>
-                    <Badge variant="secondary">
+                    <Badge className="bg-[#BFFF00]/10 text-[#BFFF00] border-[#BFFF00]/20">
                       Nível {profile.level || 1}
                     </Badge>
                   </div>
                   
-                  <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-4 mt-2 text-sm text-white/50">
                     <span className="flex items-center gap-1">
                       <Calendar className="h-4 w-4" />
                       Membro desde {formatDate(profile.createdAt)}
@@ -295,61 +295,61 @@ const Profile = () => {
 
           {/* Stats Grid */}
           <div className="grid gap-4 md:grid-cols-4 mb-6">
-            <Card>
+            <Card variant="gradient">
               <CardContent className="p-4 flex items-center gap-4">
-                <div className={cn("p-3 rounded-lg", rank.bg)}>
-                  <Star className={cn("h-6 w-6", rank.color)} />
+                <div className="p-3 rounded-xl bg-[#BFFF00]/10 border border-[#BFFF00]/20">
+                  <Star className="h-6 w-6 text-[#BFFF00]" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">{profile.points?.toLocaleString() || 0}</p>
-                  <p className="text-sm text-muted-foreground">Pontos</p>
+                  <p className="text-2xl font-bold text-[#BFFF00]">{profile.points?.toLocaleString() || 0}</p>
+                  <p className="text-sm text-white/50">Pontos</p>
                 </div>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card variant="gradient">
               <CardContent className="p-4 flex items-center gap-4">
-                <div className="p-3 rounded-lg bg-primary/20">
-                  <Zap className="h-6 w-6 text-primary" />
+                <div className="p-3 rounded-xl bg-[#BFFF00]/10 border border-[#BFFF00]/20">
+                  <Zap className="h-6 w-6 text-[#BFFF00]" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">{profile.xp?.toLocaleString() || 0}</p>
-                  <p className="text-sm text-muted-foreground">XP Total</p>
+                  <p className="text-2xl font-bold text-white">{profile.xp?.toLocaleString() || 0}</p>
+                  <p className="text-sm text-white/50">XP Total</p>
                 </div>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card variant="gradient">
               <CardContent className="p-4 flex items-center gap-4">
-                <div className="p-3 rounded-lg bg-orange-500/20">
+                <div className="p-3 rounded-xl bg-orange-500/10 border border-orange-500/20">
                   <Flame className="h-6 w-6 text-orange-500" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">{profile.streakDays || 0}</p>
-                  <p className="text-sm text-muted-foreground">Dias de Streak</p>
+                  <p className="text-2xl font-bold text-white">{profile.streakDays || 0}</p>
+                  <p className="text-sm text-white/50">Dias de Streak</p>
                 </div>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card variant="gradient">
               <CardContent className="p-4 flex items-center gap-4">
-                <div className="p-3 rounded-lg bg-green-500/20">
-                  <Award className="h-6 w-6 text-green-500" />
+                <div className="p-3 rounded-xl bg-[#BFFF00]/10 border border-[#BFFF00]/20">
+                  <Award className="h-6 w-6 text-[#BFFF00]" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">{unlockedIds.length}</p>
-                  <p className="text-sm text-muted-foreground">Conquistas</p>
+                  <p className="text-2xl font-bold text-white">{unlockedIds.length}</p>
+                  <p className="text-sm text-white/50">Conquistas</p>
                 </div>
               </CardContent>
             </Card>
           </div>
 
           {/* Level Progress */}
-          <Card className="mb-6">
+          <Card variant="gradient" className="mb-6">
             <CardContent className="p-4">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium">Nível {profile.level || 1}</span>
-                <span className="text-sm text-muted-foreground">
+                <span className="text-sm font-medium text-white">Nível {profile.level || 1}</span>
+                <span className="text-sm text-white/50">
                   {xpProgress.current} / {xpProgress.needed} XP
                 </span>
               </div>

@@ -58,7 +58,7 @@ const Achievements = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-[#0a0a0a]">
       <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
       
       <div className={`transition-all duration-300 ${sidebarCollapsed ? 'pl-20' : 'pl-64'}`}>
@@ -66,26 +66,29 @@ const Achievements = () => {
         
         <main className="p-6">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold flex items-center gap-3">
-              <Award className="h-8 w-8 text-primary" />
-              Conquistas
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#BFFF00]/10 border border-[#BFFF00]/20 mb-3">
+              <span className="text-xs text-[#BFFF00] uppercase tracking-widest font-medium">Conquistas</span>
+            </div>
+            <h1 className="text-3xl font-bold flex items-center gap-3 text-white">
+              <Award className="h-8 w-8 text-[#BFFF00]" />
+              Suas <span className="text-[#BFFF00] italic">Conquistas</span>
             </h1>
-            <p className="mt-1 text-muted-foreground">
+            <p className="mt-1 text-white/50">
               Desbloqueie conquistas completando desafios
             </p>
           </div>
 
           {/* Progress Overview */}
-          <Card className="mb-8 bg-gradient-to-r from-primary/10 to-accent/10 border-primary/20">
+          <Card variant="gradient" className="mb-8 border-[#BFFF00]/20">
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <h3 className="text-xl font-bold">Seu Progresso</h3>
-                  <p className="text-muted-foreground">
+                  <h3 className="text-xl font-bold text-white">Seu Progresso</h3>
+                  <p className="text-white/50">
                     {unlockedCount} de {totalCount} conquistas desbloqueadas
                   </p>
                 </div>
-                <div className="text-4xl font-bold text-primary">
+                <div className="text-4xl font-bold text-[#BFFF00]">
                   {Math.round(progressPercent)}%
                 </div>
               </div>
@@ -96,9 +99,9 @@ const Achievements = () => {
                   const count = groupedAchievements[key as keyof typeof groupedAchievements]?.length || 0;
                   const unlocked = groupedAchievements[key as keyof typeof groupedAchievements]?.filter(a => unlockedIds.includes(a.id)).length || 0;
                   return (
-                    <div key={key} className={cn("flex-1 p-3 rounded-lg", config.bg)}>
+                    <div key={key} className={cn("flex-1 p-3 rounded-xl bg-white/5 border border-white/10", config.bg)}>
                       <p className={cn("text-sm font-medium", config.color)}>{config.label}</p>
-                      <p className="text-lg font-bold">{unlocked}/{count}</p>
+                      <p className="text-lg font-bold text-white">{unlocked}/{count}</p>
                     </div>
                   );
                 })}
@@ -132,34 +135,35 @@ const Achievements = () => {
                       return (
                         <Card 
                           key={achievement.id}
+                          variant="gradient"
                           className={cn(
                             "transition-all relative overflow-hidden",
                             isUnlocked 
-                              ? cn(config.border, "border-2") 
-                              : "opacity-60 grayscale"
+                              ? cn(config.border, "border-2 shadow-[0_0_20px_rgba(191,255,0,0.1)]") 
+                              : "opacity-50 grayscale"
                           )}
                         >
                           {isUnlocked && (
                             <div className="absolute top-3 right-3">
-                              <CheckCircle2 className="h-5 w-5 text-green-500" />
+                              <CheckCircle2 className="h-5 w-5 text-[#BFFF00]" />
                             </div>
                           )}
                           <CardContent className="p-6">
                             <div className={cn(
                               "w-16 h-16 rounded-xl flex items-center justify-center mb-4",
-                              isUnlocked ? config.bg : "bg-muted"
+                              isUnlocked ? config.bg : "bg-white/5"
                             )}>
                               {isUnlocked ? (
                                 <Icon className={cn("h-8 w-8", config.color)} />
                               ) : (
-                                <Lock className="h-8 w-8 text-muted-foreground" />
+                                <Lock className="h-8 w-8 text-white/30" />
                               )}
                             </div>
-                            <h3 className="font-bold text-lg">{achievement.name}</h3>
-                            <p className="text-sm text-muted-foreground mt-1">
+                            <h3 className="font-bold text-lg text-white">{achievement.name}</h3>
+                            <p className="text-sm text-white/50 mt-1">
                               {achievement.description}
                             </p>
-                            <Badge className={cn("mt-3", isUnlocked ? config.bg : "bg-muted", config.color)}>
+                            <Badge className={cn("mt-3", isUnlocked ? config.bg : "bg-white/5", config.color)}>
                               {config.label}
                             </Badge>
                           </CardContent>

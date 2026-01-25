@@ -330,7 +330,7 @@ const Community = () => {
 
   return (
     <>
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-[#0a0a0a]">
       <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
       
       <div className={`transition-all duration-300 ${sidebarCollapsed ? 'pl-20' : 'pl-64'}`}>
@@ -338,11 +338,14 @@ const Community = () => {
         
         <main className="p-6">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold flex items-center gap-3">
-              <Users className="h-8 w-8 text-primary" />
-              Comunidade
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#BFFF00]/10 border border-[#BFFF00]/20 mb-3">
+              <span className="text-xs text-[#BFFF00] uppercase tracking-widest font-medium">Comunidade</span>
+            </div>
+            <h1 className="text-3xl font-bold flex items-center gap-3 text-white">
+              <Users className="h-8 w-8 text-[#BFFF00]" />
+              Nossa <span className="text-[#BFFF00] italic">Comunidade</span>
             </h1>
-            <p className="mt-1 text-muted-foreground">
+            <p className="mt-1 text-white/50">
               Conecte-se com outros membros e compartilhe sua jornada
             </p>
           </div>
@@ -351,7 +354,7 @@ const Community = () => {
             {/* Main Feed */}
             <div className="lg:col-span-2 space-y-6">
               {/* Create Post */}
-              <Card>
+              <Card variant="gradient">
                 <CardContent className="p-4">
                   <div className="flex gap-4">
                     <Avatar className="h-10 w-10">
