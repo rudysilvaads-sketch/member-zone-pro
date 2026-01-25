@@ -788,7 +788,8 @@ const PostCard = ({ post, currentUserId, onLike, onDelete, onOpenComments, forma
   const [imageExpanded, setImageExpanded] = useState(false);
 
   const handleShare = async () => {
-    const shareUrl = `${window.location.origin}/community?post=${post.id}`;
+    // Use public route that doesn't require authentication
+    const shareUrl = `${window.location.origin}/post/${post.id}`;
     const shareText = post.content 
       ? `${post.authorName}: "${post.content.substring(0, 100)}${post.content.length > 100 ? '...' : ''}"`
       : `Post de ${post.authorName} na comunidade La Casa`;
