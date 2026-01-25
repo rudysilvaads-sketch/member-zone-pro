@@ -21,17 +21,21 @@ export interface GlobalChatMessage {
   senderRank: string;
   senderLevel: number;
   content: string;
+  audioUrl?: string | null;
+  imageUrl?: string | null;
   createdAt: Timestamp;
 }
 
-// Send a message to global chat
+// Send a message to global chat (text, audio, or image)
 export const sendGlobalMessage = async (
   senderId: string,
   senderName: string,
   senderAvatar: string | null,
   senderRank: string,
   senderLevel: number,
-  content: string
+  content: string,
+  audioUrl?: string | null,
+  imageUrl?: string | null
 ): Promise<{ success: boolean; error?: string }> => {
   try {
     const messagesRef = collection(db, 'globalChat');
@@ -43,6 +47,8 @@ export const sendGlobalMessage = async (
       senderRank,
       senderLevel,
       content: content.trim(),
+      audioUrl: audioUrl || null,
+      imageUrl: imageUrl || null,
       createdAt: serverTimestamp(),
     });
     
