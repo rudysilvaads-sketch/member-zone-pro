@@ -172,7 +172,7 @@ export function ProductsShowcase({ userRank, userPoints }: ProductsShowcaseProps
                   const isAvailable = product.available && hasAccess;
                   
                   return (
-                    <CarouselItem key={product.id} className="pl-3 basis-[85%] sm:basis-[45%] lg:basis-[24%]">
+                    <CarouselItem key={product.id} className="pl-3 basis-[85%] sm:basis-[45%] lg:basis-[19%]">
                       <div className="group relative">
                         {/* Card glow on hover */}
                         <div className="absolute -inset-0.5 bg-gradient-to-r from-[#BFFF00]/0 via-[#BFFF00]/20 to-[#BFFF00]/0 rounded-2xl opacity-0 group-hover:opacity-100 blur-sm transition-opacity duration-500" />
