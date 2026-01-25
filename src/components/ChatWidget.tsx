@@ -18,19 +18,32 @@ export function ChatWidget({ conversations }: ChatWidgetProps) {
   const [newMessage, setNewMessage] = useState("");
   const [sending, setSending] = useState(false);
   const [dismissedConversations, setDismissedConversations] = useState<Set<string>>(new Set());
+  const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const previousUnreadRef = useRef<Record<string, number>>({});
 
   // Find conversations with new unread messages (not dismissed)
   const conversationsWithNewMessages = conversations.filter(convo => {
     if (!user) return false;
     const unread = convo.unreadCount?.[user.uid] || 0;
-    const previousUnread = previousUnreadRef.current[convo.id] || 0;
+    
+    // Keep showing if it's the active expanded conversation
+    if (activeConversationId === convo.id) return true;
     
     // Show if there are unread messages and not dismissed
     return unread > 0 && 
            !dismissedConversations.has(convo.id) && 
            convo.lastMessageSenderId !== user.uid;
   });
+
+  // Update expanded chat data when conversations update
+  useEffect(() => {
+    if (activeConversationId) {
+      const updatedConvo = conversations.find(c => c.id === activeConversationId);
+      if (updatedConvo) {
+        setExpandedChat(updatedConvo);
+      }
+    }
+  }, [conversations, activeConversationId]);
 
   // Update previous unread counts
   useEffect(() => {
@@ -57,11 +70,13 @@ export function ChatWidget({ conversations }: ChatWidgetProps) {
     setDismissedConversations(prev => new Set([...prev, convoId]));
     if (expandedChat?.id === convoId) {
       setExpandedChat(null);
+      setActiveConversationId(null);
     }
   };
 
   const handleExpand = async (convo: Conversation) => {
     setExpandedChat(convo);
+    setActiveConversationId(convo.id);
     if (user) {
       await markMessagesAsRead(convo.id, user.uid);
     }
@@ -82,6 +97,7 @@ export function ChatWidget({ conversations }: ChatWidgetProps) {
         other.oderId
       );
       setNewMessage("");
+      // Close the widget after sending
       handleDismiss(expandedChat.id);
     } catch (error) {
       console.error("Error sending message:", error);
@@ -90,7 +106,7 @@ export function ChatWidget({ conversations }: ChatWidgetProps) {
     }
   };
 
-  // Don't render if no new messages or no user
+  // Don't render if no conversations to show or no user
   if (!user || conversationsWithNewMessages.length === 0) {
     return null;
   }
