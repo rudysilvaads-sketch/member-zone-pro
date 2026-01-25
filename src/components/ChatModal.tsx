@@ -40,6 +40,7 @@ export const ChatModal = ({ open, onOpenChange, targetUser }: ChatModalProps) =>
   const [loading, setLoading] = useState(true);
   const [loadingMessages, setLoadingMessages] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   // Subscribe to conversations
   useEffect(() => {
@@ -139,25 +140,35 @@ export const ChatModal = ({ open, onOpenChange, targetUser }: ChatModalProps) =>
     if (!recipientId) return;
 
     setSending(true);
-    const content = newMessage;
+    const content = newMessage.trim();
+    
+    // Clear input immediately before async operation
     setNewMessage("");
 
-    const result = await sendMessage(
-      selectedConversation.id,
-      userProfile.uid,
-      userProfile.displayName,
-      userProfile.photoURL,
-      content,
-      recipientId
-    );
+    try {
+      const result = await sendMessage(
+        selectedConversation.id,
+        userProfile.uid,
+        userProfile.displayName,
+        userProfile.photoURL,
+        content,
+        recipientId
+      );
 
-    if (!result.success) {
+      if (!result.success) {
+        // Only restore if actually failed
+        setNewMessage(content);
+        console.error('Message send failed:', result.error);
+      }
+    } catch (error) {
+      console.error('Error in handleSendMessage:', error);
       setNewMessage(content);
+    } finally {
+      setSending(false);
     }
-    setSending(false);
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
@@ -325,10 +336,11 @@ export const ChatModal = ({ open, onOpenChange, targetUser }: ChatModalProps) =>
         {/* Input */}
         <div className="p-3 border-t flex gap-2">
           <Input
+            ref={inputRef}
             placeholder="Digite sua mensagem..."
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
-            onKeyPress={handleKeyPress}
+            onKeyDown={handleKeyDown}
             disabled={sending}
             className="flex-1"
           />
