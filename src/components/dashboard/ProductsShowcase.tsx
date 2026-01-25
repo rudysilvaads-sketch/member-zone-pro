@@ -177,7 +177,10 @@ export function ProductsShowcase({ userRank, userPoints }: ProductsShowcaseProps
                         {/* Card glow on hover */}
                         <div className="absolute -inset-0.5 bg-gradient-to-r from-[#BFFF00]/0 via-[#BFFF00]/20 to-[#BFFF00]/0 rounded-2xl opacity-0 group-hover:opacity-100 blur-sm transition-opacity duration-500" />
                         
-                        <div className="relative overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-sm transition-all duration-500 group-hover:border-[#BFFF00]/30 group-hover:shadow-[0_0_30px_rgba(191,255,0,0.1)]">
+                        <div 
+                          className="relative overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-sm transition-all duration-500 group-hover:border-[#BFFF00]/30 group-hover:shadow-[0_0_30px_rgba(191,255,0,0.1)] cursor-pointer"
+                          onClick={() => isAvailable && canAfford && !purchasingId && handlePurchase(product)}
+                        >
                           {/* Featured badge */}
                           {product.featured && (
                             <div className="absolute right-2 top-2 z-10">
@@ -235,7 +238,10 @@ export function ProductsShowcase({ userRank, userPoints }: ProductsShowcaseProps
                                 size="sm"
                                 variant={isAvailable && canAfford ? "gold" : "secondary"}
                                 disabled={!isAvailable || !canAfford || purchasingId === product.id}
-                                onClick={() => handlePurchase(product)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handlePurchase(product);
+                                }}
                                 className={`h-7 text-[10px] px-3 font-bold ${
                                   isAvailable && canAfford 
                                     ? 'shadow-[0_0_15px_rgba(191,255,0,0.3)]' 
