@@ -63,6 +63,7 @@ export function AdminProducts() {
   const [notifying, setNotifying] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -228,10 +229,7 @@ export function AdminProducts() {
     setDialogOpen(true);
   };
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
+  const processImageFile = async (file: File) => {
     // Validate file type
     if (!file.type.startsWith('image/')) {
       toast.error('Por favor, selecione uma imagem');
@@ -265,6 +263,35 @@ export function AdminProducts() {
       toast.error('Erro ao enviar imagem');
     } finally {
       setUploading(false);
+    }
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    await processImageFile(file);
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = async (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const files = e.dataTransfer.files;
+    if (files && files.length > 0) {
+      await processImageFile(files[0]);
     }
   };
 
@@ -537,21 +564,33 @@ export function AdminProducts() {
                 </div>
               )}
               
-              {/* Upload area */}
+              {/* Upload area with drag & drop */}
               {!imagePreview && (
                 <div 
-                  className="relative w-full aspect-video rounded-lg border-2 border-dashed border-border hover:border-primary/50 bg-secondary/30 flex flex-col items-center justify-center cursor-pointer transition-colors"
+                  className={`relative w-full aspect-video rounded-lg border-2 border-dashed bg-secondary/30 flex flex-col items-center justify-center cursor-pointer transition-all duration-200 ${
+                    isDragging 
+                      ? 'border-primary bg-primary/10 scale-[1.02]' 
+                      : 'border-border hover:border-primary/50'
+                  }`}
                   onClick={() => fileInputRef.current?.click()}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
                 >
                   {uploading ? (
                     <>
                       <Loader2 className="h-8 w-8 text-primary animate-spin mb-2" />
                       <p className="text-sm text-muted-foreground">Enviando...</p>
                     </>
+                  ) : isDragging ? (
+                    <>
+                      <Upload className="h-10 w-10 text-primary mb-2 animate-bounce" />
+                      <p className="text-sm font-medium text-primary">Solte a imagem aqui</p>
+                    </>
                   ) : (
                     <>
                       <Upload className="h-8 w-8 text-muted-foreground mb-2" />
-                      <p className="text-sm text-muted-foreground">Clique para fazer upload</p>
+                      <p className="text-sm text-muted-foreground">Arraste uma imagem ou clique aqui</p>
                       <p className="text-xs text-muted-foreground/60 mt-1">PNG, JPG até 5MB</p>
                     </>
                   )}
