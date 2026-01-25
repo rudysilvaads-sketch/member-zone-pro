@@ -120,7 +120,7 @@ export default function Auth() {
             animation: 'border-rotate 3s linear infinite',
           }}
         />
-        <div className="relative backdrop-blur-xl bg-[#0a0a0a]/95 border-0 rounded-2xl p-8 shadow-2xl">
+        <div className="relative backdrop-blur-2xl bg-black/40 border border-white/10 rounded-2xl p-8 shadow-[0_8px_32px_rgba(0,0,0,0.5)]">
           {/* Badge */}
           <div className="flex justify-center mb-6">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#F5A623]/10 border border-[#F5A623]/30">
