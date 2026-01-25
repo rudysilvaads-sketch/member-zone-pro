@@ -25,6 +25,7 @@ export interface ChatMessage {
   senderAvatar: string | null;
   content: string;
   audioUrl?: string | null;
+  imageUrl?: string | null;
   createdAt: Timestamp;
   read: boolean;
 }
@@ -93,7 +94,7 @@ export const getOrCreateConversation = async (
   return docRef.id;
 };
 
-// Send a message (text or audio)
+// Send a message (text, audio, or image)
 export const sendMessage = async (
   conversationId: string,
   senderId: string,
@@ -101,7 +102,8 @@ export const sendMessage = async (
   senderAvatar: string | null,
   content: string,
   recipientId: string,
-  audioUrl?: string | null
+  audioUrl?: string | null,
+  imageUrl?: string | null
 ): Promise<{ success: boolean; error?: string }> => {
   try {
     const messagesRef = collection(db, 'conversations', conversationId, 'messages');
@@ -113,13 +115,20 @@ export const sendMessage = async (
       senderAvatar,
       content: content.trim(),
       audioUrl: audioUrl || null,
+      imageUrl: imageUrl || null,
       createdAt: serverTimestamp(),
       read: false,
     });
     
     // Update conversation with last message
     const conversationRef = doc(db, 'conversations', conversationId);
-    const lastMessageText = audioUrl ? '🎤 Mensagem de áudio' : content.substring(0, 100);
+    let lastMessageText = content.substring(0, 100);
+    if (imageUrl) {
+      lastMessageText = '📷 Imagem';
+    } else if (audioUrl) {
+      lastMessageText = '🎤 Mensagem de áudio';
+    }
+    
     await updateDoc(conversationRef, {
       lastMessage: lastMessageText,
       lastMessageAt: serverTimestamp(),

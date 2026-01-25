@@ -8,6 +8,7 @@ interface UseAudioRecorderReturn {
   stopRecording: () => Promise<Blob | null>;
   cancelRecording: () => void;
   uploadAudio: (blob: Blob, conversationId: string) => Promise<string | null>;
+  uploadImage: (file: File, conversationId: string) => Promise<string | null>;
 }
 
 export function useAudioRecorder(): UseAudioRecorderReturn {
@@ -139,6 +140,34 @@ export function useAudioRecorder(): UseAudioRecorderReturn {
     }
   }, []);
 
+  const uploadImage = useCallback(async (file: File, conversationId: string): Promise<string | null> => {
+    try {
+      const fileExt = file.name.split('.').pop() || 'jpg';
+      const fileName = `${conversationId}/${Date.now()}.${fileExt}`;
+      
+      const { data, error } = await supabase.storage
+        .from('chat-images')
+        .upload(fileName, file, {
+          contentType: file.type,
+          cacheControl: '3600',
+        });
+      
+      if (error) {
+        console.error('Error uploading image:', error);
+        return null;
+      }
+      
+      const { data: urlData } = supabase.storage
+        .from('chat-images')
+        .getPublicUrl(data.path);
+      
+      return urlData.publicUrl;
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      return null;
+    }
+  }, []);
+
   return {
     isRecording,
     recordingTime,
@@ -146,6 +175,7 @@ export function useAudioRecorder(): UseAudioRecorderReturn {
     stopRecording,
     cancelRecording,
     uploadAudio,
+    uploadImage,
   };
 }
 
