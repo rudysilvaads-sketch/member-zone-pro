@@ -15,6 +15,7 @@ import {
   and
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { createNotification } from '@/lib/firebaseServices';
 
 export interface ChatMessage {
   id: string;
@@ -121,6 +122,21 @@ export const sendMessage = async (
       lastMessageSenderId: senderId,
       [`unreadCount.${recipientId}`]: (await getUnreadCount(conversationId, recipientId)) + 1,
     });
+    
+    // Create notification for the recipient
+    try {
+      await createNotification({
+        userId: recipientId,
+        fromUserId: senderId,
+        fromUserName: senderName,
+        fromUserAvatar: senderAvatar,
+        type: 'message',
+        postContent: content.substring(0, 100),
+      });
+    } catch (notifError) {
+      console.error('Error creating message notification:', notifError);
+      // Don't fail the message send if notification fails
+    }
     
     return { success: true };
   } catch (error) {

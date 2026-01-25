@@ -834,9 +834,9 @@ export interface Notification {
   fromUserId: string;
   fromUserName: string;
   fromUserAvatar: string | null;
-  type: 'like' | 'comment' | 'new_product';
+  type: 'like' | 'comment' | 'new_product' | 'message';
   postId?: string;
-  postContent?: string; // first 50 chars of post
+  postContent?: string; // first 50 chars of post or message content
   commentContent?: string; // for comment notifications
   // Product notification fields
   productId?: string;
