@@ -164,12 +164,14 @@ export function ProductsShowcase({ userRank, userPoints }: ProductsShowcaseProps
               opts={{
                 align: "start",
                 loop: true,
+                dragFree: true,
               }}
               plugins={[
                 Autoplay({
-                  delay: 4000,
+                  delay: 3000,
                   stopOnInteraction: false,
                   stopOnMouseEnter: true,
+                  playOnInit: true,
                 }),
               ]}
               className="w-full"
