@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Header } from "@/components/layout/Header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -54,6 +54,7 @@ const rankConfig: Record<string, { color: string; bg: string }> = {
 const Community = () => {
   const { userProfile } = useAuth();
   const { isUserOnline, onlineCount } = usePresence();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [topUsers, setTopUsers] = useState<(UserProfile & { position: number })[]>([]);
   const [posts, setPosts] = useState<Post[]>([]);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -65,12 +66,14 @@ const Community = () => {
   const [newComment, setNewComment] = useState("");
   const [loadingComments, setLoadingComments] = useState(false);
   const [postingComment, setPostingComment] = useState(false);
+  const [highlightedPostId, setHighlightedPostId] = useState<string | null>(null);
   
   // Image upload state
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const postRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   // Chat state
   const [chatOpen, setChatOpen] = useState(false);
@@ -86,10 +89,42 @@ const Community = () => {
     try {
       const postsData = await getPosts(50);
       setPosts(postsData);
+      return postsData;
     } catch (error) {
       console.error('Error fetching posts:', error);
+      return [];
     }
   }, []);
+
+  // Handle shared post link
+  useEffect(() => {
+    const postId = searchParams.get('post');
+    if (postId && posts.length > 0) {
+      const post = posts.find(p => p.id === postId);
+      if (post) {
+        // Highlight the post
+        setHighlightedPostId(postId);
+        
+        // Scroll to the post after a short delay
+        setTimeout(() => {
+          const postElement = postRefs.current[postId];
+          if (postElement) {
+            postElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }, 300);
+        
+        // Remove highlight after 3 seconds
+        setTimeout(() => {
+          setHighlightedPostId(null);
+          // Clean URL
+          setSearchParams({});
+        }, 3000);
+      } else {
+        toast.error('Post não encontrado');
+        setSearchParams({});
+      }
+    }
+  }, [searchParams, posts, setSearchParams]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -481,6 +516,8 @@ const Community = () => {
                         onDelete={() => handleDeletePost(post.id)}
                         onOpenComments={() => openComments(post)}
                         formatTimeAgo={formatTimeAgo}
+                        isHighlighted={highlightedPostId === post.id}
+                        postRef={(el) => { postRefs.current[post.id] = el; }}
                       />
                     ))
                   )}
@@ -499,6 +536,8 @@ const Community = () => {
                         onDelete={() => handleDeletePost(post.id)}
                         onOpenComments={() => openComments(post)}
                         formatTimeAgo={formatTimeAgo}
+                        isHighlighted={highlightedPostId === post.id}
+                        postRef={(el) => { postRefs.current[post.id] = el; }}
                       />
                     ))}
                 </TabsContent>
@@ -738,9 +777,11 @@ interface PostCardProps {
   onDelete: () => void;
   onOpenComments: () => void;
   formatTimeAgo: (timestamp: any) => string;
+  isHighlighted?: boolean;
+  postRef?: (el: HTMLDivElement | null) => void;
 }
 
-const PostCard = ({ post, currentUserId, onLike, onDelete, onOpenComments, formatTimeAgo }: PostCardProps) => {
+const PostCard = ({ post, currentUserId, onLike, onDelete, onOpenComments, formatTimeAgo, isHighlighted, postRef }: PostCardProps) => {
   const rankStyle = rankConfig[post.authorRank] || rankConfig.bronze;
   const isLiked = post.likes?.includes(currentUserId || '');
   const isAuthor = post.authorId === currentUserId;
@@ -779,8 +820,12 @@ const PostCard = ({ post, currentUserId, onLike, onDelete, onOpenComments, forma
 
   return (
     <>
-      <Card>
-        <CardContent className="p-4">
+      <div ref={postRef}>
+        <Card className={cn(
+          "transition-all duration-500",
+          isHighlighted && "ring-2 ring-primary shadow-lg shadow-primary/20"
+        )}>
+          <CardContent className="p-4">
           <div className="flex gap-4">
             <Link to={`/profile/${post.authorId}`}>
               <Avatar className="h-12 w-12 cursor-pointer hover:ring-2 hover:ring-primary/50 transition-all">
@@ -882,7 +927,8 @@ const PostCard = ({ post, currentUserId, onLike, onDelete, onOpenComments, forma
             </div>
           </div>
         </CardContent>
-      </Card>
+        </Card>
+      </div>
 
       {/* Image Expanded Dialog */}
       <Dialog open={imageExpanded} onOpenChange={setImageExpanded}>
