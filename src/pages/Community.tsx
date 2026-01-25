@@ -421,7 +421,7 @@ const Community = () => {
                         value={newPost}
                         onChange={(e) => setNewPost(e.target.value)}
                         className="resize-none min-h-[80px]"
-                        maxLength={500}
+                        maxLength={1000}
                       />
                       
                       {/* Image Preview */}
@@ -462,7 +462,7 @@ const Community = () => {
                             Imagem
                           </Button>
                           <span className="text-xs text-muted-foreground">
-                            {newPost.length}/500
+                            {newPost.length}/1000
                           </span>
                         </div>
                         <Button 

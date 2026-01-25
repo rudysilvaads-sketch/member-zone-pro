@@ -604,10 +604,10 @@ export function AdminPostModeration() {
               value={editContent}
               onChange={(e) => setEditContent(e.target.value)}
               className="min-h-[120px]"
-              maxLength={500}
+              maxLength={1000}
             />
             <p className="text-xs text-muted-foreground text-right">
-              {editContent.length}/500
+              {editContent.length}/1000
             </p>
           </div>
           
