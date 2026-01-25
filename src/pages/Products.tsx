@@ -750,12 +750,6 @@ const ProductCard = ({ product, canPurchase, isPurchased, onSelect, formatName, 
                 NOVO
               </Badge>
             )}
-            {product.featured && (
-              <Badge className="bg-primary text-primary-foreground text-[10px] px-2 py-0.5 h-5 font-semibold shadow-lg">
-                <Play className="h-2.5 w-2.5 mr-1 fill-current" />
-                DEMO
-              </Badge>
-            )}
           </div>
           
           {/* Right Side - Liberado Badge */}
