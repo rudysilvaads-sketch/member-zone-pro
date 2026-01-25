@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Send, Loader2, ArrowLeft, MessageSquare } from "lucide-react";
+import { Send, Loader2, ArrowLeft, MessageSquare, Mic, Square, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { 
@@ -18,6 +18,7 @@ import {
 } from "@/lib/chatService";
 import { OnlineIndicator } from "./OnlineIndicator";
 import { usePresence } from "@/hooks/usePresence";
+import { useAudioRecorder, formatRecordingTime } from "@/hooks/useAudioRecorder";
 
 interface ChatModalProps {
   open: boolean;
@@ -41,6 +42,15 @@ export const ChatModal = ({ open, onOpenChange, targetUser }: ChatModalProps) =>
   const [loadingMessages, setLoadingMessages] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  
+  const { 
+    isRecording, 
+    recordingTime, 
+    startRecording, 
+    stopRecording, 
+    cancelRecording,
+    uploadAudio 
+  } = useAudioRecorder();
 
   // Subscribe to conversations
   useEffect(() => {
@@ -131,8 +141,8 @@ export const ChatModal = ({ open, onOpenChange, targetUser }: ChatModalProps) =>
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const handleSendMessage = async () => {
-    if (!newMessage.trim() || !selectedConversation || !userProfile) return;
+  const handleSendMessage = async (audioUrl?: string) => {
+    if ((!newMessage.trim() && !audioUrl) || !selectedConversation || !userProfile) return;
 
     const recipientId = selectedConversation.participants.find(
       id => id !== userProfile.uid
@@ -152,7 +162,8 @@ export const ChatModal = ({ open, onOpenChange, targetUser }: ChatModalProps) =>
         userProfile.displayName,
         userProfile.photoURL,
         content,
-        recipientId
+        recipientId,
+        audioUrl
       );
 
       if (!result.success) {
@@ -163,6 +174,33 @@ export const ChatModal = ({ open, onOpenChange, targetUser }: ChatModalProps) =>
     } catch (error) {
       console.error('Error in handleSendMessage:', error);
       setNewMessage(content);
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const handleStartRecording = async () => {
+    try {
+      await startRecording();
+    } catch (error) {
+      console.error("Error starting recording:", error);
+    }
+  };
+
+  const handleStopRecording = async () => {
+    if (!selectedConversation || !userProfile) return;
+    
+    setSending(true);
+    try {
+      const audioBlob = await stopRecording();
+      if (audioBlob) {
+        const audioUrl = await uploadAudio(audioBlob, selectedConversation.id);
+        if (audioUrl) {
+          await handleSendMessage(audioUrl);
+        }
+      }
+    } catch (error) {
+      console.error("Error sending audio:", error);
     } finally {
       setSending(false);
     }
@@ -317,7 +355,16 @@ export const ChatModal = ({ open, onOpenChange, targetUser }: ChatModalProps) =>
                           : "bg-muted"
                       )}
                     >
-                      <p className="text-sm break-words">{message.content}</p>
+                      {message.audioUrl ? (
+                        <audio 
+                          controls 
+                          src={message.audioUrl} 
+                          className="max-w-full h-10"
+                          preload="metadata"
+                        />
+                      ) : (
+                        <p className="text-sm break-words">{message.content}</p>
+                      )}
                       <p className={cn(
                         "text-xs mt-1",
                         isOwn ? "text-primary-foreground/70" : "text-muted-foreground"
@@ -335,26 +382,64 @@ export const ChatModal = ({ open, onOpenChange, targetUser }: ChatModalProps) =>
 
         {/* Input */}
         <div className="p-3 border-t flex gap-2">
-          <Input
-            ref={inputRef}
-            placeholder="Digite sua mensagem..."
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            onKeyDown={handleKeyDown}
-            disabled={sending}
-            className="flex-1"
-          />
-          <Button
-            onClick={handleSendMessage}
-            disabled={!newMessage.trim() || sending}
-            size="icon"
-          >
-            {sending ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Send className="h-4 w-4" />
-            )}
-          </Button>
+          {isRecording ? (
+            <>
+              <div className="flex-1 flex items-center gap-2 px-3 bg-destructive/10 rounded-md">
+                <span className="animate-pulse text-destructive">●</span>
+                <span className="text-sm font-medium">{formatRecordingTime(recordingTime)}</span>
+              </div>
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={cancelRecording}
+                disabled={sending}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+              <Button
+                size="icon"
+                className="bg-destructive hover:bg-destructive/90"
+                onClick={handleStopRecording}
+                disabled={sending}
+              >
+                {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Square className="h-4 w-4" />}
+              </Button>
+            </>
+          ) : (
+            <>
+              <Input
+                ref={inputRef}
+                placeholder="Digite sua mensagem..."
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                onKeyDown={handleKeyDown}
+                disabled={sending}
+                className="flex-1"
+              />
+              {newMessage.trim() ? (
+                <Button
+                  onClick={() => handleSendMessage()}
+                  disabled={sending}
+                  size="icon"
+                >
+                  {sending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Send className="h-4 w-4" />
+                  )}
+                </Button>
+              ) : (
+                <Button
+                  size="icon"
+                  variant="outline"
+                  onClick={handleStartRecording}
+                  disabled={sending}
+                >
+                  <Mic className="h-4 w-4" />
+                </Button>
+              )}
+            </>
+          )}
         </div>
       </div>
     );
