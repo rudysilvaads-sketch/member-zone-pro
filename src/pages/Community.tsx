@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { 
   Users, MessageSquare, Heart, TrendingUp, Send, Clock, 
-  MoreHorizontal, Trash2, Loader2, ImagePlus, X, Share2
+  MoreHorizontal, Trash2, Loader2, ImagePlus, X, Share2, Wrench
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -44,6 +44,7 @@ import { usePresence } from "@/hooks/usePresence";
 import { InviteCard } from "@/components/community/InviteCard";
 import { GlobalChat } from "@/components/community/GlobalChat";
 import { OnlineMembersList } from "@/components/community/OnlineMembersList";
+import { ToolsTab } from "@/components/community/ToolsTab";
 import { useAchievements } from "@/hooks/useAchievements";
 
 const rankConfig: Record<string, { color: string; bg: string }> = {
@@ -492,6 +493,10 @@ const Community = () => {
                 <TabsList>
                   <TabsTrigger value="recent">Recentes</TabsTrigger>
                   <TabsTrigger value="popular">Populares</TabsTrigger>
+                  <TabsTrigger value="tools" className="gap-1">
+                    <Wrench className="h-3 w-3" />
+                    Ferramentas
+                  </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="recent" className="space-y-4 mt-4">
@@ -557,6 +562,10 @@ const Community = () => {
                         postRef={(el) => { postRefs.current[post.id] = el; }}
                       />
                     ))}
+                </TabsContent>
+
+                <TabsContent value="tools" className="mt-4">
+                  <ToolsTab />
                 </TabsContent>
               </Tabs>
             </div>
