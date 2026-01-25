@@ -16,12 +16,17 @@ export const usePresence = () => {
 
   // Set up presence for current user
   useEffect(() => {
-    if (!user || !userProfile) return;
+    if (!user || !userProfile) {
+      console.log('usePresence: No user or userProfile');
+      return;
+    }
 
+    console.log('usePresence: Setting up presence for user:', user.uid);
     const userStatusRef = ref(realtimeDb, `presence/${user.uid}`);
     const connectedRef = ref(realtimeDb, '.info/connected');
 
     const handleConnected = (snapshot: any) => {
+      console.log('usePresence: Connected status:', snapshot.val());
       if (snapshot.val() === true) {
         // User is connected
         const userStatus: OnlineUser = {
@@ -37,14 +42,18 @@ export const usePresence = () => {
           lastSeen: Date.now(),
           displayName: userProfile.displayName,
           photoURL: userProfile.photoURL,
-        });
+        }).catch(err => console.error('usePresence: onDisconnect error:', err));
 
         // Set user as online
-        set(userStatusRef, userStatus);
+        set(userStatusRef, userStatus)
+          .then(() => console.log('usePresence: User set as online'))
+          .catch(err => console.error('usePresence: Error setting online status:', err));
       }
     };
 
-    onValue(connectedRef, handleConnected);
+    onValue(connectedRef, handleConnected, (error) => {
+      console.error('usePresence: Error listening to connected ref:', error);
+    });
 
     // Update presence periodically
     const interval = setInterval(() => {
@@ -77,6 +86,7 @@ export const usePresence = () => {
 
     const handlePresence = (snapshot: any) => {
       const data = snapshot.val();
+      console.log('usePresence: Received presence data:', data);
       if (data) {
         // Filter to only show users online in the last 2 minutes
         const now = Date.now();
@@ -86,13 +96,16 @@ export const usePresence = () => {
             filtered[uid] = userData;
           }
         });
+        console.log('usePresence: Filtered online users:', Object.keys(filtered).length);
         setOnlineUsers(filtered);
       } else {
         setOnlineUsers({});
       }
     };
 
-    onValue(presenceRef, handlePresence);
+    onValue(presenceRef, handlePresence, (error) => {
+      console.error('usePresence: Error listening to presence:', error);
+    });
 
     return () => {
       off(presenceRef);
