@@ -125,7 +125,8 @@ export const sendMessage = async (
     
     // Create notification for the recipient
     try {
-      await createNotification({
+      console.log('Creating message notification for recipient:', recipientId, 'from:', senderId);
+      const notifResult = await createNotification({
         userId: recipientId,
         fromUserId: senderId,
         fromUserName: senderName,
@@ -133,6 +134,7 @@ export const sendMessage = async (
         type: 'message',
         postContent: content.substring(0, 100),
       });
+      console.log('Notification created:', notifResult);
     } catch (notifError) {
       console.error('Error creating message notification:', notifError);
       // Don't fail the message send if notification fails
