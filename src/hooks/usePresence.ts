@@ -14,6 +14,11 @@ export const usePresence = () => {
   const { user, userProfile } = useAuth();
   const [onlineUsers, setOnlineUsers] = useState<Record<string, OnlineUser>>({});
 
+  // Log on mount
+  useEffect(() => {
+    console.log('usePresence: Hook mounted, realtimeDb:', !!realtimeDb);
+  }, []);
+
   // Set up presence for current user
   useEffect(() => {
     if (!user || !userProfile) {
