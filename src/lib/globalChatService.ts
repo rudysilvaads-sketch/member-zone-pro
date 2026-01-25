@@ -45,9 +45,12 @@ export const getChatSettings = async (): Promise<ChatSettings> => {
     const snapshot = await getDoc(settingsRef);
     
     if (snapshot.exists()) {
-      return snapshot.data() as ChatSettings;
+      const data = snapshot.data() as ChatSettings;
+      console.log('Chat settings loaded:', data);
+      return data;
     }
     
+    console.log('No chat settings found, returning default');
     return { isLocked: false };
   } catch (error) {
     console.error('Error getting chat settings:', error);
@@ -63,10 +66,16 @@ export const subscribeToChatSettings = (
   
   return onSnapshot(settingsRef, (snapshot) => {
     if (snapshot.exists()) {
-      callback(snapshot.data() as ChatSettings);
+      const data = snapshot.data() as ChatSettings;
+      console.log('Chat settings updated (realtime):', data);
+      callback(data);
     } else {
+      console.log('No chat settings document, using default');
       callback({ isLocked: false });
     }
+  }, (error) => {
+    console.error('Error subscribing to chat settings:', error);
+    callback({ isLocked: false });
   });
 };
 
@@ -77,11 +86,19 @@ export const toggleChatLock = async (
 ): Promise<boolean> => {
   try {
     const settingsRef = doc(db, 'settings', 'globalChat');
-    await setDoc(settingsRef, {
+    
+    const updateData = {
       isLocked,
       lockedBy: isLocked ? adminId : null,
       lockedAt: isLocked ? serverTimestamp() : null,
-    }, { merge: true });
+      updatedAt: serverTimestamp(),
+    };
+    
+    console.log('Toggling chat lock:', updateData);
+    
+    await setDoc(settingsRef, updateData, { merge: true });
+    
+    console.log('Chat lock status updated successfully');
     return true;
   } catch (error) {
     console.error('Error toggling chat lock:', error);
@@ -170,12 +187,16 @@ export const sendGlobalMessage = async (
   senderLevel: number,
   content: string,
   audioUrl?: string | null,
-  imageUrl?: string | null
+  imageUrl?: string | null,
+  isAdmin?: boolean
 ): Promise<{ success: boolean; error?: string }> => {
   try {
-    // Check if chat is locked
+    // Check if chat is locked (admins can bypass)
     const settings = await getChatSettings();
-    if (settings.isLocked) {
+    console.log('Checking chat lock status:', { isLocked: settings.isLocked, isAdmin });
+    
+    if (settings.isLocked && !isAdmin) {
+      console.log('Chat is locked and user is not admin, blocking message');
       return { success: false, error: 'O chat está bloqueado por um administrador' };
     }
     
