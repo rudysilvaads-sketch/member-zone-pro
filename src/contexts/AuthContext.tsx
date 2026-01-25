@@ -9,7 +9,7 @@ import {
   signInWithPopup,
   sendPasswordResetEmail
 } from 'firebase/auth';
-import { doc, setDoc, getDoc, serverTimestamp, updateDoc, increment } from 'firebase/firestore';
+import { doc, setDoc, getDoc, serverTimestamp, updateDoc, increment, onSnapshot } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 import { calculateLevel } from '@/lib/firebaseServices';
 import { getStreakBonus } from '@/components/dashboard/StreakCard';
@@ -92,6 +92,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Auth state listener
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
@@ -107,6 +108,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     return () => unsubscribe();
   }, []);
+
+  // Real-time profile listener
+  useEffect(() => {
+    if (!user) return;
+
+    const userRef = doc(db, 'users', user.uid);
+    const unsubscribe = onSnapshot(userRef, (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        setUserProfile({
+          ...data,
+          xp: data.xp || 0,
+          level: data.level || calculateLevel(data.xp || 0),
+        } as UserProfile);
+      }
+    });
+
+    return () => unsubscribe();
+  }, [user?.uid]);
 
   const createUserProfile = async (user: User, displayName: string, referralCode?: string) => {
     const userRef = doc(db, 'users', user.uid);
