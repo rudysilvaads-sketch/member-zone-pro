@@ -14,7 +14,8 @@ import {
   Loader2,
   ShoppingBag,
   Trophy,
-  Sparkles
+  Sparkles,
+  RotateCcw
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -23,6 +24,7 @@ import {
   initializeUserDailyMissions, 
   verifyAndFixLoginReward,
   checkAndAwardAllMissionsBonus,
+  resetDailyMissions,
   MISSION_REWARDS,
   ALL_MISSIONS_BONUS
 } from '@/lib/missionService';
@@ -86,6 +88,31 @@ export function DailyMissions() {
   const [timeUntilReset, setTimeUntilReset] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [bonusClaimed, setBonusClaimed] = useState(false);
+  const [resetting, setResetting] = useState(false);
+
+  // Reset missions for testing
+  const handleResetMissions = async () => {
+    if (!user) return;
+    
+    setResetting(true);
+    try {
+      const success = await resetDailyMissions(user.uid);
+      if (success) {
+        toast.success('Missões resetadas! Recarregando...');
+        // Reload missions after reset
+        setTimeout(() => {
+          loadMissions();
+        }, 500);
+      } else {
+        toast.error('Erro ao resetar missões');
+      }
+    } catch (error) {
+      console.error('Error resetting missions:', error);
+      toast.error('Erro ao resetar missões');
+    } finally {
+      setResetting(false);
+    }
+  };
 
   // Load missions from Firebase
   const loadMissions = useCallback(async () => {
@@ -219,9 +246,25 @@ export function DailyMissions() {
           <Target className="h-5 w-5 text-accent" />
           Missões Diárias
         </CardTitle>
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Clock className="h-4 w-4" />
-          Reinicia em {timeUntilReset}
+        <div className="flex items-center gap-3">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleResetMissions}
+            disabled={resetting}
+            className="text-xs text-muted-foreground hover:text-destructive"
+            title="Resetar missões (teste)"
+          >
+            {resetting ? (
+              <Loader2 className="h-3 w-3 animate-spin" />
+            ) : (
+              <RotateCcw className="h-3 w-3" />
+            )}
+          </Button>
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Clock className="h-4 w-4" />
+            Reinicia em {timeUntilReset}
+          </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
