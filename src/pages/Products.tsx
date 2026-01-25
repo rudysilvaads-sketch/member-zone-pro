@@ -326,12 +326,12 @@ const Products = () => {
                   <div className="relative px-12">
                     <Carousel
                       opts={{
-                        align: "start",
+                        align: "center",
                         loop: true,
                       }}
                       plugins={[
                         Autoplay({
-                          delay: 5000,
+                          delay: 4000,
                           stopOnInteraction: false,
                           stopOnMouseEnter: true,
                         }),
@@ -340,7 +340,7 @@ const Products = () => {
                     >
                       <CarouselContent className="-ml-4">
                         {products.filter(p => p.featured).map((product) => (
-                          <CarouselItem key={product.id} className="pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5">
+                          <CarouselItem key={product.id} className="pl-4 basis-full">
                             <FeaturedProductCard
                               product={product}
                               canPurchase={canPurchase(product)}
@@ -564,63 +564,71 @@ const FeaturedProductCard = ({ product, canPurchase, isPurchased, onSelect, form
       className="group cursor-pointer"
       onClick={onSelect}
     >
-      {/* Image Container */}
-      <div className="relative aspect-[4/3] rounded-xl overflow-hidden bg-secondary/50 mb-3 border border-border/50 group-hover:border-primary/50 transition-all duration-300">
+      {/* Landscape Card Container */}
+      <div className="relative aspect-[21/9] rounded-2xl overflow-hidden bg-secondary/50 border border-border/50 group-hover:border-primary/50 transition-all duration-300 shadow-xl">
         <img 
           src={product.image} 
           alt={product.name}
           className={cn(
-            "w-full h-full object-cover transition-all duration-300",
-            "group-hover:scale-110",
+            "w-full h-full object-cover transition-all duration-500",
+            "group-hover:scale-105",
             (isUnavailable || (!canPurchase.allowed && !isPurchased)) && "opacity-60"
           )}
         />
         
-        {/* Gradient Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent" />
+        {/* Gradient Overlays */}
+        <div className="absolute inset-0 bg-gradient-to-r from-background/95 via-background/40 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent" />
         
-        {/* Featured Badge */}
-        <div className="absolute top-2 left-2">
-          <Badge className="bg-primary text-primary-foreground text-[10px] px-2 py-0.5 h-5 shadow-lg">
-            <Star className="h-2.5 w-2.5 mr-1 fill-current" />
+        {/* Top Badges */}
+        <div className="absolute top-4 left-4 flex items-center gap-2">
+          <Badge className="bg-primary text-primary-foreground text-xs px-3 py-1 h-7 shadow-lg font-bold">
+            <Star className="h-3 w-3 mr-1.5 fill-current" />
             DESTAQUE
           </Badge>
-        </div>
-        
-        {/* Status Badge */}
-        <div className="absolute top-2 right-2">
           {isPurchased && (
-            <Badge className="bg-primary text-primary-foreground text-[10px] px-1.5 py-0.5 h-5">
-              <CheckCircle className="h-2.5 w-2.5 mr-0.5" />
+            <Badge className="bg-primary/90 text-primary-foreground text-xs px-3 py-1 h-7 shadow-lg">
+              <CheckCircle className="h-3 w-3 mr-1.5" />
               LIBERADO
+            </Badge>
+          )}
+          {product.requiredRank && !isPurchased && (
+            <Badge variant="secondary" className="text-xs px-3 py-1 h-7 bg-background/70 backdrop-blur-sm border border-white/10">
+              <Crown className="h-3 w-3 mr-1.5 text-primary" />
+              VIP {product.requiredRank.toUpperCase()}
             </Badge>
           )}
         </div>
 
-        {/* Bottom Info Overlay */}
-        <div className="absolute bottom-0 left-0 right-0 p-3">
-          <h3 className="text-sm font-bold leading-tight line-clamp-2 text-foreground drop-shadow-lg">
+        {/* Content Overlay - Left Side */}
+        <div className="absolute bottom-0 left-0 right-0 p-6 flex flex-col justify-end">
+          <h3 className="text-2xl md:text-3xl font-black leading-tight mb-2 text-foreground drop-shadow-lg">
             {formatName(product.name)}
           </h3>
-          <div className="flex items-center justify-between mt-2">
-            <span className="text-primary text-sm font-bold">
-              {isPurchased ? 'Acessar' : `${product.price.toLocaleString()} pts`}
-            </span>
-            {product.requiredRank && (
-              <Badge variant="secondary" className="text-[10px] px-1.5 py-0.5 h-5 bg-background/50 backdrop-blur-sm">
-                <Crown className="h-2.5 w-2.5 mr-0.5" />
-                {product.requiredRank.toUpperCase()}
-              </Badge>
-            )}
+          <p className="text-sm text-white/70 line-clamp-1 max-w-md mb-4">
+            {product.description}
+          </p>
+          <div className="flex items-center gap-4">
+            <Button
+              variant={isPurchased ? "secondary" : "gold"}
+              size="lg"
+              className="rounded-xl font-bold shadow-lg"
+            >
+              {isPurchased ? (
+                <>Acessar</>
+              ) : (
+                <>{product.price.toLocaleString()} pts</>
+              )}
+            </Button>
           </div>
         </div>
 
         {/* Unavailable Overlay */}
         {isUnavailable && (
-          <div className="absolute inset-0 bg-background/60 backdrop-blur-[2px] flex items-center justify-center">
-            <Badge variant="secondary" className="text-xs px-2 py-1">
-              <Wrench className="h-3 w-3 mr-1" />
-              Manutenção
+          <div className="absolute inset-0 bg-background/70 backdrop-blur-sm flex items-center justify-center">
+            <Badge variant="secondary" className="text-sm px-4 py-2">
+              <Wrench className="h-4 w-4 mr-2" />
+              Em Manutenção
             </Badge>
           </div>
         )}
