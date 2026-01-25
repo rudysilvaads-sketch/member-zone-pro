@@ -93,10 +93,10 @@ export const PWAInstallPrompt = () => {
         "md:left-auto md:right-4 md:max-w-sm"
       )}
     >
-      <Card className="bg-[#0a0a0a]/95 backdrop-blur-xl border-[#BFFF00]/20 shadow-[0_0_30px_rgba(191,255,0,0.15)]">
+      <Card className="bg-[#0a0a0a]/95 backdrop-blur-xl border-[#F5A623]/20 shadow-[0_0_30px_rgba(245,166,35,0.15)]">
         <CardContent className="p-4">
           <div className="flex items-start gap-3">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#BFFF00] shadow-[0_0_20px_rgba(191,255,0,0.3)]">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#F5A623] shadow-[0_0_20px_rgba(245,166,35,0.3)]">
               <Smartphone className="h-6 w-6 text-[#0a0a0a]" />
             </div>
             
@@ -114,7 +114,7 @@ export const PWAInstallPrompt = () => {
                   <Button 
                     onClick={handleInstall}
                     size="sm"
-                    className="bg-[#BFFF00] text-[#0a0a0a] hover:bg-[#BFFF00]/90 font-medium h-8 px-3 text-xs"
+                    className="bg-[#F5A623] text-[#0a0a0a] hover:bg-[#F5A623]/90 font-medium h-8 px-3 text-xs"
                   >
                     <Download className="h-3.5 w-3.5 mr-1.5" />
                     Instalar Agora

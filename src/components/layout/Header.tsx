@@ -29,7 +29,7 @@ export function Header() {
 
   return (
     <>
-      <header className="sticky top-0 z-30 flex h-14 sm:h-16 items-center justify-between border-b border-[#BFFF00]/10 bg-[#0a0a0a]/95 backdrop-blur-xl px-3 sm:px-6 safe-area-inset">
+      <header className="sticky top-0 z-30 flex h-14 sm:h-16 items-center justify-between border-b border-[#F5A623]/10 bg-[#0a0a0a]/95 backdrop-blur-xl px-3 sm:px-6 safe-area-inset">
         {/* Search - Hidden on mobile, visible on sm+ */}
         <div className="hidden sm:flex items-center gap-4 flex-1 max-w-xl">
           <div className="relative w-full">
@@ -37,7 +37,7 @@ export function Header() {
             <input
               type="text"
               placeholder="Buscar..."
-              className="h-10 w-full rounded-xl border border-[#BFFF00]/10 bg-white/5 pl-10 pr-4 text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-1 focus:ring-[#BFFF00]/50 focus:border-[#BFFF00]/30 transition-all"
+              className="h-10 w-full rounded-xl border border-[#F5A623]/10 bg-white/5 pl-10 pr-4 text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-1 focus:ring-[#F5A623]/50 focus:border-[#F5A623]/30 transition-all"
             />
           </div>
         </div>
@@ -74,11 +74,11 @@ export function Header() {
             variant="ghost"
             size="icon"
             onClick={() => setChatOpen(true)}
-            className="relative text-white/70 hover:text-[#BFFF00] hover:bg-[#BFFF00]/5 h-10 w-10 sm:h-10 sm:w-10"
+            className="relative text-white/70 hover:text-[#F5A623] hover:bg-[#F5A623]/5 h-10 w-10 sm:h-10 sm:w-10"
           >
             <MessageCircle className="h-5 w-5" />
             {unreadCount > 0 && (
-              <span className="absolute -top-1 -right-1 flex h-4 w-4 sm:h-5 sm:w-5 items-center justify-center rounded-full bg-[#BFFF00] text-[9px] sm:text-[10px] font-bold text-[#0a0a0a]">
+              <span className="absolute -top-1 -right-1 flex h-4 w-4 sm:h-5 sm:w-5 items-center justify-center rounded-full bg-[#F5A623] text-[9px] sm:text-[10px] font-bold text-[#0a0a0a]">
                 {unreadCount > 99 ? '99+' : unreadCount}
               </span>
             )}
@@ -88,7 +88,7 @@ export function Header() {
           <NotificationsDropdown />
 
           {/* User Menu - Desktop only details */}
-          <div className="flex items-center gap-2 sm:gap-3 pl-2 border-l border-[#BFFF00]/10">
+          <div className="flex items-center gap-2 sm:gap-3 pl-2 border-l border-[#F5A623]/10">
             <div className="hidden lg:block text-right">
               <p className="text-sm font-medium text-white">{userProfile?.displayName || 'Membro'}</p>
               <div className="flex items-center gap-1 justify-end">
@@ -98,9 +98,9 @@ export function Header() {
                 <span className="text-xs text-white/50">{userProfile?.points?.toLocaleString() || 0} pts</span>
               </div>
             </div>
-            <Avatar className="h-8 w-8 sm:h-10 sm:w-10 border-2 border-[#BFFF00] shadow-[0_0_10px_rgba(191,255,0,0.3)]">
+            <Avatar className="h-8 w-8 sm:h-10 sm:w-10 border-2 border-[#F5A623] shadow-[0_0_10px_rgba(245,166,35,0.3)]">
               <AvatarImage src={userProfile?.photoURL || undefined} />
-              <AvatarFallback className="bg-[#BFFF00]/20 text-[#BFFF00] text-sm">{userProfile?.displayName?.[0] || 'M'}</AvatarFallback>
+              <AvatarFallback className="bg-[#F5A623]/20 text-[#F5A623] text-sm">{userProfile?.displayName?.[0] || 'M'}</AvatarFallback>
             </Avatar>
           </div>
         </div>

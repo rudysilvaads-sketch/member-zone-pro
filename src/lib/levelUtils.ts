@@ -51,10 +51,10 @@ export const getLevelTitle = (level: number): string => {
 };
 
 export const getLevelColor = (level: number): string => {
-  if (level >= 50) return 'from-[#BFFF00] via-[#9ACD32] to-[#7CFC00]';
-  if (level >= 40) return 'from-[#BFFF00] via-[#DFFF00] to-[#9ACD32]';
-  if (level >= 30) return 'from-[#BFFF00] to-[#9ACD32]';
-  if (level >= 20) return 'from-[#BFFF00]/90 to-[#7CFC00]/90';
-  if (level >= 10) return 'from-[#BFFF00]/80 to-[#9ACD32]/80';
-  return 'from-[#BFFF00]/60 to-[#9ACD32]/60';
+  if (level >= 50) return 'from-[#F5A623] via-[#E8920D] to-[#FFB84D]';
+  if (level >= 40) return 'from-[#F5A623] via-[#FFB84D] to-[#E8920D]';
+  if (level >= 30) return 'from-[#F5A623] to-[#E8920D]';
+  if (level >= 20) return 'from-[#F5A623]/90 to-[#FFB84D]/90';
+  if (level >= 10) return 'from-[#F5A623]/80 to-[#E8920D]/80';
+  return 'from-[#F5A623]/60 to-[#E8920D]/60';
 };

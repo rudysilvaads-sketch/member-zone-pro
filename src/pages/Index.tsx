@@ -78,11 +78,11 @@ const Index = () => {
         <main className="p-3 sm:p-4 md:p-6 pt-16 md:pt-6">
           {/* Welcome Section - La Casa Elite Style */}
           <div className="mb-6 md:mb-8">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#BFFF00]/10 border border-[#BFFF00]/20 mb-2 md:mb-3">
-              <span className="text-[10px] sm:text-xs text-[#BFFF00] uppercase tracking-widest font-medium">Dashboard</span>
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#F5A623]/10 border border-[#F5A623]/20 mb-2 md:mb-3">
+              <span className="text-[10px] sm:text-xs text-[#F5A623] uppercase tracking-widest font-medium">Dashboard</span>
             </div>
             <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white">
-              Bem-vindo de volta, <span className="text-[#BFFF00] italic">{displayName}</span>! 👋
+              Bem-vindo de volta, <span className="text-[#F5A623] italic">{displayName}</span>! 👋
             </h1>
             <p className="mt-1 text-sm md:text-base text-white/50">
               Continue sua jornada e alcance novos patamares.

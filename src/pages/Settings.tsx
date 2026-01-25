@@ -75,12 +75,12 @@ const Settings = () => {
         
         <main className="p-6">
           <div className="mb-8">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#BFFF00]/10 border border-[#BFFF00]/20 mb-3">
-              <span className="text-xs text-[#BFFF00] uppercase tracking-widest font-medium">Settings</span>
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#F5A623]/10 border border-[#F5A623]/20 mb-3">
+              <span className="text-xs text-[#F5A623] uppercase tracking-widest font-medium">Settings</span>
             </div>
             <h1 className="text-3xl font-bold flex items-center gap-3 text-white">
-              <SettingsIcon className="h-8 w-8 text-[#BFFF00]" />
-              <span className="text-[#BFFF00] italic">Configurações</span>
+              <SettingsIcon className="h-8 w-8 text-[#F5A623]" />
+              <span className="text-[#F5A623] italic">Configurações</span>
             </h1>
             <p className="mt-1 text-white/50">
               Gerencie sua conta e preferências
