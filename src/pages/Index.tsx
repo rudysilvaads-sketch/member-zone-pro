@@ -10,33 +10,42 @@ import { DailyMissions } from "@/components/dashboard/DailyMissions";
 import { LevelProgress } from "@/components/dashboard/LevelProgress";
 import { StreakCard } from "@/components/dashboard/StreakCard";
 import { useAuth } from "@/contexts/AuthContext";
-import { getTopUsers, UserProfile } from "@/lib/firebaseServices";
+import { UserProfile } from "@/lib/firebaseServices";
+import { collection, query, orderBy, limit, onSnapshot } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 const Index = () => {
-  const { userProfile } = useAuth();
+  const { userProfile, refreshProfile } = useAuth();
   const [topUsers, setTopUsers] = useState<(UserProfile & { position: number })[]>([]);
   const [userRank, setUserRank] = useState<number | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
+  // Real-time listener for ranking updates
   useEffect(() => {
-    const fetchRanking = async () => {
-      try {
-        const users = await getTopUsers(100);
-        setTopUsers(users.slice(0, 5));
-        
-        if (userProfile) {
-          const userIndex = users.findIndex(u => u.uid === userProfile.uid);
-          if (userIndex !== -1) {
-            setUserRank(userIndex + 1);
-          }
+    const usersRef = collection(db, 'users');
+    const q = query(usersRef, orderBy('points', 'desc'), limit(100));
+    
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const users = snapshot.docs.map((doc, index) => ({
+        ...doc.data(),
+        uid: doc.id,
+        position: index + 1,
+      })) as (UserProfile & { position: number })[];
+      
+      setTopUsers(users.slice(0, 5));
+      
+      if (userProfile) {
+        const userIndex = users.findIndex(u => u.uid === userProfile.uid);
+        if (userIndex !== -1) {
+          setUserRank(userIndex + 1);
         }
-      } catch (error) {
-        console.error('Error fetching ranking:', error);
+        // Refresh user profile to get updated data
+        refreshProfile();
       }
-    };
+    });
 
-    fetchRanking();
-  }, [userProfile]);
+    return () => unsubscribe();
+  }, [userProfile?.uid]);
 
   const displayName = userProfile?.displayName?.split(' ')[0] || 'Membro';
 
