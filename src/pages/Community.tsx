@@ -43,6 +43,7 @@ import { ChatModal } from "@/components/ChatModal";
 import { usePresence } from "@/hooks/usePresence";
 import { InviteCard } from "@/components/community/InviteCard";
 import { GlobalChat } from "@/components/community/GlobalChat";
+import { OnlineMembersList } from "@/components/community/OnlineMembersList";
 
 const rankConfig: Record<string, { color: string; bg: string }> = {
   bronze: { color: "text-orange-400", bg: "bg-orange-500/20" },
@@ -594,6 +595,11 @@ const Community = () => {
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Online Members */}
+              <OnlineMembersList 
+                onMemberClick={(user) => openChatWithUser(user)}
+              />
 
               {/* Top Members */}
               <Card>
