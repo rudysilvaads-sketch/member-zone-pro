@@ -4,12 +4,16 @@ import {
   query, 
   orderBy, 
   limit,
+  where,
   onSnapshot,
   serverTimestamp,
   Timestamp,
   getDocs,
   deleteDoc,
-  doc
+  doc,
+  getDoc,
+  setDoc,
+  writeBatch
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
@@ -26,6 +30,137 @@ export interface GlobalChatMessage {
   createdAt: Timestamp;
 }
 
+export interface ChatSettings {
+  isLocked: boolean;
+  lockedBy?: string;
+  lockedAt?: Timestamp;
+  lastClearedAt?: Timestamp;
+  lastClearedBy?: string;
+}
+
+// Get chat settings
+export const getChatSettings = async (): Promise<ChatSettings> => {
+  try {
+    const settingsRef = doc(db, 'settings', 'globalChat');
+    const snapshot = await getDoc(settingsRef);
+    
+    if (snapshot.exists()) {
+      return snapshot.data() as ChatSettings;
+    }
+    
+    return { isLocked: false };
+  } catch (error) {
+    console.error('Error getting chat settings:', error);
+    return { isLocked: false };
+  }
+};
+
+// Subscribe to chat settings
+export const subscribeToChatSettings = (
+  callback: (settings: ChatSettings) => void
+) => {
+  const settingsRef = doc(db, 'settings', 'globalChat');
+  
+  return onSnapshot(settingsRef, (snapshot) => {
+    if (snapshot.exists()) {
+      callback(snapshot.data() as ChatSettings);
+    } else {
+      callback({ isLocked: false });
+    }
+  });
+};
+
+// Toggle chat lock (admin only)
+export const toggleChatLock = async (
+  isLocked: boolean,
+  adminId: string
+): Promise<boolean> => {
+  try {
+    const settingsRef = doc(db, 'settings', 'globalChat');
+    await setDoc(settingsRef, {
+      isLocked,
+      lockedBy: isLocked ? adminId : null,
+      lockedAt: isLocked ? serverTimestamp() : null,
+    }, { merge: true });
+    return true;
+  } catch (error) {
+    console.error('Error toggling chat lock:', error);
+    return false;
+  }
+};
+
+// Clear all chat messages (admin only)
+export const clearAllMessages = async (adminId: string): Promise<boolean> => {
+  try {
+    const messagesRef = collection(db, 'globalChat');
+    const snapshot = await getDocs(messagesRef);
+    
+    // Delete in batches of 500 (Firestore limit)
+    const batchSize = 500;
+    const docs = snapshot.docs;
+    
+    for (let i = 0; i < docs.length; i += batchSize) {
+      const batch = writeBatch(db);
+      const chunk = docs.slice(i, i + batchSize);
+      
+      chunk.forEach((docSnapshot) => {
+        batch.delete(docSnapshot.ref);
+      });
+      
+      await batch.commit();
+    }
+    
+    // Update settings with last cleared info
+    const settingsRef = doc(db, 'settings', 'globalChat');
+    await setDoc(settingsRef, {
+      lastClearedAt: serverTimestamp(),
+      lastClearedBy: adminId,
+    }, { merge: true });
+    
+    return true;
+  } catch (error) {
+    console.error('Error clearing messages:', error);
+    return false;
+  }
+};
+
+// Clean messages older than 7 days
+export const cleanOldMessages = async (): Promise<number> => {
+  try {
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    
+    const messagesRef = collection(db, 'globalChat');
+    const q = query(
+      messagesRef,
+      where('createdAt', '<', Timestamp.fromDate(sevenDaysAgo))
+    );
+    
+    const snapshot = await getDocs(q);
+    let deletedCount = 0;
+    
+    const batchSize = 500;
+    const docs = snapshot.docs;
+    
+    for (let i = 0; i < docs.length; i += batchSize) {
+      const batch = writeBatch(db);
+      const chunk = docs.slice(i, i + batchSize);
+      
+      chunk.forEach((docSnapshot) => {
+        batch.delete(docSnapshot.ref);
+        deletedCount++;
+      });
+      
+      await batch.commit();
+    }
+    
+    return deletedCount;
+  } catch (error) {
+    console.error('Error cleaning old messages:', error);
+    return 0;
+  }
+};
+
 // Send a message to global chat (text, audio, or image)
 export const sendGlobalMessage = async (
   senderId: string,
@@ -38,6 +173,12 @@ export const sendGlobalMessage = async (
   imageUrl?: string | null
 ): Promise<{ success: boolean; error?: string }> => {
   try {
+    // Check if chat is locked
+    const settings = await getChatSettings();
+    if (settings.isLocked) {
+      return { success: false, error: 'O chat está bloqueado por um administrador' };
+    }
+    
     const messagesRef = collection(db, 'globalChat');
     
     const messageData = {
