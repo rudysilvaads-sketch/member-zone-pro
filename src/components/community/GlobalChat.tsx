@@ -14,7 +14,10 @@ import {
   Mic,
   Square,
   X,
-  ImagePlus
+  ImagePlus,
+  Lock,
+  Unlock,
+  AlertTriangle
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -23,13 +26,37 @@ import { OnlineIndicator } from '@/components/OnlineIndicator';
 import { usePresence } from '@/hooks/usePresence';
 import { 
   GlobalChatMessage, 
+  ChatSettings,
   subscribeToGlobalChat, 
   sendGlobalMessage,
-  deleteGlobalMessage 
+  deleteGlobalMessage,
+  subscribeToChatSettings,
+  toggleChatLock,
+  clearAllMessages,
+  cleanOldMessages
 } from '@/lib/globalChatService';
 import { useAudioRecorder, formatRecordingTime } from '@/hooks/useAudioRecorder';
 import { AudioMessagePlayer } from '@/components/AudioMessagePlayer';
 import { EmojiPicker } from '@/components/EmojiPicker';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { MoreVertical } from 'lucide-react';
 
 const rankConfig: Record<string, { color: string; bg: string }> = {
   bronze: { color: "text-orange-400", bg: "bg-orange-500/20" },
@@ -52,6 +79,10 @@ export const GlobalChat = ({ onUserClick }: GlobalChatProps) => {
   const [loading, setLoading] = useState(true);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [chatSettings, setChatSettings] = useState<ChatSettings>({ isLocked: false });
+  const [clearDialogOpen, setClearDialogOpen] = useState(false);
+  const [isClearing, setIsClearing] = useState(false);
+  const [isTogglingLock, setIsTogglingLock] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
@@ -66,6 +97,8 @@ export const GlobalChat = ({ onUserClick }: GlobalChatProps) => {
     uploadImage
   } = useAudioRecorder();
 
+  const isAdmin = (userProfile as any)?.isAdmin;
+
   // Subscribe to global chat
   useEffect(() => {
     const unsubscribe = subscribeToGlobalChat((msgs) => {
@@ -75,6 +108,26 @@ export const GlobalChat = ({ onUserClick }: GlobalChatProps) => {
 
     return () => unsubscribe();
   }, []);
+
+  // Subscribe to chat settings
+  useEffect(() => {
+    const unsubscribe = subscribeToChatSettings((settings) => {
+      setChatSettings(settings);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  // Clean old messages periodically (run once on mount for admins)
+  useEffect(() => {
+    if (isAdmin) {
+      cleanOldMessages().then((count) => {
+        if (count > 0) {
+          console.log(`Cleaned ${count} messages older than 7 days`);
+        }
+      });
+    }
+  }, [isAdmin]);
 
   // Auto-scroll to bottom on new messages
   useEffect(() => {
@@ -105,10 +158,40 @@ export const GlobalChat = ({ onUserClick }: GlobalChatProps) => {
 
     if (!result.success) {
       setNewMessage(content);
-      toast.error('Erro ao enviar mensagem');
+      toast.error(result.error || 'Erro ao enviar mensagem');
     }
     
     setSending(false);
+  };
+
+  const handleToggleLock = async () => {
+    if (!userProfile || !isAdmin) return;
+    
+    setIsTogglingLock(true);
+    const newLockState = !chatSettings.isLocked;
+    const success = await toggleChatLock(newLockState, userProfile.uid);
+    
+    if (success) {
+      toast.success(newLockState ? 'Chat bloqueado' : 'Chat desbloqueado');
+    } else {
+      toast.error('Erro ao alterar status do chat');
+    }
+    setIsTogglingLock(false);
+  };
+
+  const handleClearChat = async () => {
+    if (!userProfile || !isAdmin) return;
+    
+    setIsClearing(true);
+    const success = await clearAllMessages(userProfile.uid);
+    
+    if (success) {
+      toast.success('Todas as mensagens foram apagadas');
+      setClearDialogOpen(false);
+    } else {
+      toast.error('Erro ao limpar o chat');
+    }
+    setIsClearing(false);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -244,10 +327,88 @@ export const GlobalChat = ({ onUserClick }: GlobalChatProps) => {
           <div className="flex items-center gap-2">
             <MessageCircle className="h-5 w-5 text-accent" />
             Chat Geral
+            {chatSettings.isLocked && (
+              <Badge variant="destructive" className="text-[10px] gap-1">
+                <Lock className="h-3 w-3" />
+                Bloqueado
+              </Badge>
+            )}
           </div>
-          <div className="flex items-center gap-1.5 text-sm font-normal text-muted-foreground">
-            <Users className="h-4 w-4" />
-            <span>{onlineCount} online</span>
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 text-sm font-normal text-muted-foreground">
+              <Users className="h-4 w-4" />
+              <span>{onlineCount} online</span>
+            </div>
+            
+            {/* Admin Controls */}
+            {isAdmin && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem 
+                    onClick={handleToggleLock}
+                    disabled={isTogglingLock}
+                  >
+                    {chatSettings.isLocked ? (
+                      <>
+                        <Unlock className="h-4 w-4 mr-2" />
+                        Desbloquear Chat
+                      </>
+                    ) : (
+                      <>
+                        <Lock className="h-4 w-4 mr-2" />
+                        Bloquear Chat
+                      </>
+                    )}
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <AlertDialog open={clearDialogOpen} onOpenChange={setClearDialogOpen}>
+                    <AlertDialogTrigger asChild>
+                      <DropdownMenuItem 
+                        onSelect={(e) => e.preventDefault()}
+                        className="text-destructive focus:text-destructive"
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Limpar Todo o Chat
+                      </DropdownMenuItem>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle className="flex items-center gap-2">
+                          <AlertTriangle className="h-5 w-5 text-destructive" />
+                          Limpar Chat
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Tem certeza que deseja apagar TODAS as mensagens do chat global? 
+                          Esta ação não pode ser desfeita.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={handleClearChat}
+                          disabled={isClearing}
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                          {isClearing ? (
+                            <>
+                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                              Limpando...
+                            </>
+                          ) : (
+                            'Limpar Tudo'
+                          )}
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </div>
         </CardTitle>
       </CardHeader>
@@ -395,7 +556,12 @@ export const GlobalChat = ({ onUserClick }: GlobalChatProps) => {
         
         {/* Input */}
         <div className="p-4 border-t border-border/50">
-          {isRecording ? (
+          {chatSettings.isLocked && !isAdmin ? (
+            <div className="flex items-center justify-center gap-2 py-2 text-muted-foreground">
+              <Lock className="h-4 w-4" />
+              <span className="text-sm">O chat está temporariamente bloqueado</span>
+            </div>
+          ) : isRecording ? (
             <div className="flex gap-2">
               <div className="flex-1 flex items-center gap-2 px-3 bg-destructive/10 rounded-md h-10">
                 <span className="animate-pulse text-destructive">●</span>
@@ -447,28 +613,28 @@ export const GlobalChat = ({ onUserClick }: GlobalChatProps) => {
                 size="icon"
                 variant="ghost"
                 onClick={() => imageInputRef.current?.click()}
-                disabled={!userProfile || sending}
+                disabled={!userProfile || sending || (chatSettings.isLocked && !isAdmin)}
               >
                 <ImagePlus className="h-4 w-4" />
               </Button>
               <EmojiPicker 
                 onEmojiSelect={handleEmojiSelect}
-                disabled={!userProfile || sending}
+                disabled={!userProfile || sending || (chatSettings.isLocked && !isAdmin)}
               />
               <Input
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 onKeyDown={handleKeyPress}
-                placeholder="Digite sua mensagem..."
+                placeholder={chatSettings.isLocked ? "Chat bloqueado (admin pode enviar)" : "Digite sua mensagem..."}
                 maxLength={500}
-                disabled={!userProfile || sending}
+                disabled={!userProfile || sending || (chatSettings.isLocked && !isAdmin)}
                 className="flex-1"
               />
               {newMessage.trim() ? (
                 <Button 
                   size="icon"
                   onClick={() => handleSend()}
-                  disabled={!userProfile || sending}
+                  disabled={!userProfile || sending || (chatSettings.isLocked && !isAdmin)}
                 >
                   {sending ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -481,14 +647,14 @@ export const GlobalChat = ({ onUserClick }: GlobalChatProps) => {
                   size="icon"
                   variant="outline"
                   onClick={handleStartRecording}
-                  disabled={!userProfile || sending}
+                  disabled={!userProfile || sending || (chatSettings.isLocked && !isAdmin)}
                 >
                   <Mic className="h-4 w-4" />
                 </Button>
               )}
             </div>
           )}
-          {!isRecording && !imagePreview && (
+          {!isRecording && !imagePreview && !chatSettings.isLocked && (
             <p className="text-[10px] text-muted-foreground mt-1 text-right">
               {newMessage.length}/500
             </p>
