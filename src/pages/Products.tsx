@@ -15,6 +15,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import Autoplay from "embla-carousel-autoplay";
 import { MyRedemptions } from "@/components/dashboard/MyRedemptions";
+import featuredHeroBg from "@/assets/featured-hero-bg.jpg";
 
 const rankOrder = ['bronze', 'silver', 'gold', 'platinum', 'diamond'];
 
@@ -575,12 +576,18 @@ const FeaturedProductCard = ({ product, canPurchase, isPurchased, onSelect, form
     >
       {/* Hero Banner Container */}
       <div className="relative aspect-[21/9] md:aspect-[3/1] rounded-2xl overflow-hidden bg-[#0a0a0a] border border-white/10 group-hover:border-[#BFFF00]/30 transition-all duration-500 shadow-2xl">
-        {/* Background Image */}
+        {/* Premium Background Image */}
+        <img 
+          src={featuredHeroBg} 
+          alt="Background"
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+        {/* Product Image Overlay */}
         <img 
           src={product.image} 
           alt={product.name}
           className={cn(
-            "absolute inset-0 w-full h-full object-cover transition-all duration-700",
+            "absolute right-0 top-0 h-full w-1/2 object-contain object-right transition-all duration-700",
             "group-hover:scale-105",
             (isUnavailable || (!canPurchase.allowed && !isPurchased)) && "opacity-50"
           )}
