@@ -3,6 +3,8 @@ import {
   doc, 
   addDoc, 
   updateDoc,
+  setDoc,
+  deleteDoc,
   query, 
   where, 
   orderBy, 
@@ -16,6 +18,12 @@ import {
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { createNotification } from '@/lib/firebaseServices';
+
+export interface TypingIndicator {
+  odId: string;
+  odName: string;
+  timestamp: Timestamp;
+}
 
 export interface ChatMessage {
   id: string;
@@ -269,4 +277,44 @@ export const adminSubscribeToMessages = (
   callback: (messages: ChatMessage[]) => void
 ) => {
   return subscribeToMessages(conversationId, callback);
+};
+
+// Set typing status for a user in a conversation
+export const setTypingStatus = async (
+  conversationId: string,
+  odId: string,
+  odName: string,
+  isTyping: boolean
+): Promise<void> => {
+  try {
+    const typingRef = doc(db, 'conversations', conversationId, 'typing', odId);
+    
+    if (isTyping) {
+      await setDoc(typingRef, {
+        odId,
+        odName,
+        timestamp: serverTimestamp(),
+      });
+    } else {
+      await deleteDoc(typingRef);
+    }
+  } catch (error) {
+    console.error('Error setting typing status:', error);
+  }
+};
+
+// Subscribe to typing indicators for a conversation
+export const subscribeToTypingIndicators = (
+  conversationId: string,
+  currentodId: string,
+  callback: (typingods: TypingIndicator[]) => void
+) => {
+  const typingRef = collection(db, 'conversations', conversationId, 'typing');
+  
+  return onSnapshot(typingRef, (snapshot) => {
+    const typingods = snapshot.docs
+      .map(doc => doc.data() as TypingIndicator)
+      .filter(indicator => indicator.odId !== currentodId);
+    callback(typingods);
+  });
 };
