@@ -32,8 +32,11 @@ import {
   Shield,
   ShieldCheck,
   UserCog,
-  ChevronDown
+  ChevronDown,
+  Sparkles,
+  TrendingUp
 } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { collection, getDocs, doc, updateDoc, deleteDoc, increment } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { toast } from 'sonner';
@@ -76,6 +79,8 @@ export function AdminUsers() {
   const [search, setSearch] = useState('');
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [pointsToAdd, setPointsToAdd] = useState(0);
+  const [xpToAdd, setXpToAdd] = useState(0);
+  const [newLevel, setNewLevel] = useState(1);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -128,6 +133,50 @@ export function AdminUsers() {
     } catch (error) {
       console.error('Error updating points:', error);
       toast.error('Erro ao atualizar pontos');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleAddXp = async () => {
+    if (!editingUser || xpToAdd === 0) return;
+    
+    setSaving(true);
+    try {
+      const userRef = doc(db, 'users', editingUser.id);
+      const newXp = (editingUser.xp || 0) + xpToAdd;
+      await updateDoc(userRef, {
+        xp: newXp,
+      });
+      
+      toast.success(`${xpToAdd > 0 ? '+' : ''}${xpToAdd} XP para ${editingUser.displayName}`);
+      setEditingUser(null);
+      setXpToAdd(0);
+      fetchUsers();
+    } catch (error) {
+      console.error('Error updating XP:', error);
+      toast.error('Erro ao atualizar XP');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleChangeLevel = async () => {
+    if (!editingUser || newLevel === editingUser.level) return;
+    
+    setSaving(true);
+    try {
+      const userRef = doc(db, 'users', editingUser.id);
+      await updateDoc(userRef, {
+        level: newLevel,
+      });
+      
+      toast.success(`Nível de ${editingUser.displayName} alterado para ${newLevel}`);
+      setEditingUser(null);
+      fetchUsers();
+    } catch (error) {
+      console.error('Error updating level:', error);
+      toast.error('Erro ao atualizar nível');
     } finally {
       setSaving(false);
     }
@@ -321,6 +370,8 @@ export function AdminUsers() {
                       onClick={() => {
                         setEditingUser(user);
                         setPointsToAdd(0);
+                        setXpToAdd(0);
+                        setNewLevel(user.level || 1);
                       }}
                     >
                       <Edit className="h-4 w-4" />
@@ -343,68 +394,197 @@ export function AdminUsers() {
 
       {/* Edit Points Dialog */}
       <Dialog open={!!editingUser} onOpenChange={() => setEditingUser(null)}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Editar Pontos</DialogTitle>
+            <DialogTitle>Editar Usuário</DialogTitle>
             <DialogDescription>
-              Adicione ou remova pontos de {editingUser?.displayName}
+              Gerenciar pontos, XP e nível de {editingUser?.displayName}
             </DialogDescription>
           </DialogHeader>
           
-          <div className="space-y-4 py-4">
-            <div className="flex items-center justify-center gap-4">
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => setPointsToAdd(prev => prev - 100)}
-              >
-                <Minus className="h-4 w-4" />
-              </Button>
-              <div className="text-center">
-                <p className="text-3xl font-bold">
-                  {pointsToAdd > 0 ? '+' : ''}{pointsToAdd}
-                </p>
-                <p className="text-sm text-muted-foreground">pontos</p>
-              </div>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => setPointsToAdd(prev => prev + 100)}
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
-            </div>
+          <Tabs defaultValue="points" className="w-full">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="points" className="flex items-center gap-1.5">
+                <Crown className="h-3.5 w-3.5" />
+                Pontos
+              </TabsTrigger>
+              <TabsTrigger value="xp" className="flex items-center gap-1.5">
+                <Sparkles className="h-3.5 w-3.5" />
+                XP
+              </TabsTrigger>
+              <TabsTrigger value="level" className="flex items-center gap-1.5">
+                <TrendingUp className="h-3.5 w-3.5" />
+                Nível
+              </TabsTrigger>
+            </TabsList>
             
-            <div className="flex justify-center gap-2">
-              {[50, 100, 500, 1000].map(amount => (
+            {/* Points Tab */}
+            <TabsContent value="points" className="space-y-4 py-4">
+              <div className="flex items-center justify-center gap-4">
                 <Button
-                  key={amount}
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => setPointsToAdd(amount)}
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setPointsToAdd(prev => prev - 100)}
                 >
-                  +{amount}
+                  <Minus className="h-4 w-4" />
                 </Button>
-              ))}
-            </div>
+                <div className="text-center">
+                  <p className="text-3xl font-bold">
+                    {pointsToAdd > 0 ? '+' : ''}{pointsToAdd}
+                  </p>
+                  <p className="text-sm text-muted-foreground">pontos</p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setPointsToAdd(prev => prev + 100)}
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+              
+              <div className="flex justify-center gap-2">
+                {[50, 100, 500, 1000].map(amount => (
+                  <Button
+                    key={amount}
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => setPointsToAdd(amount)}
+                  >
+                    +{amount}
+                  </Button>
+                ))}
+              </div>
+              
+              <div className="text-center text-sm text-muted-foreground">
+                Novo total: {((editingUser?.points || 0) + pointsToAdd).toLocaleString()} pontos
+              </div>
+              
+              <div className="flex justify-end gap-2 pt-2">
+                <Button variant="outline" onClick={() => setEditingUser(null)}>
+                  Cancelar
+                </Button>
+                <Button 
+                  variant="gold" 
+                  onClick={handleAddPoints}
+                  disabled={pointsToAdd === 0 || saving}
+                >
+                  {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Salvar Pontos'}
+                </Button>
+              </div>
+            </TabsContent>
             
-            <div className="text-center text-sm text-muted-foreground">
-              Novo total: {((editingUser?.points || 0) + pointsToAdd).toLocaleString()} pontos
-            </div>
-          </div>
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditingUser(null)}>
-              Cancelar
-            </Button>
-            <Button 
-              variant="gold" 
-              onClick={handleAddPoints}
-              disabled={pointsToAdd === 0 || saving}
-            >
-              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Salvar'}
-            </Button>
-          </DialogFooter>
+            {/* XP Tab */}
+            <TabsContent value="xp" className="space-y-4 py-4">
+              <div className="flex items-center justify-center gap-4">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setXpToAdd(prev => prev - 50)}
+                >
+                  <Minus className="h-4 w-4" />
+                </Button>
+                <div className="text-center">
+                  <p className="text-3xl font-bold">
+                    {xpToAdd > 0 ? '+' : ''}{xpToAdd}
+                  </p>
+                  <p className="text-sm text-muted-foreground">XP</p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setXpToAdd(prev => prev + 50)}
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+              
+              <div className="flex justify-center gap-2">
+                {[25, 50, 100, 250, 500].map(amount => (
+                  <Button
+                    key={amount}
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => setXpToAdd(amount)}
+                  >
+                    +{amount}
+                  </Button>
+                ))}
+              </div>
+              
+              <div className="text-center text-sm text-muted-foreground">
+                Novo total: {((editingUser?.xp || 0) + xpToAdd).toLocaleString()} XP
+              </div>
+              
+              <div className="flex justify-end gap-2 pt-2">
+                <Button variant="outline" onClick={() => setEditingUser(null)}>
+                  Cancelar
+                </Button>
+                <Button 
+                  variant="gold" 
+                  onClick={handleAddXp}
+                  disabled={xpToAdd === 0 || saving}
+                >
+                  {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Salvar XP'}
+                </Button>
+              </div>
+            </TabsContent>
+            
+            {/* Level Tab */}
+            <TabsContent value="level" className="space-y-4 py-4">
+              <div className="flex items-center justify-center gap-4">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setNewLevel(prev => Math.max(1, prev - 1))}
+                  disabled={newLevel <= 1}
+                >
+                  <Minus className="h-4 w-4" />
+                </Button>
+                <div className="text-center">
+                  <p className="text-4xl font-bold text-primary">{newLevel}</p>
+                  <p className="text-sm text-muted-foreground">Nível</p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setNewLevel(prev => prev + 1)}
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+              
+              <div className="flex justify-center gap-2">
+                {[1, 5, 10, 25, 50, 100].map(level => (
+                  <Button
+                    key={level}
+                    variant={newLevel === level ? "default" : "secondary"}
+                    size="sm"
+                    onClick={() => setNewLevel(level)}
+                  >
+                    {level}
+                  </Button>
+                ))}
+              </div>
+              
+              <div className="text-center text-sm text-muted-foreground">
+                Nível atual: {editingUser?.level || 1} → Novo: {newLevel}
+              </div>
+              
+              <div className="flex justify-end gap-2 pt-2">
+                <Button variant="outline" onClick={() => setEditingUser(null)}>
+                  Cancelar
+                </Button>
+                <Button 
+                  variant="gold" 
+                  onClick={handleChangeLevel}
+                  disabled={newLevel === (editingUser?.level || 1) || saving}
+                >
+                  {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Salvar Nível'}
+                </Button>
+              </div>
+            </TabsContent>
+          </Tabs>
         </DialogContent>
       </Dialog>
     </div>
