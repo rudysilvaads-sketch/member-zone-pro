@@ -257,7 +257,7 @@ const Products = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-[#0a0a0a]">
       <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
       
       <div className={`transition-all duration-300 ${sidebarCollapsed ? 'pl-20' : 'pl-64'}`}>
@@ -266,14 +266,19 @@ const Products = () => {
         <main className="p-6 space-y-6">
           {/* Header Section */}
           <div className="flex items-center gap-4">
-            <div className="p-3 rounded-xl bg-primary/10 border border-primary/20">
-              <Package className="h-6 w-6 text-primary" />
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#BFFF00]/10 border border-[#BFFF00]/20">
+              <span className="text-xs text-[#BFFF00] uppercase tracking-widest font-medium">Vitrine</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="p-3 rounded-xl bg-[#BFFF00]/10 border border-[#BFFF00]/20">
+              <Package className="h-6 w-6 text-[#BFFF00]" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold">
-                <span className="text-primary">MEUS</span> PRODUTOS
+              <h1 className="text-2xl font-bold text-white">
+                <span className="text-[#BFFF00] italic">MEUS</span> PRODUTOS
               </h1>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-white/50">
                 Produtos que você tem acesso
               </p>
             </div>

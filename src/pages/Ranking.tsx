@@ -70,7 +70,7 @@ const Ranking = () => {
   const userPosition = users.find(u => u.uid === userProfile?.uid)?.position;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-[#0a0a0a]">
       <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
       
       <div className={`transition-all duration-300 ${sidebarCollapsed ? 'pl-20' : 'pl-64'}`}>
@@ -78,39 +78,42 @@ const Ranking = () => {
         
         <main className="p-6">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold flex items-center gap-3">
-              <Trophy className="h-8 w-8 text-primary" />
-              Ranking Global
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#BFFF00]/10 border border-[#BFFF00]/20 mb-3">
+              <span className="text-xs text-[#BFFF00] uppercase tracking-widest font-medium">Ranking</span>
+            </div>
+            <h1 className="text-3xl font-bold flex items-center gap-3 text-white">
+              <Trophy className="h-8 w-8 text-[#BFFF00]" />
+              Ranking <span className="text-[#BFFF00] italic">Global</span>
             </h1>
-            <p className="mt-1 text-muted-foreground">
+            <p className="mt-1 text-white/50">
               Veja os melhores membros da comunidade
             </p>
           </div>
 
           {/* User Position Card */}
           {userProfile && userPosition && (
-            <Card className="mb-6 bg-gradient-to-r from-primary/10 to-accent/10 border-primary/20">
+            <Card variant="gradient" className="mb-6 border-[#BFFF00]/20">
               <CardContent className="flex items-center justify-between p-6">
                 <div className="flex items-center gap-4">
-                  <Avatar className="h-14 w-14 border-2 border-primary">
+                  <Avatar className="h-14 w-14 border-2 border-[#BFFF00]/50">
                     <AvatarImage src={userProfile.photoURL || undefined} />
-                    <AvatarFallback className="bg-primary/20">
+                    <AvatarFallback className="bg-[#BFFF00]/20 text-[#BFFF00]">
                       {userProfile.displayName?.charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                   <div>
-                    <p className="text-sm text-muted-foreground">Sua posição</p>
-                    <p className="text-2xl font-bold text-primary">#{userPosition}</p>
+                    <p className="text-sm text-white/50">Sua posição</p>
+                    <p className="text-2xl font-bold text-[#BFFF00]">#{userPosition}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-6 text-center">
                   <div>
-                    <p className="text-2xl font-bold">{userProfile.points.toLocaleString()}</p>
-                    <p className="text-sm text-muted-foreground">Pontos</p>
+                    <p className="text-2xl font-bold text-white">{userProfile.points.toLocaleString()}</p>
+                    <p className="text-sm text-white/50">Pontos</p>
                   </div>
                   <div>
-                    <p className="text-2xl font-bold">Nível {userProfile.level || 1}</p>
-                    <p className="text-sm text-muted-foreground">XP: {userProfile.xp || 0}</p>
+                    <p className="text-2xl font-bold text-white">Nível {userProfile.level || 1}</p>
+                    <p className="text-sm text-white/50">XP: {userProfile.xp || 0}</p>
                   </div>
                 </div>
               </CardContent>
@@ -140,9 +143,10 @@ const Ranking = () => {
                 return (
                   <Card 
                     key={user.uid} 
+                    variant="gradient"
                     className={cn(
                       "text-center transition-all",
-                      isFirst && "md:order-1 md:-mt-4 border-yellow-500/30 bg-gradient-to-b from-yellow-500/10 to-transparent",
+                      isFirst && "md:order-1 md:-mt-4 border-[#BFFF00]/30 shadow-[0_0_40px_rgba(191,255,0,0.2)]",
                       idx === 1 && "md:order-0 border-slate-400/30",
                       idx === 2 && "md:order-2 border-orange-500/30"
                     )}
@@ -151,20 +155,20 @@ const Ranking = () => {
                       <div className="flex justify-center mb-4">
                         {getPositionIcon(user.position)}
                       </div>
-                      <Avatar className={cn("h-20 w-20 mx-auto border-4", rank.border)}>
+                      <Avatar className={cn("h-20 w-20 mx-auto border-4", isFirst ? "border-[#BFFF00]/50" : rank.border)}>
                         <AvatarImage src={user.photoURL || undefined} />
-                        <AvatarFallback className={rank.bg}>
+                        <AvatarFallback className={isFirst ? "bg-[#BFFF00]/20 text-[#BFFF00]" : rank.bg}>
                           {user.displayName?.charAt(0).toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
-                      <h3 className="mt-4 font-bold text-lg">{user.displayName}</h3>
+                      <h3 className="mt-4 font-bold text-lg text-white">{user.displayName}</h3>
                       <Badge className={cn("mt-2", rank.bg, rank.color)}>
                         {user.rank?.charAt(0).toUpperCase() + user.rank?.slice(1)}
                       </Badge>
-                      <p className="mt-3 text-2xl font-bold text-primary">
+                      <p className="mt-3 text-2xl font-bold text-[#BFFF00]">
                         {user.points.toLocaleString()} pts
                       </p>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-sm text-white/50">
                         Nível {user.level || 1}
                       </p>
                     </CardContent>
@@ -175,11 +179,11 @@ const Ranking = () => {
           )}
 
           {/* Full Ranking List */}
-          <Card>
+          <Card variant="gradient">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5" />
-                Classificação Completa
+              <CardTitle className="flex items-center gap-2 text-white">
+                <TrendingUp className="h-5 w-5 text-[#BFFF00]" />
+                Classificação <span className="text-[#BFFF00] italic ml-1">Completa</span>
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -199,31 +203,31 @@ const Ranking = () => {
                       <div 
                         key={user.uid}
                         className={cn(
-                          "flex items-center gap-4 p-4 rounded-lg transition-all hover:bg-muted/50",
-                          isCurrentUser && "bg-primary/10 border border-primary/20"
+                          "flex items-center gap-4 p-4 rounded-xl transition-all hover:bg-white/5",
+                          isCurrentUser && "bg-[#BFFF00]/10 border border-[#BFFF00]/20"
                         )}
                       >
                         <div className="w-10 flex justify-center">
                           {getPositionIcon(user.position)}
                         </div>
-                        <Avatar className={cn("h-12 w-12 border-2", rank.border)}>
+                        <Avatar className={cn("h-12 w-12 border-2", isCurrentUser ? "border-[#BFFF00]/50" : rank.border)}>
                           <AvatarImage src={user.photoURL || undefined} />
-                          <AvatarFallback className={rank.bg}>
+                          <AvatarFallback className={isCurrentUser ? "bg-[#BFFF00]/20 text-[#BFFF00]" : rank.bg}>
                             {user.displayName?.charAt(0).toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex-1">
-                          <p className={cn("font-semibold", isCurrentUser && "text-primary")}>
+                          <p className={cn("font-semibold text-white", isCurrentUser && "text-[#BFFF00]")}>
                             {user.displayName}
-                            {isCurrentUser && <span className="ml-2 text-xs">(Você)</span>}
+                            {isCurrentUser && <span className="ml-2 text-xs text-[#BFFF00]">(Você)</span>}
                           </p>
                           <Badge variant="outline" className={cn("text-xs", rank.color)}>
                             {user.rank?.charAt(0).toUpperCase() + user.rank?.slice(1)} • Nível {user.level || 1}
                           </Badge>
                         </div>
                         <div className="text-right">
-                          <p className="font-bold text-lg">{user.points.toLocaleString()}</p>
-                          <p className="text-xs text-muted-foreground">pontos</p>
+                          <p className="font-bold text-lg text-[#BFFF00]">{user.points.toLocaleString()}</p>
+                          <p className="text-xs text-white/50">pontos</p>
                         </div>
                       </div>
                     );
