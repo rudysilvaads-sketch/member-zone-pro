@@ -125,17 +125,6 @@ export default function Auth() {
       
       {/* Glass Card with Animated Border */}
       <div className="relative z-10 w-full max-w-md">
-        {/* Animated border container */}
-        <div 
-          className="absolute inset-0 rounded-2xl p-[2px]"
-          style={{
-            background: 'conic-gradient(from var(--border-angle, 0deg), #F5A623 0%, #FFB347 15%, transparent 30%, transparent 70%, #FFB347 85%, #F5A623 100%)',
-            animation: 'border-rotate 4s linear infinite',
-          }}
-        >
-          {/* Inner mask to create border effect */}
-          <div className="absolute inset-[2px] rounded-[14px] bg-[#0a0a0a]" />
-        </div>
         {/* Outer glow effect */}
         <div 
           className="absolute -inset-1 rounded-2xl opacity-50 blur-md -z-10"
@@ -144,8 +133,20 @@ export default function Auth() {
             animation: 'border-rotate 4s linear infinite',
           }}
         />
+        {/* Animated border - using pseudo-element technique */}
+        <div 
+          className="absolute inset-0 rounded-2xl"
+          style={{
+            padding: '2px',
+            background: 'conic-gradient(from var(--border-angle, 0deg), #F5A623 0%, #FFB347 15%, transparent 30%, transparent 70%, #FFB347 85%, #F5A623 100%)',
+            animation: 'border-rotate 4s linear infinite',
+            WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+            WebkitMaskComposite: 'xor',
+            maskComposite: 'exclude',
+          }}
+        />
         {/* Card content - transparent glassmorphism */}
-        <div className="relative backdrop-blur-2xl bg-black/40 rounded-2xl p-8 shadow-[0_8px_32px_rgba(0,0,0,0.5)] border border-white/5">
+        <div className="relative backdrop-blur-2xl bg-black/30 rounded-2xl p-8 shadow-[0_8px_32px_rgba(0,0,0,0.5)]">
           {/* Badge */}
           <div className="flex justify-center mb-6">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#F5A623]/10 border border-[#F5A623]/30">
