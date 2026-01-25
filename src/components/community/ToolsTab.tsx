@@ -127,7 +127,7 @@ export const ToolsTab = () => {
     );
 
     if (result.success) {
-      toast.success('Recurso compartilhado! +50 XP');
+      toast.success('Recurso enviado para aprovação! Você receberá XP após a aprovação.');
       setCreateDialogOpen(false);
       resetForm();
     } else {
@@ -461,9 +461,9 @@ export const ToolsTab = () => {
             </div>
 
             <div className="bg-primary/10 rounded-lg p-3 text-sm">
-              <p className="font-medium text-primary">🎁 Recompensa: +50 XP + 10 Pontos</p>
+              <p className="font-medium text-primary">🎁 Recompensa: +50 XP + 10 Pontos (após aprovação)</p>
               <p className="text-muted-foreground text-xs mt-1">
-                Você também ganha XP quando outros usuários curtem ou salvam seu recurso!
+                Seu recurso será analisado pela moderação antes de ser publicado. Você também ganha XP quando outros usuários curtem ou salvam seu recurso!
               </p>
             </div>
           </div>
