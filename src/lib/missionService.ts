@@ -32,6 +32,7 @@ export interface UserMissionsDoc {
   date: string; // Format: YYYY-MM-DD
   missions: Record<string, UserDailyMission>;
   updatedAt: Timestamp;
+  xpVerified?: boolean; // Flag to prevent duplicate reward grants
 }
 
 // Get today's date string in YYYY-MM-DD format
@@ -60,7 +61,64 @@ export const getUserDailyMissions = async (
   }
 };
 
-// Initialize or update user's daily missions
+// Verify and fix login reward if it was marked as claimed but XP wasn't credited
+export const verifyAndFixLoginReward = async (userId: string): Promise<boolean> => {
+  try {
+    const today = getTodayDateString();
+    const missionDocRef = doc(db, 'users', userId, 'dailyMissions', today);
+    const missionDoc = await getDoc(missionDocRef);
+    
+    if (!missionDoc.exists()) return false;
+    
+    const data = missionDoc.data() as UserMissionsDoc;
+    const loginMission = data.missions['daily-login'];
+    
+    // If login mission is claimed, we should verify XP was credited
+    // by checking if there's a xpVerified flag
+    if (loginMission?.claimed && !data.xpVerified) {
+      const loginReward = MISSION_REWARDS['daily-login'];
+      const userDocRef = doc(db, 'users', userId);
+      const userDoc = await getDoc(userDocRef);
+      
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        const currentXp = userData.xp || 0;
+        const currentPoints = userData.points || 0;
+        const newXp = currentXp + loginReward.xp;
+        const newPoints = currentPoints + loginReward.points;
+        const newLevel = calculateLevel(newXp);
+        
+        console.log('Fixing missing login reward:', {
+          userId,
+          currentXp,
+          newXp,
+          currentPoints,
+          newPoints
+        });
+        
+        await updateDoc(userDocRef, {
+          xp: newXp,
+          points: newPoints,
+          level: newLevel,
+        });
+        
+        // Mark as verified to prevent duplicate rewards
+        await updateDoc(missionDocRef, {
+          xpVerified: true,
+        });
+        
+        return true;
+      }
+    }
+    
+    return false;
+  } catch (error) {
+    console.error('Error verifying login reward:', error);
+    return false;
+  }
+};
+
+
 export const initializeUserDailyMissions = async (
   userId: string,
   missionIds: string[]
@@ -92,6 +150,7 @@ export const initializeUserDailyMissions = async (
     date: today,
     missions,
     updatedAt: serverTimestamp() as Timestamp,
+    xpVerified: true, // Mark as verified since we're granting reward now
   };
   
   await setDoc(missionDocRef, newDoc);
@@ -103,15 +162,37 @@ export const initializeUserDailyMissions = async (
     
     // First get current XP to calculate new level
     const userDoc = await getDoc(userDocRef);
-    const currentXp = userDoc.exists() ? (userDoc.data().xp || 0) : 0;
+    
+    if (!userDoc.exists()) {
+      console.error('User document not found for userId:', userId);
+      return { missionsDoc: newDoc, loginRewardGranted: false };
+    }
+    
+    const userData = userDoc.data();
+    const currentXp = userData.xp || 0;
+    const currentPoints = userData.points || 0;
     const newXp = currentXp + loginReward.xp;
+    const newPoints = currentPoints + loginReward.points;
     const newLevel = calculateLevel(newXp);
     
+    console.log('Awarding login reward:', {
+      userId,
+      currentXp,
+      currentPoints,
+      newXp,
+      newPoints,
+      newLevel,
+      reward: loginReward
+    });
+    
+    // Use set with merge instead of increment to ensure values are set correctly
     await updateDoc(userDocRef, {
-      xp: increment(loginReward.xp),
-      points: increment(loginReward.points),
+      xp: newXp,
+      points: newPoints,
       level: newLevel,
     });
+    
+    console.log('Login reward applied successfully');
   }
   
   return { missionsDoc: newDoc, loginRewardGranted: true };
@@ -210,15 +291,35 @@ export const completeMission = async (
         
         // First get current XP to calculate new level
         const userDoc = await getDoc(userDocRef);
-        const currentXp = userDoc.exists() ? (userDoc.data().xp || 0) : 0;
-        const newXp = currentXp + rewards.xp;
-        const newLevel = calculateLevel(newXp);
         
-        await updateDoc(userDocRef, {
-          xp: increment(rewards.xp),
-          points: increment(rewards.points),
-          level: newLevel,
-        });
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          const currentXp = userData.xp || 0;
+          const currentPoints = userData.points || 0;
+          const newXp = currentXp + rewards.xp;
+          const newPoints = currentPoints + rewards.points;
+          const newLevel = calculateLevel(newXp);
+          
+          console.log('Awarding mission reward:', {
+            userId,
+            missionId,
+            currentXp,
+            currentPoints,
+            newXp,
+            newPoints,
+            newLevel,
+            rewards
+          });
+          
+          await updateDoc(userDocRef, {
+            xp: newXp,
+            points: newPoints,
+            level: newLevel,
+          });
+          
+          console.log('Mission reward applied successfully');
+        }
+        
         return { completed: true, rewards };
       }
     }
