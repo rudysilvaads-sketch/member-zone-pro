@@ -7,6 +7,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { GlobalChatWidget } from "@/components/GlobalChatWidget";
+import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import AdminSetup from "./pages/AdminSetup";
@@ -107,6 +108,7 @@ const App = () => {
                 <Route path="*" element={<NotFound />} />
               </Routes>
               <GlobalChatWidget />
+              <PWAInstallPrompt />
             </TooltipProvider>
           </AuthProvider>
         </BrowserRouter>
