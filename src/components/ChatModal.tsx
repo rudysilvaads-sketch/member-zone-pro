@@ -23,6 +23,7 @@ import { OnlineIndicator } from "./OnlineIndicator";
 import { usePresence } from "@/hooks/usePresence";
 import { useAudioRecorder, formatRecordingTime } from "@/hooks/useAudioRecorder";
 import { AudioMessagePlayer } from "./AudioMessagePlayer";
+import { EmojiPicker } from "./EmojiPicker";
 import { toast } from "sonner";
 
 interface ChatModalProps {
@@ -337,6 +338,23 @@ export const ChatModal = ({ open, onOpenChange, targetUser }: ChatModalProps) =>
     }
   };
 
+  const handleEmojiSelect = (emoji: string) => {
+    setNewMessage(prev => prev + emoji);
+    
+    // Trigger typing indicator for emoji
+    if (selectedConversation && userProfile) {
+      setTypingStatus(selectedConversation.id, userProfile.uid, userProfile.displayName, true);
+      
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+      
+      typingTimeoutRef.current = setTimeout(() => {
+        setTypingStatus(selectedConversation.id, userProfile.uid, userProfile.displayName, false);
+      }, 3000);
+    }
+  };
+
   const getOtherParticipant = (conversation: Conversation) => {
     const otherId = conversation.participants.find(id => id !== userProfile?.uid);
     if (!otherId) return { name: "Desconhecido", avatar: null, id: "" };
@@ -601,6 +619,10 @@ export const ChatModal = ({ open, onOpenChange, targetUser }: ChatModalProps) =>
               >
                 <ImagePlus className="h-4 w-4" />
               </Button>
+              <EmojiPicker 
+                onEmojiSelect={handleEmojiSelect}
+                disabled={sending}
+              />
               <Input
                 ref={inputRef}
                 placeholder="Digite sua mensagem..."
