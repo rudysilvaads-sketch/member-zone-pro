@@ -5,15 +5,15 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { 
   Zap, 
-  BookOpen, 
   MessageSquare, 
   Share2, 
-  Trophy, 
   Target,
   CheckCircle,
   Clock,
   Gift,
-  Loader2
+  Loader2,
+  ShoppingBag,
+  Users
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -49,18 +49,9 @@ const missionConfigs: Omit<DailyMission, 'progress' | 'completed' | 'claimed'>[]
     requirement: 1,
   },
   {
-    id: 'complete-module',
-    title: 'Estudante Dedicado',
-    description: 'Complete 1 módulo de estudo',
-    xpReward: 100,
-    pointsReward: 50,
-    icon: BookOpen,
-    requirement: 1,
-  },
-  {
     id: 'engage-community',
     title: 'Membro Ativo',
-    description: 'Interaja na comunidade',
+    description: 'Faça um post ou comentário na comunidade',
     xpReward: 75,
     pointsReward: 35,
     icon: MessageSquare,
@@ -69,10 +60,19 @@ const missionConfigs: Omit<DailyMission, 'progress' | 'completed' | 'claimed'>[]
   {
     id: 'share-progress',
     title: 'Compartilhador',
-    description: 'Compartilhe seu progresso',
+    description: 'Compartilhe um post da comunidade',
     xpReward: 50,
     pointsReward: 25,
     icon: Share2,
+    requirement: 1,
+  },
+  {
+    id: 'visit-store',
+    title: 'Explorador',
+    description: 'Visite a Vitrine de produtos',
+    xpReward: 25,
+    pointsReward: 15,
+    icon: ShoppingBag,
     requirement: 1,
   },
 ];
