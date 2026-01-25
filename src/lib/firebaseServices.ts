@@ -516,7 +516,7 @@ export interface Comment {
   createdAt: Timestamp;
 }
 
-// Upload image to Firebase Storage
+// Upload image to Firebase Storage with timeout
 export const uploadPostImage = async (
   userId: string,
   file: File
@@ -538,14 +538,44 @@ export const uploadPostImage = async (
     const extension = file.name.split('.').pop() || 'jpg';
     const path = `posts/${userId}/${timestamp}.${extension}`;
     
+    console.log('[uploadPostImage] Starting upload:', { userId, path, fileSize: file.size, fileType: file.type });
+    
     const storageRef = ref(storage, path);
-    await uploadBytes(storageRef, file);
+    
+    // Create a timeout promise
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => reject(new Error('Upload timeout - a operação demorou muito')), 30000);
+    });
+    
+    // Race between upload and timeout
+    const uploadPromise = uploadBytes(storageRef, file);
+    await Promise.race([uploadPromise, timeoutPromise]);
+    
+    console.log('[uploadPostImage] Upload completed, getting download URL...');
+    
     const url = await getDownloadURL(storageRef);
     
+    console.log('[uploadPostImage] Success:', { url, path });
+    
     return { success: true, url, path };
-  } catch (error) {
-    console.error('Error uploading image:', error);
-    return { success: false, error: 'Erro ao fazer upload da imagem' };
+  } catch (error: any) {
+    console.error('[uploadPostImage] Error:', error);
+    
+    // Provide more specific error messages
+    if (error?.code === 'storage/unauthorized') {
+      return { success: false, error: 'Sem permissão para fazer upload. Verifique se está logado.' };
+    }
+    if (error?.code === 'storage/canceled') {
+      return { success: false, error: 'Upload cancelado.' };
+    }
+    if (error?.code === 'storage/quota-exceeded') {
+      return { success: false, error: 'Limite de armazenamento excedido.' };
+    }
+    if (error?.message?.includes('timeout')) {
+      return { success: false, error: 'Upload demorou muito. Tente com uma imagem menor.' };
+    }
+    
+    return { success: false, error: error?.message || 'Erro ao fazer upload da imagem' };
   }
 };
 
