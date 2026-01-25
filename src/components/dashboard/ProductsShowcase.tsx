@@ -214,7 +214,7 @@ export function ProductsShowcase({ userRank, userPoints }: ProductsShowcaseProps
                           </div>
                           
                           {/* Product info */}
-                          <div className="relative p-3 -mt-4">
+                          <div className="relative px-4 py-3 -mt-4">
                             <h4 className="font-bold text-sm text-white truncate group-hover:text-[#BFFF00] transition-colors">
                               {product.name}
                             </h4>
