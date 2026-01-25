@@ -16,6 +16,27 @@ import { toast } from "sonner";
 import Autoplay from "embla-carousel-autoplay";
 import { MyRedemptions } from "@/components/dashboard/MyRedemptions";
 import featuredHeroBg from "@/assets/featured-hero-wide.jpg";
+import bannerChatGPT from "@/assets/banner-chatgpt.jpg";
+import bannerGoogleVO3 from "@/assets/banner-google-vo3.jpg";
+import bannerCapCut from "@/assets/banner-capcut.jpg";
+
+// Map product names to their featured banners
+const productBanners: Record<string, string> = {
+  'chatgpt': bannerChatGPT,
+  'google vo3': bannerGoogleVO3,
+  'capcut': bannerCapCut,
+};
+
+const getProductBanner = (productName: string, featuredImage?: string): string => {
+  if (featuredImage) return featuredImage;
+  
+  const nameLower = productName.toLowerCase();
+  for (const [key, banner] of Object.entries(productBanners)) {
+    if (nameLower.includes(key)) return banner;
+  }
+  
+  return featuredHeroBg;
+};
 
 const rankOrder = ['bronze', 'silver', 'gold', 'platinum', 'diamond'];
 
@@ -578,7 +599,7 @@ const FeaturedProductCard = ({ product, canPurchase, isPurchased, onSelect, form
       <div className="relative aspect-[21/7] md:aspect-[4/1] rounded-2xl overflow-hidden bg-[#0a0a0a] border border-white/10 group-hover:border-[#BFFF00]/30 transition-all duration-500 shadow-2xl">
         {/* Featured Image - Full Cover */}
         <img 
-          src={product.featuredImage || featuredHeroBg} 
+          src={getProductBanner(product.name, product.featuredImage)} 
           alt={product.name}
           className={cn(
             "absolute inset-0 w-full h-full object-cover transition-all duration-700",
