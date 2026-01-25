@@ -50,6 +50,21 @@ export const getTodayDateString = (): string => {
   return now.toISOString().split('T')[0];
 };
 
+// Reset daily missions for testing (deletes today's mission document)
+export const resetDailyMissions = async (userId: string): Promise<boolean> => {
+  try {
+    const today = getTodayDateString();
+    const missionDocRef = doc(db, 'users', userId, 'dailyMissions', today);
+    const { deleteDoc } = await import('firebase/firestore');
+    await deleteDoc(missionDocRef);
+    console.log('Daily missions reset for user:', userId);
+    return true;
+  } catch (error) {
+    console.error('Error resetting daily missions:', error);
+    return false;
+  }
+};
+
 // Get user's daily missions for today
 export const getUserDailyMissions = async (
   userId: string
