@@ -24,6 +24,7 @@ export interface ChatMessage {
   senderName: string;
   senderAvatar: string | null;
   content: string;
+  audioUrl?: string | null;
   createdAt: Timestamp;
   read: boolean;
 }
@@ -92,14 +93,15 @@ export const getOrCreateConversation = async (
   return docRef.id;
 };
 
-// Send a message
+// Send a message (text or audio)
 export const sendMessage = async (
   conversationId: string,
   senderId: string,
   senderName: string,
   senderAvatar: string | null,
   content: string,
-  recipientId: string
+  recipientId: string,
+  audioUrl?: string | null
 ): Promise<{ success: boolean; error?: string }> => {
   try {
     const messagesRef = collection(db, 'conversations', conversationId, 'messages');
@@ -110,14 +112,16 @@ export const sendMessage = async (
       senderName,
       senderAvatar,
       content: content.trim(),
+      audioUrl: audioUrl || null,
       createdAt: serverTimestamp(),
       read: false,
     });
     
     // Update conversation with last message
     const conversationRef = doc(db, 'conversations', conversationId);
+    const lastMessageText = audioUrl ? '🎤 Mensagem de áudio' : content.substring(0, 100);
     await updateDoc(conversationRef, {
-      lastMessage: content.substring(0, 100),
+      lastMessage: lastMessageText,
       lastMessageAt: serverTimestamp(),
       lastMessageSenderId: senderId,
       [`unreadCount.${recipientId}`]: (await getUnreadCount(conversationId, recipientId)) + 1,
@@ -132,7 +136,7 @@ export const sendMessage = async (
         fromUserName: senderName,
         fromUserAvatar: senderAvatar,
         type: 'message',
-        postContent: content.substring(0, 100),
+        postContent: lastMessageText,
       });
       console.log('Notification created:', notifResult);
     } catch (notifError) {
