@@ -29,6 +29,7 @@ import {
 } from '@/lib/globalChatService';
 import { useAudioRecorder, formatRecordingTime } from '@/hooks/useAudioRecorder';
 import { AudioMessagePlayer } from '@/components/AudioMessagePlayer';
+import { EmojiPicker } from '@/components/EmojiPicker';
 
 const rankConfig: Record<string, { color: string; bg: string }> = {
   bronze: { color: "text-orange-400", bg: "bg-orange-500/20" },
@@ -177,8 +178,12 @@ export const GlobalChat = ({ onUserClick }: GlobalChatProps) => {
 
     setSending(true);
     try {
+      console.log('Uploading image to Supabase...');
       const imageUrl = await uploadImage(selectedImage, 'global-chat');
+      console.log('Image uploaded, URL:', imageUrl);
+      
       if (imageUrl) {
+        console.log('Sending message with image URL:', imageUrl);
         await handleSend(undefined, imageUrl);
       } else {
         toast.error('Erro ao enviar imagem');
@@ -189,6 +194,10 @@ export const GlobalChat = ({ onUserClick }: GlobalChatProps) => {
     } finally {
       setSending(false);
     }
+  };
+
+  const handleEmojiSelect = (emoji: string) => {
+    setNewMessage(prev => prev + emoji);
   };
 
   const cancelImagePreview = () => {
@@ -442,6 +451,10 @@ export const GlobalChat = ({ onUserClick }: GlobalChatProps) => {
               >
                 <ImagePlus className="h-4 w-4" />
               </Button>
+              <EmojiPicker 
+                onEmojiSelect={handleEmojiSelect}
+                disabled={!userProfile || sending}
+              />
               <Input
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}

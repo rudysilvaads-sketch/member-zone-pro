@@ -40,7 +40,7 @@ export const sendGlobalMessage = async (
   try {
     const messagesRef = collection(db, 'globalChat');
     
-    await addDoc(messagesRef, {
+    const messageData = {
       senderId,
       senderName,
       senderAvatar,
@@ -50,7 +50,12 @@ export const sendGlobalMessage = async (
       audioUrl: audioUrl || null,
       imageUrl: imageUrl || null,
       createdAt: serverTimestamp(),
-    });
+    };
+    
+    console.log('Saving global message to Firestore:', messageData);
+    
+    const docRef = await addDoc(messagesRef, messageData);
+    console.log('Message saved with ID:', docRef.id);
     
     return { success: true };
   } catch (error) {
