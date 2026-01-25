@@ -300,13 +300,21 @@ export const purchaseProduct = async (
 
 export const getUserPurchases = async (uid: string): Promise<Purchase[]> => {
   const purchasesRef = collection(db, 'purchases');
-  const q = query(purchasesRef, where('userId', '==', uid), orderBy('purchasedAt', 'desc'));
+  // Simple query without orderBy to avoid composite index requirement
+  const q = query(purchasesRef, where('userId', '==', uid));
   const snapshot = await getDocs(q);
   
-  return snapshot.docs.map(doc => ({
+  const purchases = snapshot.docs.map(doc => ({
     id: doc.id,
     ...doc.data(),
   })) as Purchase[];
+  
+  // Sort client-side by purchasedAt descending
+  return purchases.sort((a, b) => {
+    const dateA = a.purchasedAt?.toMillis?.() || 0;
+    const dateB = b.purchasedAt?.toMillis?.() || 0;
+    return dateB - dateA;
+  });
 };
 
 // Initialize default data (run once)
