@@ -44,13 +44,9 @@ export function AdminAccessRequests() {
 
   const fetchRequests = async () => {
     try {
-      // Get all purchases with access requested
+      // Get all purchases with access requested - simple query to avoid index requirement
       const purchasesRef = collection(db, 'purchases');
-      const q = query(
-        purchasesRef, 
-        where('accessRequested', '==', true),
-        orderBy('accessRequestedAt', 'desc')
-      );
+      const q = query(purchasesRef, where('accessRequested', '==', true));
       const snapshot = await getDocs(q);
       
       const requestsData: PendingAccess[] = [];
@@ -74,6 +70,13 @@ export function AdminAccessRequests() {
         
         requestsData.push(purchase);
       }
+      
+      // Sort client-side by accessRequestedAt descending
+      requestsData.sort((a, b) => {
+        const dateA = a.accessRequestedAt?.toMillis?.() || 0;
+        const dateB = b.accessRequestedAt?.toMillis?.() || 0;
+        return dateB - dateA;
+      });
       
       setRequests(requestsData);
     } catch (error) {
