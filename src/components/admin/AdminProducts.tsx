@@ -559,6 +559,17 @@ export function AdminProducts() {
             <div className="space-y-2">
               <Label>Imagem do Produto</Label>
               
+              {/* URL input as primary method */}
+              <Input
+                id="image"
+                value={formData.image}
+                onChange={(e) => {
+                  setFormData({ ...formData, image: e.target.value });
+                  setImagePreview(e.target.value || null);
+                }}
+                placeholder="Cole a URL da imagem (ex: https://...)"
+              />
+              
               {/* Image preview */}
               {imagePreview && (
                 <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-secondary border border-border">
@@ -566,6 +577,7 @@ export function AdminProducts() {
                     src={imagePreview} 
                     alt="Preview" 
                     className="w-full h-full object-contain"
+                    onError={() => setImagePreview(null)}
                   />
                   <Button
                     type="button"
@@ -579,62 +591,17 @@ export function AdminProducts() {
                 </div>
               )}
               
-              {/* Upload area with drag & drop */}
+              {/* Placeholder when no image */}
               {!imagePreview && (
-                <div 
-                  className={`relative w-full aspect-video rounded-lg border-2 border-dashed bg-secondary/30 flex flex-col items-center justify-center cursor-pointer transition-all duration-200 ${
-                    isDragging 
-                      ? 'border-primary bg-primary/10 scale-[1.02]' 
-                      : 'border-border hover:border-primary/50'
-                  }`}
-                  onClick={() => fileInputRef.current?.click()}
-                  onDragOver={handleDragOver}
-                  onDragLeave={handleDragLeave}
-                  onDrop={handleDrop}
-                >
-                  {uploading ? (
-                    <>
-                      <Loader2 className="h-8 w-8 text-primary animate-spin mb-2" />
-                      <p className="text-sm text-muted-foreground">Enviando...</p>
-                    </>
-                  ) : isDragging ? (
-                    <>
-                      <Upload className="h-10 w-10 text-primary mb-2 animate-bounce" />
-                      <p className="text-sm font-medium text-primary">Solte a imagem aqui</p>
-                    </>
-                  ) : (
-                    <>
-                      <Upload className="h-8 w-8 text-muted-foreground mb-2" />
-                      <p className="text-sm text-muted-foreground">Arraste uma imagem ou clique aqui</p>
-                      <p className="text-xs text-muted-foreground/60 mt-1">PNG, JPG até 5MB</p>
-                    </>
-                  )}
+                <div className="w-full aspect-video rounded-lg border border-dashed border-border bg-secondary/30 flex flex-col items-center justify-center">
+                  <ImageIcon className="h-8 w-8 text-muted-foreground/50 mb-2" />
+                  <p className="text-xs text-muted-foreground">Cole uma URL acima para ver o preview</p>
                 </div>
               )}
               
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleImageUpload}
-                className="hidden"
-              />
-              
-              {/* URL input as alternative */}
-              <div className="flex items-center gap-2 mt-2">
-                <div className="flex-1 h-px bg-border" />
-                <span className="text-xs text-muted-foreground">ou cole uma URL</span>
-                <div className="flex-1 h-px bg-border" />
-              </div>
-              <Input
-                id="image"
-                value={formData.image}
-                onChange={(e) => {
-                  setFormData({ ...formData, image: e.target.value });
-                  setImagePreview(e.target.value || null);
-                }}
-                placeholder="https://..."
-              />
+              <p className="text-xs text-muted-foreground">
+                💡 Use imagens do Unsplash, Imgur ou qualquer URL pública
+              </p>
             </div>
             
             <div className="space-y-2">
