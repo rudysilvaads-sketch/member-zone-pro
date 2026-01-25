@@ -255,12 +255,27 @@ export function AdminProducts() {
       // Get download URL
       const downloadURL = await getDownloadURL(storageRef);
       
-      setFormData({ ...formData, image: downloadURL });
+      setFormData(prev => ({ ...prev, image: downloadURL }));
       setImagePreview(downloadURL);
       toast.success('Imagem enviada com sucesso!');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error uploading image:', error);
-      toast.error('Erro ao enviar imagem');
+      
+      // Check for Firebase Storage permission errors
+      if (error?.code === 'storage/unauthorized' || error?.message?.includes('permission')) {
+        toast.error('Sem permissão para upload. Configure as regras do Firebase Storage.');
+        
+        // Fallback: Convert to base64 data URL for preview
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const base64 = reader.result as string;
+          setImagePreview(base64);
+          toast.info('Use uma URL externa para a imagem do produto.');
+        };
+        reader.readAsDataURL(file);
+      } else {
+        toast.error('Erro ao enviar imagem. Tente usar uma URL.');
+      }
     } finally {
       setUploading(false);
     }
