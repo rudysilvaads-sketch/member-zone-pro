@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -24,10 +24,13 @@ import {
   Loader2,
   Image as ImageIcon,
   Bell,
-  Send
+  Send,
+  Upload,
+  X
 } from 'lucide-react';
 import { collection, getDocs, doc, setDoc, updateDoc, deleteDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
+import { db, storage } from '@/lib/firebase';
 import { toast } from 'sonner';
 import { Product, notifyNewProduct } from '@/lib/firebaseServices';
 import {
@@ -58,6 +61,9 @@ export function AdminProducts() {
   const [saving, setSaving] = useState(false);
   const [notifyOnCreate, setNotifyOnCreate] = useState(true);
   const [notifying, setNotifying] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetchProducts();
@@ -202,6 +208,7 @@ export function AdminProducts() {
   const handleOpenCreate = () => {
     setEditingProduct(null);
     setFormData(emptyProduct);
+    setImagePreview(null);
     setDialogOpen(true);
   };
 
@@ -217,7 +224,56 @@ export function AdminProducts() {
       requiredRank: product.requiredRank || '',
       category: product.category || 'other',
     });
+    setImagePreview(product.image || null);
     setDialogOpen(true);
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Por favor, selecione uma imagem');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Imagem muito grande. Máximo 5MB');
+      return;
+    }
+
+    setUploading(true);
+    try {
+      // Create unique filename
+      const timestamp = Date.now();
+      const filename = `products/${timestamp}-${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
+      const storageRef = ref(storage, filename);
+
+      // Upload file
+      await uploadBytes(storageRef, file);
+      
+      // Get download URL
+      const downloadURL = await getDownloadURL(storageRef);
+      
+      setFormData({ ...formData, image: downloadURL });
+      setImagePreview(downloadURL);
+      toast.success('Imagem enviada com sucesso!');
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast.error('Erro ao enviar imagem');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setFormData({ ...formData, image: '' });
+    setImagePreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   const handleNotifyProduct = async (product: Product) => {
@@ -459,11 +515,70 @@ export function AdminProducts() {
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="image">URL da Imagem</Label>
+              <Label>Imagem do Produto</Label>
+              
+              {/* Image preview */}
+              {imagePreview && (
+                <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-secondary border border-border">
+                  <img 
+                    src={imagePreview} 
+                    alt="Preview" 
+                    className="w-full h-full object-contain"
+                  />
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="icon"
+                    className="absolute top-2 right-2 h-7 w-7"
+                    onClick={handleRemoveImage}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
+              
+              {/* Upload area */}
+              {!imagePreview && (
+                <div 
+                  className="relative w-full aspect-video rounded-lg border-2 border-dashed border-border hover:border-primary/50 bg-secondary/30 flex flex-col items-center justify-center cursor-pointer transition-colors"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  {uploading ? (
+                    <>
+                      <Loader2 className="h-8 w-8 text-primary animate-spin mb-2" />
+                      <p className="text-sm text-muted-foreground">Enviando...</p>
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="h-8 w-8 text-muted-foreground mb-2" />
+                      <p className="text-sm text-muted-foreground">Clique para fazer upload</p>
+                      <p className="text-xs text-muted-foreground/60 mt-1">PNG, JPG até 5MB</p>
+                    </>
+                  )}
+                </div>
+              )}
+              
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="hidden"
+              />
+              
+              {/* URL input as alternative */}
+              <div className="flex items-center gap-2 mt-2">
+                <div className="flex-1 h-px bg-border" />
+                <span className="text-xs text-muted-foreground">ou cole uma URL</span>
+                <div className="flex-1 h-px bg-border" />
+              </div>
               <Input
                 id="image"
                 value={formData.image}
-                onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                onChange={(e) => {
+                  setFormData({ ...formData, image: e.target.value });
+                  setImagePreview(e.target.value || null);
+                }}
                 placeholder="https://..."
               />
             </div>
