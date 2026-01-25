@@ -47,10 +47,10 @@ export function ProgressSection({
 
   return (
     <Card variant="gradient" className="animate-fade-in relative overflow-hidden" style={{ animationDelay: "100ms" }}>
-      <div className="absolute inset-0 bg-gradient-to-br from-[#BFFF00]/5 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-br from-[#F5A623]/5 to-transparent" />
       <CardHeader className="relative">
         <CardTitle className="flex items-center gap-2 text-white">
-          <TrendingUp className="h-5 w-5 text-[#BFFF00]" />
+          <TrendingUp className="h-5 w-5 text-[#F5A623]" />
           Seu Progresso
         </CardTitle>
       </CardHeader>
@@ -58,16 +58,16 @@ export function ProgressSection({
         {/* Current Rank */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#BFFF00] shadow-[0_0_25px_rgba(191,255,0,0.4)]">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#F5A623] shadow-[0_0_25px_rgba(245,166,35,0.4)]">
               <Crown className="h-6 w-6 text-[#0a0a0a]" />
             </div>
             <div>
               <p className="text-sm text-white/50">Rank Atual</p>
-              <p className="text-xl font-bold text-[#BFFF00] italic">{currentRank.toUpperCase()}</p>
+              <p className="text-xl font-bold text-[#F5A623] italic">{currentRank.toUpperCase()}</p>
             </div>
           </div>
           <div className="text-right">
-            <div className="flex items-center gap-1 text-[#BFFF00]">
+            <div className="flex items-center gap-1 text-[#F5A623]">
               <ArrowUp className="h-4 w-4" />
               <span className="text-sm font-medium">{currentPoints.toLocaleString()} pts</span>
             </div>
@@ -89,14 +89,14 @@ export function ProgressSection({
             </div>
             <Progress value={progress} className="h-3" />
             <p className="text-center text-sm text-white/50">
-              Faltam <span className="font-bold text-[#BFFF00]">{pointsToNextRank.toLocaleString()}</span> pontos para o próximo rank!
+              Faltam <span className="font-bold text-[#F5A623]">{pointsToNextRank.toLocaleString()}</span> pontos para o próximo rank!
             </p>
           </div>
         )}
 
         {currentRank === 'diamond' && (
           <div className="text-center py-4">
-            <p className="text-lg font-bold text-[#BFFF00]">🎉 Rank Máximo Atingido!</p>
+            <p className="text-lg font-bold text-[#F5A623]">🎉 Rank Máximo Atingido!</p>
             <p className="text-sm text-white/50">Você é uma lenda!</p>
           </div>
         )}
@@ -104,15 +104,15 @@ export function ProgressSection({
         {/* Quick Stats */}
         <div className="grid grid-cols-3 gap-4 pt-2">
           <div className="text-center p-3 rounded-xl bg-white/5 border border-white/10">
-            <p className="text-2xl font-bold text-[#BFFF00]">{completedModules}</p>
+            <p className="text-2xl font-bold text-[#F5A623]">{completedModules}</p>
             <p className="text-xs text-white/50">Módulos</p>
           </div>
           <div className="text-center p-3 rounded-xl bg-white/5 border border-white/10">
-            <p className="text-2xl font-bold text-[#BFFF00]">{achievements}</p>
+            <p className="text-2xl font-bold text-[#F5A623]">{achievements}</p>
             <p className="text-xs text-white/50">Conquistas</p>
           </div>
           <div className="text-center p-3 rounded-xl bg-white/5 border border-white/10">
-            <p className="text-2xl font-bold text-[#BFFF00]">{streakDays}</p>
+            <p className="text-2xl font-bold text-[#F5A623]">{streakDays}</p>
             <p className="text-xs text-white/50">Dias Streak</p>
           </div>
         </div>

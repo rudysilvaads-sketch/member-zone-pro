@@ -391,12 +391,12 @@ const Community = () => {
         
         <main className="p-6">
           <div className="mb-8">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#BFFF00]/10 border border-[#BFFF00]/20 mb-3">
-              <span className="text-xs text-[#BFFF00] uppercase tracking-widest font-medium">Comunidade</span>
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#F5A623]/10 border border-[#F5A623]/20 mb-3">
+              <span className="text-xs text-[#F5A623] uppercase tracking-widest font-medium">Comunidade</span>
             </div>
             <h1 className="text-3xl font-bold flex items-center gap-3 text-white">
-              <Users className="h-8 w-8 text-[#BFFF00]" />
-              Nossa <span className="text-[#BFFF00] italic">Comunidade</span>
+              <Users className="h-8 w-8 text-[#F5A623]" />
+              Nossa <span className="text-[#F5A623] italic">Comunidade</span>
             </h1>
             <p className="mt-1 text-white/50">
               Conecte-se com outros membros e compartilhe sua jornada

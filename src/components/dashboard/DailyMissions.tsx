@@ -321,7 +321,7 @@ export function DailyMissions() {
         <div 
           className={`flex items-center gap-4 p-4 rounded-lg border transition-all duration-300 ${
             bonusClaimed 
-              ? 'bg-gradient-to-r from-[#BFFF00]/20 to-[#9ACD32]/20 border-[#BFFF00]/50 shadow-[0_0_20px_rgba(191,255,0,0.2)]' 
+              ? 'bg-gradient-to-r from-[#F5A623]/20 to-[#E8920D]/20 border-[#F5A623]/50 shadow-[0_0_20px_rgba(245,166,35,0.2)]' 
               : allCompleted
               ? 'bg-primary/10 border-primary/30 animate-pulse'
               : 'bg-secondary/30 border-border/50 opacity-60'
@@ -329,7 +329,7 @@ export function DailyMissions() {
         >
           <div className={`flex h-12 w-12 items-center justify-center rounded-lg ${
             bonusClaimed 
-              ? 'bg-gradient-to-br from-[#BFFF00] to-[#9ACD32] shadow-[0_0_15px_rgba(191,255,0,0.4)]' 
+              ? 'bg-gradient-to-br from-[#F5A623] to-[#E8920D] shadow-[0_0_15px_rgba(245,166,35,0.4)]' 
               : allCompleted
               ? 'bg-gradient-gold shadow-glow-gold'
               : 'bg-secondary'
@@ -343,11 +343,11 @@ export function DailyMissions() {
           
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <p className={`font-medium ${bonusClaimed ? 'text-[#BFFF00]' : ''}`}>
+              <p className={`font-medium ${bonusClaimed ? 'text-[#F5A623]' : ''}`}>
                 {ALL_MISSIONS_BONUS.title}
               </p>
               {bonusClaimed && (
-                <Badge variant="outline" className="text-[10px] text-[#BFFF00] border-[#BFFF00]/30">
+                <Badge variant="outline" className="text-[10px] text-[#F5A623] border-[#F5A623]/30">
                   <Trophy className="h-3 w-3 mr-1" />
                   Conquistado!
                 </Badge>
@@ -361,7 +361,7 @@ export function DailyMissions() {
           </div>
           
           <div className="text-right">
-            <p className={`text-sm font-bold ${bonusClaimed ? 'text-[#BFFF00]' : 'text-primary'}`}>
+            <p className={`text-sm font-bold ${bonusClaimed ? 'text-[#F5A623]' : 'text-primary'}`}>
               +{ALL_MISSIONS_BONUS.xp} XP
             </p>
             <p className="text-xs text-muted-foreground">+{ALL_MISSIONS_BONUS.points} pts</p>

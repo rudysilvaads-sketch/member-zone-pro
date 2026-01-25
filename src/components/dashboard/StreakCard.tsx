@@ -41,17 +41,17 @@ export function StreakCard() {
 
   return (
     <Card className="overflow-hidden">
-      <div className="bg-gradient-to-r from-[#BFFF00]/20 via-[#9ACD32]/20 to-[#BFFF00]/20 p-[1px] rounded-xl">
+      <div className="bg-gradient-to-r from-[#F5A623]/20 via-[#E8920D]/20 to-[#F5A623]/20 p-[1px] rounded-xl">
         <CardContent className="bg-[#0a0a0a] rounded-xl p-4">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <div className={cn(
                 "flex h-12 w-12 items-center justify-center rounded-full",
-                streakDays >= 7 ? "bg-gradient-to-br from-[#BFFF00] to-[#9ACD32] shadow-[0_0_20px_rgba(191,255,0,0.4)]" : "bg-[#BFFF00]/10"
+                streakDays >= 7 ? "bg-gradient-to-br from-[#F5A623] to-[#E8920D] shadow-[0_0_20px_rgba(245,166,35,0.4)]" : "bg-[#F5A623]/10"
               )}>
                 <Flame className={cn(
                   "h-6 w-6",
-                  streakDays >= 7 ? "text-[#0a0a0a]" : "text-[#BFFF00]"
+                  streakDays >= 7 ? "text-[#0a0a0a]" : "text-[#F5A623]"
                 )} />
               </div>
               <div>
@@ -63,7 +63,7 @@ export function StreakCard() {
             </div>
             
             {currentBonus > 1 && (
-              <Badge className="bg-[#BFFF00] text-[#0a0a0a] border-0 text-sm px-3 py-1 font-bold shadow-[0_0_10px_rgba(191,255,0,0.3)]">
+              <Badge className="bg-[#F5A623] text-[#0a0a0a] border-0 text-sm px-3 py-1 font-bold shadow-[0_0_10px_rgba(245,166,35,0.3)]">
                 +{Math.round((currentBonus - 1) * 100)}% XP
               </Badge>
             )}
@@ -78,7 +78,7 @@ export function StreakCard() {
               </div>
               <div className="h-2 bg-white/10 rounded-full overflow-hidden">
                 <div 
-                  className="h-full bg-gradient-to-r from-[#BFFF00] to-[#9ACD32] transition-all duration-500 shadow-[0_0_10px_rgba(191,255,0,0.4)]"
+                  className="h-full bg-gradient-to-r from-[#F5A623] to-[#E8920D] transition-all duration-500 shadow-[0_0_10px_rgba(245,166,35,0.4)]"
                   style={{ width: `${progress}%` }}
                 />
               </div>
@@ -90,9 +90,9 @@ export function StreakCard() {
           
           {/* Max streak reached */}
           {!nextMilestone && streakDays >= 30 && (
-            <div className="flex items-center justify-center gap-2 p-2 bg-[#BFFF00]/10 rounded-lg border border-[#BFFF00]/20">
-              <Trophy className="h-4 w-4 text-[#BFFF00]" />
-              <span className="text-sm font-medium text-[#BFFF00]">
+            <div className="flex items-center justify-center gap-2 p-2 bg-[#F5A623]/10 rounded-lg border border-[#F5A623]/20">
+              <Trophy className="h-4 w-4 text-[#F5A623]" />
+              <span className="text-sm font-medium text-[#F5A623]">
                 Bônus máximo alcançado!
               </span>
             </div>
@@ -109,7 +109,7 @@ export function StreakCard() {
                   className={cn(
                     "flex flex-col items-center gap-1 p-2 rounded-lg flex-1 transition-all",
                     isAchieved 
-                      ? "bg-[#BFFF00]/10 text-[#BFFF00] border border-[#BFFF00]/20" 
+                      ? "bg-[#F5A623]/10 text-[#F5A623] border border-[#F5A623]/20" 
                       : "bg-white/5 text-white/40"
                   )}
                 >

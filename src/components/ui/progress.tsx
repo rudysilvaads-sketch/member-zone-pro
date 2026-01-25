@@ -13,7 +13,7 @@ const Progress = React.forwardRef<
     {...props}
   >
     <ProgressPrimitive.Indicator
-      className="h-full w-full flex-1 bg-gradient-to-r from-[#BFFF00] to-[#9ACD32] transition-all duration-500 ease-out relative overflow-hidden shadow-[0_0_10px_rgba(191,255,0,0.4)]"
+      className="h-full w-full flex-1 bg-gradient-to-r from-[#F5A623] to-[#E8920D] transition-all duration-500 ease-out relative overflow-hidden shadow-[0_0_10px_rgba(245,166,35,0.4)]"
       style={{ transform: `translateX(-${100 - (value || 0)}%)` }}
     >
       <div className="absolute inset-0 animate-shine" />

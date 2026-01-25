@@ -81,15 +81,15 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const NavContent = ({ isMobile = false }: { isMobile?: boolean }) => (
     <div className="flex h-full flex-col">
       {/* Logo - La Casa Elite */}
-      <div className="flex h-14 sm:h-16 items-center justify-between border-b border-[#BFFF00]/10 px-4">
+      <div className="flex h-14 sm:h-16 items-center justify-between border-b border-[#F5A623]/10 px-4">
         <div className={cn("flex items-center gap-3", !isMobile && collapsed && "justify-center w-full")}>
-          <div className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-lg bg-[#BFFF00] shadow-[0_0_20px_rgba(191,255,0,0.3)]">
+          <div className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-lg bg-[#F5A623] shadow-[0_0_20px_rgba(245,166,35,0.3)]">
             <Crown className="h-4 w-4 sm:h-5 sm:w-5 text-[#0a0a0a]" />
           </div>
           {(isMobile || !collapsed) && (
             <div className="flex flex-col">
               <span className="text-base sm:text-lg font-bold italic text-white tracking-tight">LA CASA</span>
-              <span className="text-[7px] sm:text-[8px] text-[#BFFF00] uppercase tracking-[0.3em] -mt-1">Members Club</span>
+              <span className="text-[7px] sm:text-[8px] text-[#F5A623] uppercase tracking-[0.3em] -mt-1">Members Club</span>
             </div>
           )}
         </div>
@@ -120,12 +120,12 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                   "flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-all duration-200 min-h-[48px]",
                   !isMobile && collapsed && "justify-center px-0",
                   active
-                    ? "bg-[#BFFF00]/10 text-[#BFFF00] border border-[#BFFF00]/20 shadow-[0_0_15px_rgba(191,255,0,0.1)]"
+                    ? "bg-[#F5A623]/10 text-[#F5A623] border border-[#F5A623]/20 shadow-[0_0_15px_rgba(245,166,35,0.1)]"
                     : "text-white/70 hover:bg-white/5 hover:text-white active:bg-white/10",
-                  item.adminOnly && "text-[#BFFF00]/70"
+                  item.adminOnly && "text-[#F5A623]/70"
                 )}
               >
-                <item.icon className={cn("h-5 w-5 shrink-0", active && "text-[#BFFF00]", item.adminOnly && "text-[#BFFF00]/70")} />
+                <item.icon className={cn("h-5 w-5 shrink-0", active && "text-[#F5A623]", item.adminOnly && "text-[#F5A623]/70")} />
                 {(isMobile || !collapsed) && <span>{item.label}</span>}
               </Link>
             );
@@ -133,7 +133,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
       </nav>
 
       {/* Logout & Collapse */}
-      <div className="border-t border-[#BFFF00]/10 p-3 sm:p-4 space-y-2 safe-area-inset">
+      <div className="border-t border-[#F5A623]/10 p-3 sm:p-4 space-y-2 safe-area-inset">
         <Button
           variant="ghost"
           onClick={handleLogout}
@@ -151,7 +151,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
             variant="ghost"
             size="icon"
             onClick={onToggle}
-            className="w-full justify-center text-white/50 hover:text-[#BFFF00] hover:bg-[#BFFF00]/5 min-h-[48px]"
+            className="w-full justify-center text-white/50 hover:text-[#F5A623] hover:bg-[#F5A623]/5 min-h-[48px]"
           >
             {collapsed ? (
               <ChevronRight className="h-5 w-5" />
@@ -172,12 +172,12 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
           <Button
             variant="ghost"
             size="icon"
-            className="fixed left-3 top-3 z-50 md:hidden bg-[#0a0a0a]/90 border border-[#BFFF00]/20 text-white hover:bg-[#BFFF00]/10 hover:text-[#BFFF00] h-10 w-10"
+            className="fixed left-3 top-3 z-50 md:hidden bg-[#0a0a0a]/90 border border-[#F5A623]/20 text-white hover:bg-[#F5A623]/10 hover:text-[#F5A623] h-10 w-10"
           >
             <Menu className="h-5 w-5" />
           </Button>
         </SheetTrigger>
-        <SheetContent side="left" className="w-[280px] p-0 bg-[#0a0a0a] border-r border-[#BFFF00]/10">
+        <SheetContent side="left" className="w-[280px] p-0 bg-[#0a0a0a] border-r border-[#F5A623]/10">
           <NavContent isMobile />
         </SheetContent>
       </Sheet>
@@ -185,7 +185,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
       {/* Desktop Sidebar */}
       <aside 
         className={cn(
-          "fixed left-0 top-0 z-40 h-screen bg-[#0a0a0a] border-r border-[#BFFF00]/10 transition-all duration-300 hidden md:block",
+          "fixed left-0 top-0 z-40 h-screen bg-[#0a0a0a] border-r border-[#F5A623]/10 transition-all duration-300 hidden md:block",
           collapsed ? "w-20" : "w-64"
         )}
       >
