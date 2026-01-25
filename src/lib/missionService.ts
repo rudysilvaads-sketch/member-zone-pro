@@ -270,17 +270,34 @@ export const completeMission = async (
     const today = getTodayDateString();
     const missionDocRef = doc(db, 'users', userId, 'dailyMissions', today);
     
-    const missionDoc = await getDoc(missionDocRef);
+    let missionDoc = await getDoc(missionDocRef);
     
+    // If daily missions document doesn't exist, initialize it first
     if (!missionDoc.exists()) {
-      return { completed: false };
+      console.log('Daily missions not initialized, creating now for user:', userId);
+      const missionIds = Object.keys(MISSION_REWARDS);
+      await initializeUserDailyMissions(userId, missionIds);
+      
+      // Re-fetch the document after initialization
+      missionDoc = await getDoc(missionDocRef);
+      
+      if (!missionDoc.exists()) {
+        console.error('Failed to initialize daily missions for user:', userId);
+        return { completed: false };
+      }
     }
     
     const data = missionDoc.data() as UserMissionsDoc;
     const mission = data.missions[missionId];
     
-    if (!mission || mission.completed) {
-      return { completed: false }; // Already completed or doesn't exist
+    if (!mission) {
+      console.error('Mission not found in document:', missionId);
+      return { completed: false };
+    }
+    
+    if (mission.completed) {
+      console.log('Mission already completed:', missionId);
+      return { completed: false }; // Already completed
     }
     
     const newProgress = Math.min(mission.progress + 1, requirement);
