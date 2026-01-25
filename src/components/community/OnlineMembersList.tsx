@@ -2,17 +2,47 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { Users, Circle } from "lucide-react";
+import { Users, Circle, Clock } from "lucide-react";
 import { usePresence } from "@/hooks/usePresence";
 import { useAuth } from "@/contexts/AuthContext";
+import { Timestamp } from "firebase/firestore";
+import { useState, useEffect } from "react";
 
 interface OnlineMembersListProps {
   onMemberClick?: (user: { uid: string; displayName: string; photoURL: string | null }) => void;
 }
 
+const formatOnlineTime = (lastSeen: Timestamp | null): string => {
+  if (!lastSeen) return "agora";
+  
+  const now = Date.now();
+  const lastSeenTime = lastSeen.toMillis();
+  const diffMs = now - lastSeenTime;
+  const diffSeconds = Math.floor(diffMs / 1000);
+  
+  if (diffSeconds < 60) return "agora";
+  
+  const diffMinutes = Math.floor(diffSeconds / 60);
+  if (diffMinutes < 60) return `${diffMinutes}min`;
+  
+  const diffHours = Math.floor(diffMinutes / 60);
+  if (diffHours < 24) return `${diffHours}h`;
+  
+  return "1d+";
+};
+
 export const OnlineMembersList = ({ onMemberClick }: OnlineMembersListProps) => {
   const { onlineUsers, onlineCount } = usePresence();
   const { user: currentUser } = useAuth();
+  const [, setTick] = useState(0);
+
+  // Update time display every 30 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTick(t => t + 1);
+    }, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   const onlineUsersList = Object.entries(onlineUsers).map(([oderId, userData]) => ({
     oderId,
@@ -47,6 +77,7 @@ export const OnlineMembersList = ({ onMemberClick }: OnlineMembersListProps) => 
             <div className="space-y-2">
               {onlineUsersList.map((member) => {
                 const isCurrentUser = member.oderId === currentUser?.uid;
+                const onlineTime = formatOnlineTime(member.lastSeen);
                 
                 return (
                   <div
@@ -85,6 +116,10 @@ export const OnlineMembersList = ({ onMemberClick }: OnlineMembersListProps) => 
                           <span className="text-xs text-muted-foreground ml-1">(você)</span>
                         )}
                       </p>
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <Clock className="h-3 w-3" />
+                        <span>{onlineTime}</span>
+                      </div>
                     </div>
                   </div>
                 );
