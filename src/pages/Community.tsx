@@ -42,6 +42,7 @@ import { OnlineIndicator } from "@/components/OnlineIndicator";
 import { ChatModal } from "@/components/ChatModal";
 import { usePresence } from "@/hooks/usePresence";
 import { InviteCard } from "@/components/community/InviteCard";
+import { GlobalChat } from "@/components/community/GlobalChat";
 
 const rankConfig: Record<string, { color: string; bg: string }> = {
   bronze: { color: "text-orange-400", bg: "bg-orange-500/20" },
@@ -558,6 +559,9 @@ const Community = () => {
 
             {/* Sidebar */}
             <div className="space-y-6">
+              {/* Global Chat */}
+              <GlobalChat onUserClick={openChatWithUser} />
+              
               {/* Invite Card */}
               <InviteCard baseUrl={window.location.origin} />
               

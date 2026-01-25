@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Bell, Check, CheckCheck, Heart, MessageSquare, Trash2, X, ShoppingBag, Sparkles } from "lucide-react";
+import { Bell, Check, CheckCheck, Heart, MessageSquare, Trash2, X, ShoppingBag, Sparkles, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -79,6 +79,9 @@ export function NotificationsDropdown() {
     // Navigate based on notification type
     if (notification.type === 'new_product') {
       navigate('/products');
+    } else if (notification.type === 'message') {
+      // For messages, could open chat modal - for now go to community
+      navigate('/community');
     } else {
       navigate('/community');
     }
@@ -196,13 +199,17 @@ export function NotificationsDropdown() {
                           ? "bg-destructive"
                           : notification.type === "new_product"
                             ? "bg-primary"
-                            : "bg-accent"
+                            : notification.type === "message"
+                              ? "bg-blue-500"
+                              : "bg-accent"
                       )}
                     >
                       {notification.type === "like" ? (
                         <Heart className="h-3 w-3 text-destructive-foreground fill-current" />
                       ) : notification.type === "new_product" ? (
                         <Sparkles className="h-3 w-3 text-primary-foreground" />
+                      ) : notification.type === "message" ? (
+                        <Mail className="h-3 w-3 text-white" />
                       ) : (
                         <MessageSquare className="h-3 w-3 text-accent-foreground" />
                       )}
@@ -215,6 +222,11 @@ export function NotificationsDropdown() {
                         <>
                           <span className="font-semibold">Novo produto!</span>{" "}
                           {notification.productName} disponível na loja
+                        </>
+                      ) : notification.type === 'message' ? (
+                        <>
+                          <span className="font-semibold">{notification.fromUserName}</span>{" "}
+                          te enviou uma mensagem
                         </>
                       ) : (
                         <>
