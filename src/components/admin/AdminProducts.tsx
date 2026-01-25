@@ -64,6 +64,35 @@ export function AdminProducts() {
   }, []);
 
   const defaultProducts: Omit<Product, 'id'>[] = [
+    // FERRAMENTAS IA & CRIAÇÃO
+    {
+      name: 'Google VO3 Ultra',
+      description: '45.000 créditos para geração de vídeos com IA. Crie conteúdo profissional!',
+      price: 5000,
+      image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/480px-Google_%22G%22_logo.svg.png',
+      available: true,
+      category: 'benefits',
+      featured: true,
+    },
+    {
+      name: 'CapCut Pro 30 Dias',
+      description: 'Acesso completo ao CapCut Pro por 30 dias. Edite vídeos como um profissional!',
+      price: 2500,
+      image: 'https://sf16-va.tiktokcdn.com/obj/eden-va2/uvpohwj/ljhwZthlaukjlkulzlp/PC/Logo.png',
+      available: true,
+      category: 'benefits',
+      featured: true,
+    },
+    {
+      name: 'ChatGPT Pro 30 Dias',
+      description: 'Acesso ao ChatGPT Pro por 30 dias. Use IA avançada para criar scripts e roteiros!',
+      price: 3500,
+      image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/04/ChatGPT_logo.svg/480px-ChatGPT_logo.svg.png',
+      available: true,
+      category: 'benefits',
+      featured: true,
+    },
+    // PACKS & RECURSOS
     {
       name: 'Pack Elementor CSS',
       description: 'Pack completo de elementos CSS para Elementor. Acelere seu desenvolvimento!',
@@ -82,15 +111,6 @@ export function AdminProducts() {
       category: 'items',
     },
     {
-      name: 'Catálogo de Cursos',
-      description: 'Acesso ao catálogo completo de cursos da plataforma.',
-      price: 500,
-      image: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600&h=400&fit=crop',
-      available: true,
-      category: 'courses',
-      requiredRank: 'gold',
-    },
-    {
       name: 'Pack After Effects',
       description: 'Pack com 500 elementos UHD 4K para After Effects.',
       price: 750,
@@ -98,6 +118,32 @@ export function AdminProducts() {
       available: true,
       category: 'items',
       featured: true,
+    },
+    {
+      name: 'Prompts VEO 3',
+      description: 'Coleção de prompts otimizados para geração de vídeos com IA.',
+      price: 2500,
+      image: 'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=600&h=400&fit=crop',
+      available: true,
+      category: 'benefits',
+    },
+    {
+      name: 'Pack Edit Pro Kit',
+      description: 'Kit básico de edição com mais de 2000 recursos.',
+      price: 1800,
+      image: 'https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?w=600&h=400&fit=crop',
+      available: true,
+      category: 'items',
+    },
+    // CURSOS
+    {
+      name: 'Catálogo de Cursos',
+      description: 'Acesso ao catálogo completo de cursos da plataforma.',
+      price: 500,
+      image: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600&h=400&fit=crop',
+      available: true,
+      category: 'courses',
+      requiredRank: 'gold',
     },
     {
       name: 'Método IA do Job',
@@ -114,23 +160,6 @@ export function AdminProducts() {
       description: 'Tema profissional e otimizado para lojas Shopify.',
       price: 1500,
       image: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=600&h=400&fit=crop',
-      available: true,
-      category: 'items',
-    },
-    {
-      name: 'Prompts VEO 3',
-      description: 'Coleção de prompts otimizados para geração de vídeos com IA.',
-      price: 2500,
-      image: 'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=600&h=400&fit=crop',
-      available: true,
-      category: 'benefits',
-      featured: true,
-    },
-    {
-      name: 'Pack Edit Pro Kit',
-      description: 'Kit básico de edição com mais de 2000 recursos.',
-      price: 1800,
-      image: 'https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?w=600&h=400&fit=crop',
       available: true,
       category: 'items',
     },
