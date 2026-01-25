@@ -78,6 +78,17 @@ export interface Purchase {
   price: number;
   purchasedAt: Timestamp;
   reviewed?: boolean;
+  // Access management fields
+  accessRequested?: boolean;
+  accessRequestedAt?: Timestamp;
+  accessRequestMessage?: string;
+  accessDelivered?: boolean;
+  accessDeliveredAt?: Timestamp;
+  accessData?: {
+    link?: string;
+    credentials?: string;
+    instructions?: string;
+  };
 }
 
 export interface ProductReview {

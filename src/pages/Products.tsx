@@ -7,12 +7,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
-import { Search, Lock, CheckCircle, Coins, Package, Sparkles, Crown, Gem, ShoppingBag, User, Gift, BookOpen, Box, Play, Wrench, Star, ChevronRight } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Search, Lock, CheckCircle, Coins, Package, Sparkles, Crown, Gem, ShoppingBag, User, Gift, BookOpen, Box, Play, Wrench, Star, ChevronRight, Key } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getProducts, purchaseProduct, getUserPurchases, Product, Purchase, ProductCategory } from "@/lib/firebaseServices";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import Autoplay from "embla-carousel-autoplay";
+import { MyRedemptions } from "@/components/dashboard/MyRedemptions";
 
 const rankOrder = ['bronze', 'silver', 'gold', 'platinum', 'diamond'];
 
@@ -270,169 +272,206 @@ const Products = () => {
               <span className="text-xs text-[#BFFF00] uppercase tracking-widest font-medium">Vitrine</span>
             </div>
           </div>
-          <div className="flex items-center gap-4">
-            <div className="p-3 rounded-xl bg-[#BFFF00]/10 border border-[#BFFF00]/20">
-              <Package className="h-6 w-6 text-[#BFFF00]" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-white">
-                <span className="text-[#BFFF00] italic">MEUS</span> PRODUTOS
-              </h1>
-              <p className="text-sm text-white/50">
-                Produtos que você tem acesso
-              </p>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="p-3 rounded-xl bg-[#BFFF00]/10 border border-[#BFFF00]/20">
+                <Package className="h-6 w-6 text-[#BFFF00]" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-white">
+                  <span className="text-[#BFFF00] italic">VITRINE</span> PREMIUM
+                </h1>
+                <p className="text-sm text-white/50">
+                  Troque seus pontos por produtos exclusivos
+                </p>
+              </div>
             </div>
           </div>
 
-          {/* Featured Products Carousel */}
-          {!loading && products.filter(p => p.featured).length > 0 && (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Star className="h-5 w-5 text-primary fill-primary" />
-                  <h2 className="text-lg font-bold">
-                    <span className="text-primary">PRODUTOS</span> EM DESTAQUE
-                  </h2>
-                </div>
-                <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
-                  Ver todos <ChevronRight className="h-4 w-4 ml-1" />
-                </Button>
-              </div>
-              
-              <div className="relative px-12">
-                <Carousel
-                  opts={{
-                    align: "start",
-                    loop: true,
-                  }}
-                  plugins={[
-                    Autoplay({
-                      delay: 5000,
-                      stopOnInteraction: false,
-                      stopOnMouseEnter: true,
-                    }),
-                  ]}
-                  className="w-full"
-                >
-                  <CarouselContent className="-ml-4">
-                    {products.filter(p => p.featured).map((product) => (
-                      <CarouselItem key={product.id} className="pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5">
-                        <FeaturedProductCard
-                          product={product}
-                          canPurchase={canPurchase(product)}
-                          isPurchased={isPurchased(product.id)}
-                          onSelect={() => setSelectedProduct(product)}
-                          formatName={formatProductName}
-                        />
-                      </CarouselItem>
-                    ))}
-                  </CarouselContent>
-                  <CarouselPrevious className="left-0" />
-                  <CarouselNext className="right-0" />
-                </Carousel>
-              </div>
-            </div>
-          )}
+          {/* Main Tabs */}
+          <Tabs defaultValue="store" className="space-y-6">
+            <TabsList className="bg-white/5 border border-white/10">
+              <TabsTrigger value="store" className="flex items-center gap-2 data-[state=active]:bg-[#BFFF00] data-[state=active]:text-black">
+                <ShoppingBag className="h-4 w-4" />
+                Loja
+              </TabsTrigger>
+              <TabsTrigger value="redemptions" className="flex items-center gap-2 data-[state=active]:bg-[#BFFF00] data-[state=active]:text-black">
+                <Key className="h-4 w-4" />
+                Meus Resgates
+                {purchases.length > 0 && (
+                  <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-[10px]">
+                    {purchases.length}
+                  </Badge>
+                )}
+              </TabsTrigger>
+            </TabsList>
 
-          {/* Filters Row */}
-          <div className="flex flex-wrap items-center gap-3">
-            {/* Search */}
-            <div className="relative flex-1 min-w-[200px] max-w-md">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Buscar produtos..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="pl-9 h-10 bg-secondary/50 border-border/50 rounded-lg"
-              />
-            </div>
-
-            {/* Category Filters */}
-            <div className="flex flex-wrap gap-2">
-              <Button
-                variant={categoryFilter === 'all' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setCategoryFilter('all')}
-                className="h-8"
-              >
-                Todos ({categoryCounts.all})
-              </Button>
-              {(Object.keys(categoryConfig) as ProductCategory[]).map(cat => {
-                const count = categoryCounts[cat];
-                if (count === 0) return null;
-                return (
-                  <Button
-                    key={cat}
-                    variant={categoryFilter === cat ? 'default' : 'ghost'}
-                    size="sm"
-                    onClick={() => setCategoryFilter(cat)}
-                    className="h-8"
-                  >
-                    {categoryConfig[cat].label} ({count})
-                  </Button>
-                );
-              })}
-            </div>
-
-            {/* Status Filters */}
-            <div className="flex gap-2 ml-auto">
-              <Button
-                variant={statusFilter === 'available' ? 'secondary' : 'ghost'}
-                size="sm"
-                onClick={() => setStatusFilter(statusFilter === 'available' ? 'all' : 'available')}
-                className="h-8"
-              >
-                <Sparkles className="h-3 w-3 mr-1" />
-                Disponíveis
-              </Button>
-              <Button
-                variant={statusFilter === 'purchased' ? 'secondary' : 'ghost'}
-                size="sm"
-                onClick={() => setStatusFilter(statusFilter === 'purchased' ? 'all' : 'purchased')}
-                className="h-8"
-              >
-                <CheckCircle className="h-3 w-3 mr-1" />
-                Liberados
-              </Button>
-            </div>
-          </div>
-
-          {/* Products Grid */}
-          {loading ? (
-            <div className="grid gap-5 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
-              {[...Array(12)].map((_, i) => (
-                <div key={i} className="aspect-[3/4] bg-secondary/30 rounded-2xl animate-pulse" />
-              ))}
-            </div>
-          ) : (
-            <>
-              <div className="grid gap-5 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
-                {getDisplayProducts().map((product, index) => (
-                  <ProductCard
-                    key={product.id}
-                    product={product}
-                    canPurchase={canPurchase(product)}
-                    isPurchased={isPurchased(product.id)}
-                    onSelect={() => setSelectedProduct(product)}
-                    formatName={formatProductName}
-                    index={index}
-                  />
-                ))}
-              </div>
-
-              {getDisplayProducts().length === 0 && (
-                <div className="py-20 text-center">
-                  <Package className="h-16 w-16 mx-auto text-muted-foreground/50 mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">Nenhum produto encontrado</h3>
-                  <p className="text-muted-foreground">
-                    {statusFilter === 'purchased' 
-                      ? "Você ainda não liberou nenhum produto" 
-                      : "Tente ajustar sua busca ou filtros"}
-                  </p>
+            {/* Store Tab */}
+            <TabsContent value="store" className="space-y-6">
+              {/* Featured Products Carousel */}
+              {!loading && products.filter(p => p.featured).length > 0 && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Star className="h-5 w-5 text-primary fill-primary" />
+                      <h2 className="text-lg font-bold">
+                        <span className="text-primary">PRODUTOS</span> EM DESTAQUE
+                      </h2>
+                    </div>
+                    <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
+                      Ver todos <ChevronRight className="h-4 w-4 ml-1" />
+                    </Button>
+                  </div>
+                  
+                  <div className="relative px-12">
+                    <Carousel
+                      opts={{
+                        align: "start",
+                        loop: true,
+                      }}
+                      plugins={[
+                        Autoplay({
+                          delay: 5000,
+                          stopOnInteraction: false,
+                          stopOnMouseEnter: true,
+                        }),
+                      ]}
+                      className="w-full"
+                    >
+                      <CarouselContent className="-ml-4">
+                        {products.filter(p => p.featured).map((product) => (
+                          <CarouselItem key={product.id} className="pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5">
+                            <FeaturedProductCard
+                              product={product}
+                              canPurchase={canPurchase(product)}
+                              isPurchased={isPurchased(product.id)}
+                              onSelect={() => setSelectedProduct(product)}
+                              formatName={formatProductName}
+                            />
+                          </CarouselItem>
+                        ))}
+                      </CarouselContent>
+                      <CarouselPrevious className="left-0" />
+                      <CarouselNext className="right-0" />
+                    </Carousel>
+                  </div>
                 </div>
               )}
-            </>
-          )}
+
+              {/* Filters Row */}
+              <div className="flex flex-wrap items-center gap-3">
+                {/* Search */}
+                <div className="relative flex-1 min-w-[200px] max-w-md">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Buscar produtos..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="pl-9 h-10 bg-secondary/50 border-border/50 rounded-lg"
+                  />
+                </div>
+
+                {/* Category Filters */}
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    variant={categoryFilter === 'all' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setCategoryFilter('all')}
+                    className="h-8"
+                  >
+                    Todos ({categoryCounts.all})
+                  </Button>
+                  {(Object.keys(categoryConfig) as ProductCategory[]).map(cat => {
+                    const count = categoryCounts[cat];
+                    if (count === 0) return null;
+                    return (
+                      <Button
+                        key={cat}
+                        variant={categoryFilter === cat ? 'default' : 'ghost'}
+                        size="sm"
+                        onClick={() => setCategoryFilter(cat)}
+                        className="h-8"
+                      >
+                        {categoryConfig[cat].label} ({count})
+                      </Button>
+                    );
+                  })}
+                </div>
+
+                {/* Status Filters */}
+                <div className="flex gap-2 ml-auto">
+                  <Button
+                    variant={statusFilter === 'available' ? 'secondary' : 'ghost'}
+                    size="sm"
+                    onClick={() => setStatusFilter(statusFilter === 'available' ? 'all' : 'available')}
+                    className="h-8"
+                  >
+                    <Sparkles className="h-3 w-3 mr-1" />
+                    Disponíveis
+                  </Button>
+                  <Button
+                    variant={statusFilter === 'purchased' ? 'secondary' : 'ghost'}
+                    size="sm"
+                    onClick={() => setStatusFilter(statusFilter === 'purchased' ? 'all' : 'purchased')}
+                    className="h-8"
+                  >
+                    <CheckCircle className="h-3 w-3 mr-1" />
+                    Liberados
+                  </Button>
+                </div>
+              </div>
+
+              {/* Products Grid */}
+              {loading ? (
+                <div className="grid gap-5 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
+                  {[...Array(12)].map((_, i) => (
+                    <div key={i} className="aspect-[3/4] bg-secondary/30 rounded-2xl animate-pulse" />
+                  ))}
+                </div>
+              ) : (
+                <>
+                  <div className="grid gap-5 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
+                    {getDisplayProducts().map((product, index) => (
+                      <ProductCard
+                        key={product.id}
+                        product={product}
+                        canPurchase={canPurchase(product)}
+                        isPurchased={isPurchased(product.id)}
+                        onSelect={() => setSelectedProduct(product)}
+                        formatName={formatProductName}
+                        index={index}
+                      />
+                    ))}
+                  </div>
+
+                  {getDisplayProducts().length === 0 && (
+                    <div className="py-20 text-center">
+                      <Package className="h-16 w-16 mx-auto text-muted-foreground/50 mb-4" />
+                      <h3 className="text-lg font-semibold mb-2">Nenhum produto encontrado</h3>
+                      <p className="text-muted-foreground">
+                        {statusFilter === 'purchased' 
+                          ? "Você ainda não liberou nenhum produto" 
+                          : "Tente ajustar sua busca ou filtros"}
+                      </p>
+                    </div>
+                  )}
+                </>
+              )}
+            </TabsContent>
+
+            {/* My Redemptions Tab */}
+            <TabsContent value="redemptions">
+              <MyRedemptions 
+                purchases={purchases} 
+                onRefresh={async () => {
+                  if (userProfile) {
+                    const updatedPurchases = await getUserPurchases(userProfile.uid);
+                    setPurchases(updatedPurchases);
+                  }
+                }}
+              />
+            </TabsContent>
+          </Tabs>
         </main>
       </div>
 
