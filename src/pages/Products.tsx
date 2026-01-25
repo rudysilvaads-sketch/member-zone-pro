@@ -610,9 +610,9 @@ const FeaturedProductCard = ({ product, canPurchase, isPurchased, onSelect, form
           )}
         />
         
-        {/* Gradient Overlays */}
-        <div className="absolute inset-0 bg-gradient-to-r from-[#0a0a0a]/90 via-[#0a0a0a]/40 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a]/60 via-transparent to-transparent" />
+        {/* Gradient Overlays - minimal to show more image */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[#0a0a0a]/80 via-transparent to-transparent w-1/2" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a]/70 via-transparent to-transparent h-1/2 bottom-0 top-auto" />
         
         {/* Content - Left Side */}
         <div className="absolute inset-0 p-6 md:p-8 flex flex-col justify-between">
