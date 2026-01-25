@@ -189,7 +189,15 @@ const Products = () => {
     const trackStoreVisit = async () => {
       if (userProfile?.uid) {
         try {
-          await completeMission(userProfile.uid, 'visit-store', 1);
+          const completed = await completeMission(userProfile.uid, 'visit-store', 1);
+          if (completed) {
+            toast.success(
+              <div className="flex flex-col">
+                <span className="font-bold">🎯 Missão Completada!</span>
+                <span className="text-sm text-muted-foreground">Explorador: Visite a Vitrine</span>
+              </div>
+            );
+          }
         } catch (error) {
           console.error('Error tracking store visit mission:', error);
         }
