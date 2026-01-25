@@ -10,11 +10,14 @@ import { useAuth } from "@/contexts/AuthContext";
 import { 
   Conversation, 
   ChatMessage, 
+  TypingIndicator,
   subscribeToConversations,
   subscribeToMessages,
   sendMessage,
   markMessagesAsRead,
-  getOrCreateConversation
+  getOrCreateConversation,
+  setTypingStatus,
+  subscribeToTypingIndicators
 } from "@/lib/chatService";
 import { OnlineIndicator } from "./OnlineIndicator";
 import { usePresence } from "@/hooks/usePresence";
@@ -44,9 +47,11 @@ export const ChatModal = ({ open, onOpenChange, targetUser }: ChatModalProps) =>
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [typingUsers, setTypingUsers] = useState<TypingIndicator[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   const { 
     isRecording, 
@@ -142,10 +147,59 @@ export const ChatModal = ({ open, onOpenChange, targetUser }: ChatModalProps) =>
     return () => unsubscribe();
   }, [selectedConversation, userProfile?.uid]);
 
+  // Subscribe to typing indicators
+  useEffect(() => {
+    if (!selectedConversation || !userProfile?.uid) {
+      setTypingUsers([]);
+      return;
+    }
+
+    const unsubscribe = subscribeToTypingIndicators(
+      selectedConversation.id,
+      userProfile.uid,
+      (indicators) => setTypingUsers(indicators)
+    );
+
+    return () => {
+      unsubscribe();
+      // Clear typing status when leaving conversation
+      setTypingStatus(selectedConversation.id, userProfile.uid, userProfile.displayName, false);
+    };
+  }, [selectedConversation, userProfile?.uid, userProfile?.displayName]);
+
   // Scroll to bottom on new messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  // Handle typing indicator
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setNewMessage(value);
+
+    if (!selectedConversation || !userProfile) return;
+
+    // Set typing status
+    if (value.trim()) {
+      setTypingStatus(selectedConversation.id, userProfile.uid, userProfile.displayName, true);
+      
+      // Clear previous timeout
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+      
+      // Set timeout to clear typing after 3 seconds of inactivity
+      typingTimeoutRef.current = setTimeout(() => {
+        setTypingStatus(selectedConversation.id, userProfile.uid, userProfile.displayName, false);
+      }, 3000);
+    } else {
+      // Immediately clear typing when input is empty
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+      setTypingStatus(selectedConversation.id, userProfile.uid, userProfile.displayName, false);
+    }
+  };
 
   const handleSendMessage = async (audioUrl?: string, imageUrl?: string) => {
     if ((!newMessage.trim() && !audioUrl && !imageUrl) || !selectedConversation || !userProfile) return;
@@ -157,6 +211,12 @@ export const ChatModal = ({ open, onOpenChange, targetUser }: ChatModalProps) =>
 
     setSending(true);
     const content = newMessage.trim();
+    
+    // Clear typing status immediately
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+    setTypingStatus(selectedConversation.id, userProfile.uid, userProfile.displayName, false);
     
     // Clear input and image preview immediately before async operation
     setNewMessage("");
@@ -385,7 +445,11 @@ export const ChatModal = ({ open, onOpenChange, targetUser }: ChatModalProps) =>
           <div className="min-w-0">
             <p className="font-medium truncate">{other.name}</p>
             <p className="text-xs text-muted-foreground">
-              {isUserOnline(other.id) ? "Online" : "Offline"}
+              {typingUsers.length > 0 ? (
+                <span className="text-primary animate-pulse">digitando...</span>
+              ) : (
+                isUserOnline(other.id) ? "Online" : "Offline"
+              )}
             </p>
           </div>
         </div>
@@ -510,7 +574,7 @@ export const ChatModal = ({ open, onOpenChange, targetUser }: ChatModalProps) =>
                 ref={inputRef}
                 placeholder="Adicionar legenda..."
                 value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
+                onChange={handleInputChange}
                 onKeyDown={handleKeyDown}
                 disabled={sending}
                 className="flex-1"
@@ -541,7 +605,7 @@ export const ChatModal = ({ open, onOpenChange, targetUser }: ChatModalProps) =>
                 ref={inputRef}
                 placeholder="Digite sua mensagem..."
                 value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
+                onChange={handleInputChange}
                 onKeyDown={handleKeyDown}
                 disabled={sending}
                 className="flex-1"
