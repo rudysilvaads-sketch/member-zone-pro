@@ -1,15 +1,27 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Award, Lock, Star, Zap, Target, Flame, Trophy, Medal } from "lucide-react";
+import { Award, Lock, Star, Zap, Target, Flame, Trophy, Medal, Heart, MessageSquare, MessageCircle, ShoppingBag, Send, TrendingUp, CheckCircle, Users, Package, Crown } from "lucide-react";
+import { ACHIEVEMENTS } from "@/lib/achievementService";
 
-const allAchievements = [
-  { id: 'welcome', name: 'Bem-vindo', description: 'Criou uma conta', icon: Star, rarity: 'common' },
-  { id: 'primeiro-passo', name: 'Primeiro Passo', description: 'Complete seu primeiro módulo', icon: Star, rarity: 'common' },
-  { id: 'em-chamas', name: 'Em Chamas', description: 'Mantenha um streak de 7 dias', icon: Flame, rarity: 'rare' },
-  { id: 'mestre-do-foco', name: 'Mestre do Foco', description: 'Complete 10 módulos sem pausar', icon: Target, rarity: 'epic' },
-  { id: 'velocidade-luz', name: 'Velocidade Luz', description: 'Complete um módulo em menos de 5 min', icon: Zap, rarity: 'legendary' },
-  { id: 'campeao', name: 'Campeão', description: 'Alcance o top 10 do ranking', icon: Trophy, rarity: 'legendary' },
-  { id: 'colecionador', name: 'Colecionador', description: 'Desbloqueie 20 conquistas', icon: Medal, rarity: 'epic' },
-];
+// Map icon names to components
+const iconMap: Record<string, any> = {
+  'star': Star,
+  'flame': Flame,
+  'target': Target,
+  'zap': Zap,
+  'trophy': Trophy,
+  'medal': Medal,
+  'heart': Heart,
+  'message-square': MessageSquare,
+  'message-circle': MessageCircle,
+  'shopping-bag': ShoppingBag,
+  'send': Send,
+  'trending-up': TrendingUp,
+  'check-circle': CheckCircle,
+  'users': Users,
+  'package': Package,
+  'award': Award,
+  'crown': Crown,
+};
 
 interface AchievementsCardProps {
   unlockedAchievements: string[];
@@ -31,12 +43,15 @@ const getRarityStyles = (rarity: string, unlocked: boolean) => {
 };
 
 export function AchievementsCard({ unlockedAchievements }: AchievementsCardProps) {
+  // Show only first 7 achievements for dashboard preview
+  const displayAchievements = ACHIEVEMENTS.slice(0, 7);
+  
   return (
     <Card variant="gradient" className="animate-fade-in" style={{ animationDelay: "300ms" }}>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="flex items-center gap-2">
           <Award className="h-5 w-5 text-accent" />
-          Conquistas ({unlockedAchievements.length}/{allAchievements.length})
+          Conquistas ({unlockedAchievements.length}/{ACHIEVEMENTS.length})
         </CardTitle>
         <a href="/achievements" className="text-sm text-primary hover:underline">
           Ver todas
@@ -44,8 +59,9 @@ export function AchievementsCard({ unlockedAchievements }: AchievementsCardProps
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-          {allAchievements.map((achievement, index) => {
+          {displayAchievements.map((achievement, index) => {
             const unlocked = unlockedAchievements.includes(achievement.id);
+            const Icon = iconMap[achievement.icon] || Star;
             
             return (
               <div
@@ -62,7 +78,7 @@ export function AchievementsCard({ unlockedAchievements }: AchievementsCardProps
                     <Lock className="h-6 w-6 text-muted-foreground" />
                   </div>
                 )}
-                <achievement.icon
+                <Icon
                   className={`h-8 w-8 ${
                     unlocked
                       ? achievement.rarity === "legendary"

@@ -1,21 +1,32 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Header } from "@/components/layout/Header";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Award, Lock, Star, Flame, Target, Zap, Trophy, Medal, CheckCircle2 } from "lucide-react";
+import { Award, Lock, Star, Flame, Target, Zap, Trophy, Medal, CheckCircle2, Heart, MessageSquare, MessageCircle, ShoppingBag, Send, TrendingUp, CheckCircle, Users, Package, Crown } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { getAchievements, Achievement } from "@/lib/firebaseServices";
+import { ACHIEVEMENTS } from "@/lib/achievementService";
 import { useAuth } from "@/contexts/AuthContext";
 
 const iconMap: Record<string, React.ElementType> = {
-  star: Star,
-  flame: Flame,
-  target: Target,
-  zap: Zap,
-  trophy: Trophy,
-  medal: Medal,
+  'star': Star,
+  'flame': Flame,
+  'target': Target,
+  'zap': Zap,
+  'trophy': Trophy,
+  'medal': Medal,
+  'heart': Heart,
+  'message-square': MessageSquare,
+  'message-circle': MessageCircle,
+  'shopping-bag': ShoppingBag,
+  'send': Send,
+  'trending-up': TrendingUp,
+  'check-circle': CheckCircle,
+  'users': Users,
+  'package': Package,
+  'award': Award,
+  'crown': Crown,
 };
 
 const rarityConfig = {
@@ -27,34 +38,18 @@ const rarityConfig = {
 
 const Achievements = () => {
   const { userProfile } = useAuth();
-  const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchAchievements = async () => {
-      try {
-        const data = await getAchievements();
-        setAchievements(data);
-      } catch (error) {
-        console.error('Error fetching achievements:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchAchievements();
-  }, []);
 
   const unlockedIds = userProfile?.achievements || [];
   const unlockedCount = unlockedIds.length;
-  const totalCount = achievements.length;
+  const totalCount = ACHIEVEMENTS.length;
   const progressPercent = totalCount > 0 ? (unlockedCount / totalCount) * 100 : 0;
 
   const groupedAchievements = {
-    legendary: achievements.filter(a => a.rarity === 'legendary'),
-    epic: achievements.filter(a => a.rarity === 'epic'),
-    rare: achievements.filter(a => a.rarity === 'rare'),
-    common: achievements.filter(a => a.rarity === 'common'),
+    legendary: ACHIEVEMENTS.filter(a => a.rarity === 'legendary'),
+    epic: ACHIEVEMENTS.filter(a => a.rarity === 'epic'),
+    rare: ACHIEVEMENTS.filter(a => a.rarity === 'rare'),
+    common: ACHIEVEMENTS.filter(a => a.rarity === 'common'),
   };
 
   return (
@@ -110,82 +105,63 @@ const Achievements = () => {
           </Card>
 
           {/* Achievements Grid */}
-          {loading ? (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {[...Array(6)].map((_, i) => (
-                <div key={i} className="h-40 bg-muted/50 rounded-lg animate-pulse" />
-              ))}
-            </div>
-          ) : (
-            Object.entries(groupedAchievements).map(([rarity, items]) => {
-              if (items.length === 0) return null;
-              const config = rarityConfig[rarity as keyof typeof rarityConfig];
-              
-              return (
-                <div key={rarity} className="mb-8">
-                  <h2 className={cn("text-xl font-bold mb-4 flex items-center gap-2", config.color)}>
-                    <Star className="h-5 w-5" />
-                    {config.label}
-                  </h2>
-                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                    {items.map((achievement) => {
-                      const isUnlocked = unlockedIds.includes(achievement.id);
-                      const Icon = iconMap[achievement.icon] || Award;
-                      
-                      return (
-                        <Card 
-                          key={achievement.id}
-                          variant="gradient"
-                          className={cn(
-                            "transition-all relative overflow-hidden",
-                            isUnlocked 
-                              ? cn(config.border, "border-2 shadow-[0_0_20px_rgba(191,255,0,0.1)]") 
-                              : "opacity-50 grayscale"
-                          )}
-                        >
-                          {isUnlocked && (
-                            <div className="absolute top-3 right-3">
-                              <CheckCircle2 className="h-5 w-5 text-[#BFFF00]" />
-                            </div>
-                          )}
-                          <CardContent className="p-6">
-                            <div className={cn(
-                              "w-16 h-16 rounded-xl flex items-center justify-center mb-4",
-                              isUnlocked ? config.bg : "bg-white/5"
-                            )}>
-                              {isUnlocked ? (
-                                <Icon className={cn("h-8 w-8", config.color)} />
-                              ) : (
-                                <Lock className="h-8 w-8 text-white/30" />
-                              )}
-                            </div>
-                            <h3 className="font-bold text-lg text-white">{achievement.name}</h3>
-                            <p className="text-sm text-white/50 mt-1">
-                              {achievement.description}
-                            </p>
-                            <Badge className={cn("mt-3", isUnlocked ? config.bg : "bg-white/5", config.color)}>
-                              {config.label}
-                            </Badge>
-                          </CardContent>
-                        </Card>
-                      );
-                    })}
-                  </div>
+          {Object.entries(groupedAchievements).map(([rarity, items]) => {
+            if (items.length === 0) return null;
+            const config = rarityConfig[rarity as keyof typeof rarityConfig];
+            
+            return (
+              <div key={rarity} className="mb-8">
+                <h2 className={cn("text-xl font-bold mb-4 flex items-center gap-2", config.color)}>
+                  <Star className="h-5 w-5" />
+                  {config.label}
+                </h2>
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  {items.map((achievement) => {
+                    const isUnlocked = unlockedIds.includes(achievement.id);
+                    const Icon = iconMap[achievement.icon] || Award;
+                    
+                    return (
+                      <Card 
+                        key={achievement.id}
+                        variant="gradient"
+                        className={cn(
+                          "transition-all relative overflow-hidden",
+                          isUnlocked 
+                            ? cn(config.border, "border-2 shadow-[0_0_20px_rgba(191,255,0,0.1)]") 
+                            : "opacity-50 grayscale"
+                        )}
+                      >
+                        {isUnlocked && (
+                          <div className="absolute top-3 right-3">
+                            <CheckCircle2 className="h-5 w-5 text-[#BFFF00]" />
+                          </div>
+                        )}
+                        <CardContent className="p-6">
+                          <div className={cn(
+                            "w-16 h-16 rounded-xl flex items-center justify-center mb-4",
+                            isUnlocked ? config.bg : "bg-white/5"
+                          )}>
+                            {isUnlocked ? (
+                              <Icon className={cn("h-8 w-8", config.color)} />
+                            ) : (
+                              <Lock className="h-8 w-8 text-white/30" />
+                            )}
+                          </div>
+                          <h3 className="font-bold text-lg text-white">{achievement.name}</h3>
+                          <p className="text-sm text-white/50 mt-1">
+                            {achievement.description}
+                          </p>
+                          <Badge className={cn("mt-3", isUnlocked ? config.bg : "bg-white/5", config.color)}>
+                            {config.label}
+                          </Badge>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
                 </div>
-              );
-            })
-          )}
-
-          {achievements.length === 0 && !loading && (
-            <Card>
-              <CardContent className="py-12 text-center">
-                <Award className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <p className="text-muted-foreground">
-                  Nenhuma conquista disponível ainda
-                </p>
-              </CardContent>
-            </Card>
-          )}
+              </div>
+            );
+          })}
         </main>
       </div>
     </div>

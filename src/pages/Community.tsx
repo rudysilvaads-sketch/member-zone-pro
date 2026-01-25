@@ -44,6 +44,7 @@ import { usePresence } from "@/hooks/usePresence";
 import { InviteCard } from "@/components/community/InviteCard";
 import { GlobalChat } from "@/components/community/GlobalChat";
 import { OnlineMembersList } from "@/components/community/OnlineMembersList";
+import { useAchievements } from "@/hooks/useAchievements";
 
 const rankConfig: Record<string, { color: string; bg: string }> = {
   bronze: { color: "text-orange-400", bg: "bg-orange-500/20" },
@@ -56,6 +57,7 @@ const rankConfig: Record<string, { color: string; bg: string }> = {
 const Community = () => {
   const { userProfile } = useAuth();
   const { isUserOnline, onlineCount } = usePresence();
+  const { onPostCreated, onLikeGiven, onCommentCreated } = useAchievements();
   const [searchParams, setSearchParams] = useSearchParams();
   const [topUsers, setTopUsers] = useState<(UserProfile & { position: number })[]>([]);
   const [posts, setPosts] = useState<Post[]>([]);
@@ -212,16 +214,13 @@ const Community = () => {
         removeImage();
         await fetchPosts();
         
+        // Check achievements for post creation
+        await onPostCreated();
+        
         // Complete engage-community mission
         const missionResult = await completeMission(userProfile.uid, 'engage-community');
         if (missionResult.completed && missionResult.rewards) {
-          toast.success(
-            <div className="flex flex-col">
-              <span className="font-bold">🎯 Missão Completada!</span>
-              <span className="text-sm text-muted-foreground">{missionResult.rewards.title}</span>
-              <span className="text-xs text-primary">+{missionResult.rewards.xp} XP | +{missionResult.rewards.points} pts</span>
-            </div>
-          );
+          toast.success(`🎯 Missão Completada: ${missionResult.rewards.title} (+${missionResult.rewards.xp} XP)`);
         }
       } else {
         toast.error(result.error || 'Erro ao publicar');
@@ -257,17 +256,22 @@ const Community = () => {
     
     const result = await toggleLikePost(postId, userProfile.uid);
     
-    // Create notification if liking (not unliking) and successful
-    if (result.success && result.liked && post.authorId !== userProfile.uid) {
-      await createNotification({
-        userId: post.authorId,
-        fromUserId: userProfile.uid,
-        fromUserName: userProfile.displayName,
-        fromUserAvatar: userProfile.photoURL,
-        type: 'like',
-        postId: postId,
-        postContent: post.content?.substring(0, 50) || '',
-      });
+    // Check achievements for like action
+    if (result.success && result.liked) {
+      await onLikeGiven();
+      
+      // Create notification if liking (not unliking) and successful
+      if (post.authorId !== userProfile.uid) {
+        await createNotification({
+          userId: post.authorId,
+          fromUserId: userProfile.uid,
+          fromUserName: userProfile.displayName,
+          fromUserAvatar: userProfile.photoURL,
+          type: 'like',
+          postId: postId,
+          postContent: post.content?.substring(0, 50) || '',
+        });
+      }
     }
   };
 
@@ -314,6 +318,9 @@ const Community = () => {
             : p
         ));
         
+        // Check achievements for comment creation
+        await onCommentCreated();
+        
         // Create notification for post author
         if (selectedPost.authorId !== userProfile.uid) {
           await createNotification({
@@ -331,13 +338,7 @@ const Community = () => {
         // Complete engage-community mission
         const missionResult = await completeMission(userProfile.uid, 'engage-community');
         if (missionResult.completed && missionResult.rewards) {
-          toast.success(
-            <div className="flex flex-col">
-              <span className="font-bold">🎯 Missão Completada!</span>
-              <span className="text-sm text-muted-foreground">{missionResult.rewards.title}</span>
-              <span className="text-xs text-primary">+{missionResult.rewards.xp} XP | +{missionResult.rewards.points} pts</span>
-            </div>
-          );
+          toast.success(`🎯 Missão Completada: ${missionResult.rewards.title} (+${missionResult.rewards.xp} XP)`);
         }
         
         toast.success('Comentário adicionado!');
