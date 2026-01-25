@@ -15,7 +15,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import Autoplay from "embla-carousel-autoplay";
 import { MyRedemptions } from "@/components/dashboard/MyRedemptions";
-import featuredHeroBg from "@/assets/featured-hero-bg.jpg";
+import featuredHeroBg from "@/assets/featured-hero-wide.jpg";
 
 const rankOrder = ['bronze', 'silver', 'gold', 'platinum', 'diamond'];
 
