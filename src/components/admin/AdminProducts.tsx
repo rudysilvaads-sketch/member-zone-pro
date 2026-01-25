@@ -46,6 +46,7 @@ const emptyProduct: Omit<Product, 'id'> = {
   description: '',
   price: 0,
   image: '',
+  featuredImage: '',
   available: true,
   featured: false,
   requiredRank: '',
@@ -62,9 +63,13 @@ export function AdminProducts() {
   const [notifyOnCreate, setNotifyOnCreate] = useState(true);
   const [notifying, setNotifying] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [uploadingFeatured, setUploadingFeatured] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [featuredImagePreview, setFeaturedImagePreview] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [isDraggingFeatured, setIsDraggingFeatured] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const featuredFileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetchProducts();
@@ -210,6 +215,7 @@ export function AdminProducts() {
     setEditingProduct(null);
     setFormData(emptyProduct);
     setImagePreview(null);
+    setFeaturedImagePreview(null);
     setDialogOpen(true);
   };
 
@@ -220,12 +226,14 @@ export function AdminProducts() {
       description: product.description,
       price: product.price,
       image: product.image,
+      featuredImage: product.featuredImage || '',
       available: product.available,
       featured: product.featured || false,
       requiredRank: product.requiredRank || '',
       category: product.category || 'other',
     });
     setImagePreview(product.image || null);
+    setFeaturedImagePreview(product.featuredImage || null);
     setDialogOpen(true);
   };
 
@@ -313,6 +321,89 @@ export function AdminProducts() {
     setImagePreview(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
+    }
+  };
+
+  // Featured image handlers
+  const processFeaturedImageFile = async (file: File) => {
+    if (!file.type.startsWith('image/')) {
+      toast.error('Por favor, selecione uma imagem');
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('Imagem muito grande. Máximo 10MB');
+      return;
+    }
+
+    setUploadingFeatured(true);
+    try {
+      const timestamp = Date.now();
+      const fileExt = file.name.split('.').pop();
+      const filename = `featured-${timestamp}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+
+      const { data, error: uploadError } = await supabase.storage
+        .from('product-images')
+        .upload(filename, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      const { data: urlData } = supabase.storage
+        .from('product-images')
+        .getPublicUrl(filename);
+      
+      const downloadURL = urlData.publicUrl;
+      
+      setFormData(prev => ({ ...prev, featuredImage: downloadURL }));
+      setFeaturedImagePreview(downloadURL);
+      toast.success('Imagem de destaque enviada!');
+    } catch (error: any) {
+      console.error('Error uploading featured image:', error);
+      toast.error(error?.message || 'Erro ao enviar imagem. Tente usar uma URL.');
+    } finally {
+      setUploadingFeatured(false);
+    }
+  };
+
+  const handleFeaturedImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    await processFeaturedImageFile(file);
+  };
+
+  const handleFeaturedDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingFeatured(true);
+  };
+
+  const handleFeaturedDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingFeatured(false);
+  };
+
+  const handleFeaturedDrop = async (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingFeatured(false);
+
+    const files = e.dataTransfer.files;
+    if (files && files.length > 0) {
+      await processFeaturedImageFile(files[0]);
+    }
+  };
+
+  const handleRemoveFeaturedImage = () => {
+    setFormData({ ...formData, featuredImage: '' });
+    setFeaturedImagePreview(null);
+    if (featuredFileInputRef.current) {
+      featuredFileInputRef.current.value = '';
     }
   };
 
@@ -634,6 +725,96 @@ export function AdminProducts() {
                 placeholder="https://..."
               />
             </div>
+
+            {/* Featured Image Upload - Only show when product is marked as featured */}
+            {formData.featured && (
+              <div className="space-y-3 p-4 rounded-lg bg-primary/5 border border-primary/20">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-primary" />
+                  <Label>Imagem de Destaque (Banner Hero)</Label>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Tamanho recomendado: <span className="text-primary font-medium">1920 x 640 px</span> (proporção 3:1)
+                </p>
+                
+                {/* Featured image preview */}
+                {featuredImagePreview && (
+                  <div className="relative w-full aspect-[3/1] rounded-lg overflow-hidden bg-secondary border border-border">
+                    <img 
+                      src={featuredImagePreview} 
+                      alt="Preview Destaque" 
+                      className="w-full h-full object-cover"
+                      onError={() => setFeaturedImagePreview(null)}
+                    />
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="icon"
+                      className="absolute top-2 right-2 h-7 w-7"
+                      onClick={handleRemoveFeaturedImage}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
+                
+                {/* Upload area */}
+                {!featuredImagePreview && (
+                  <div 
+                    className={`relative w-full aspect-[3/1] rounded-lg border-2 border-dashed bg-secondary/30 flex flex-col items-center justify-center cursor-pointer transition-all duration-200 ${
+                      isDraggingFeatured 
+                        ? 'border-primary bg-primary/10 scale-[1.02]' 
+                        : 'border-primary/30 hover:border-primary/50'
+                    }`}
+                    onClick={() => featuredFileInputRef.current?.click()}
+                    onDragOver={handleFeaturedDragOver}
+                    onDragLeave={handleFeaturedDragLeave}
+                    onDrop={handleFeaturedDrop}
+                  >
+                    {uploadingFeatured ? (
+                      <>
+                        <Loader2 className="h-8 w-8 text-primary animate-spin mb-2" />
+                        <p className="text-sm text-muted-foreground">Enviando...</p>
+                      </>
+                    ) : isDraggingFeatured ? (
+                      <>
+                        <Upload className="h-10 w-10 text-primary mb-2 animate-bounce" />
+                        <p className="text-sm font-medium text-primary">Solte a imagem aqui</p>
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="h-8 w-8 text-primary/60 mb-2" />
+                        <p className="text-sm text-muted-foreground">Arraste o banner ou clique aqui</p>
+                        <p className="text-xs text-muted-foreground/60 mt-1">1920x640 px recomendado</p>
+                      </>
+                    )}
+                  </div>
+                )}
+                
+                <input
+                  ref={featuredFileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFeaturedImageUpload}
+                  className="hidden"
+                />
+                
+                {/* URL input */}
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 h-px bg-border" />
+                  <span className="text-xs text-muted-foreground">ou cole uma URL</span>
+                  <div className="flex-1 h-px bg-border" />
+                </div>
+                <Input
+                  value={formData.featuredImage || ''}
+                  onChange={(e) => {
+                    setFormData({ ...formData, featuredImage: e.target.value });
+                    setFeaturedImagePreview(e.target.value || null);
+                  }}
+                  placeholder="https://..."
+                />
+              </div>
+            )}
             
             <div className="space-y-2">
               <Label htmlFor="category">Categoria</Label>

@@ -62,6 +62,7 @@ export interface Product {
   description: string;
   price: number;
   image: string;
+  featuredImage?: string; // Imagem hero para banner de destaque (1920x640)
   available: boolean;
   category?: ProductCategory;
   requiredRank?: string;
