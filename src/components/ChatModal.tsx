@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Send, Loader2, ArrowLeft, MessageSquare, Mic, Square, X } from "lucide-react";
+import { Send, Loader2, ArrowLeft, MessageSquare, Mic, Square, X, ImagePlus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { 
@@ -20,6 +20,7 @@ import { OnlineIndicator } from "./OnlineIndicator";
 import { usePresence } from "@/hooks/usePresence";
 import { useAudioRecorder, formatRecordingTime } from "@/hooks/useAudioRecorder";
 import { AudioMessagePlayer } from "./AudioMessagePlayer";
+import { toast } from "sonner";
 
 interface ChatModalProps {
   open: boolean;
@@ -41,8 +42,11 @@ export const ChatModal = ({ open, onOpenChange, targetUser }: ChatModalProps) =>
   const [sending, setSending] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loadingMessages, setLoadingMessages] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
   
   const { 
     isRecording, 
@@ -50,7 +54,8 @@ export const ChatModal = ({ open, onOpenChange, targetUser }: ChatModalProps) =>
     startRecording, 
     stopRecording, 
     cancelRecording,
-    uploadAudio 
+    uploadAudio,
+    uploadImage
   } = useAudioRecorder();
 
   // Subscribe to conversations
@@ -142,8 +147,8 @@ export const ChatModal = ({ open, onOpenChange, targetUser }: ChatModalProps) =>
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const handleSendMessage = async (audioUrl?: string) => {
-    if ((!newMessage.trim() && !audioUrl) || !selectedConversation || !userProfile) return;
+  const handleSendMessage = async (audioUrl?: string, imageUrl?: string) => {
+    if ((!newMessage.trim() && !audioUrl && !imageUrl) || !selectedConversation || !userProfile) return;
 
     const recipientId = selectedConversation.participants.find(
       id => id !== userProfile.uid
@@ -153,8 +158,10 @@ export const ChatModal = ({ open, onOpenChange, targetUser }: ChatModalProps) =>
     setSending(true);
     const content = newMessage.trim();
     
-    // Clear input immediately before async operation
+    // Clear input and image preview immediately before async operation
     setNewMessage("");
+    setImagePreview(null);
+    setSelectedImage(null);
 
     try {
       const result = await sendMessage(
@@ -164,7 +171,8 @@ export const ChatModal = ({ open, onOpenChange, targetUser }: ChatModalProps) =>
         userProfile.photoURL,
         content,
         recipientId,
-        audioUrl
+        audioUrl,
+        imageUrl
       );
 
       if (!result.success) {
@@ -197,7 +205,7 @@ export const ChatModal = ({ open, onOpenChange, targetUser }: ChatModalProps) =>
       if (audioBlob) {
         const audioUrl = await uploadAudio(audioBlob, selectedConversation.id);
         if (audioUrl) {
-          await handleSendMessage(audioUrl);
+          await handleSendMessage(audioUrl, undefined);
         }
       }
     } catch (error) {
@@ -207,10 +215,65 @@ export const ChatModal = ({ open, onOpenChange, targetUser }: ChatModalProps) =>
     }
   };
 
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Por favor, selecione uma imagem');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('A imagem deve ter no máximo 5MB');
+      return;
+    }
+
+    setSelectedImage(file);
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setImagePreview(e.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleSendImage = async () => {
+    if (!selectedImage || !selectedConversation || !userProfile) return;
+
+    setSending(true);
+    try {
+      const imageUrl = await uploadImage(selectedImage, selectedConversation.id);
+      if (imageUrl) {
+        await handleSendMessage(undefined, imageUrl);
+      } else {
+        toast.error('Erro ao enviar imagem');
+      }
+    } catch (error) {
+      console.error("Error sending image:", error);
+      toast.error('Erro ao enviar imagem');
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const cancelImagePreview = () => {
+    setImagePreview(null);
+    setSelectedImage(null);
+    if (imageInputRef.current) {
+      imageInputRef.current.value = '';
+    }
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      handleSendMessage();
+      if (imagePreview) {
+        handleSendImage();
+      } else {
+        handleSendMessage();
+      }
     }
   };
 
@@ -356,7 +419,14 @@ export const ChatModal = ({ open, onOpenChange, targetUser }: ChatModalProps) =>
                           : "bg-muted"
                       )}
                     >
-                      {message.audioUrl ? (
+                      {message.imageUrl ? (
+                        <img 
+                          src={message.imageUrl} 
+                          alt="Imagem" 
+                          className="max-w-full rounded-md cursor-pointer hover:opacity-90 transition-opacity"
+                          onClick={() => window.open(message.imageUrl!, '_blank')}
+                        />
+                      ) : message.audioUrl ? (
                         <AudioMessagePlayer 
                           src={message.audioUrl} 
                           isOwn={isOwn}
@@ -378,6 +448,36 @@ export const ChatModal = ({ open, onOpenChange, targetUser }: ChatModalProps) =>
             </div>
           )}
         </ScrollArea>
+
+        {/* Image Preview */}
+        {imagePreview && (
+          <div className="p-3 border-t bg-muted/30">
+            <div className="relative inline-block">
+              <img 
+                src={imagePreview} 
+                alt="Preview" 
+                className="max-h-32 rounded-md"
+              />
+              <Button
+                size="icon"
+                variant="destructive"
+                className="absolute -top-2 -right-2 h-6 w-6"
+                onClick={cancelImagePreview}
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Hidden image input */}
+        <input
+          ref={imageInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handleImageSelect}
+        />
 
         {/* Input */}
         <div className="p-3 border-t flex gap-2">
@@ -404,8 +504,39 @@ export const ChatModal = ({ open, onOpenChange, targetUser }: ChatModalProps) =>
                 {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Square className="h-4 w-4" />}
               </Button>
             </>
+          ) : imagePreview ? (
+            <>
+              <Input
+                ref={inputRef}
+                placeholder="Adicionar legenda..."
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                onKeyDown={handleKeyDown}
+                disabled={sending}
+                className="flex-1"
+              />
+              <Button
+                onClick={handleSendImage}
+                disabled={sending}
+                size="icon"
+              >
+                {sending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Send className="h-4 w-4" />
+                )}
+              </Button>
+            </>
           ) : (
             <>
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={() => imageInputRef.current?.click()}
+                disabled={sending}
+              >
+                <ImagePlus className="h-4 w-4" />
+              </Button>
               <Input
                 ref={inputRef}
                 placeholder="Digite sua mensagem..."
