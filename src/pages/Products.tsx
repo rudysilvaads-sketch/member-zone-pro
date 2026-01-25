@@ -14,6 +14,7 @@ import { getProducts, purchaseProduct, getUserPurchases, Product, Purchase, Prod
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import Autoplay from "embla-carousel-autoplay";
+import Fade from "embla-carousel-fade";
 import { MyRedemptions } from "@/components/dashboard/MyRedemptions";
 import featuredHeroBg from "@/assets/featured-hero-wide.jpg";
 import bannerChatGPT from "@/assets/banner-chatgpt.jpg";
@@ -352,8 +353,9 @@ const Products = () => {
                         loop: true,
                       }}
                       plugins={[
+                        Fade(),
                         Autoplay({
-                          delay: 4000,
+                          delay: 5000,
                           stopOnInteraction: false,
                           stopOnMouseEnter: true,
                         }),
