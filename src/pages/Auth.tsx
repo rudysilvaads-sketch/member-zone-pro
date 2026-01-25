@@ -110,33 +110,26 @@ export default function Auth() {
         <LaCasaLogo size="xl" />
       </div>
       
-      {/* Glass Card with Animated Glow Border */}
-      <div className="relative z-10 w-full max-w-md group">
-        {/* Outer glow effect */}
-        <div 
-          className="absolute -inset-1 rounded-2xl opacity-75 blur-sm"
-          style={{
-            background: 'conic-gradient(from var(--border-angle, 0deg), #F5A623, #FFD700, #F5A623, transparent, #F5A623)',
-            animation: 'border-rotate 3s linear infinite',
-          }}
-        />
-        {/* Inner animated border */}
+      {/* Glass Card with Animated Border */}
+      <div className="relative z-10 w-full max-w-md">
+        {/* Animated border - thin line only */}
         <div 
           className="absolute -inset-[1px] rounded-2xl"
           style={{
-            background: 'conic-gradient(from var(--border-angle, 0deg), #F5A623 0%, #FFB347 15%, transparent 30%, transparent 70%, #FFB347 85%, #F5A623 100%)',
-            animation: 'border-rotate 3s linear infinite',
+            background: 'conic-gradient(from var(--border-angle, 0deg), #F5A623 0%, #FFB347 10%, transparent 25%, transparent 75%, #FFB347 90%, #F5A623 100%)',
+            animation: 'border-rotate 4s linear infinite',
           }}
         />
-        {/* Pulse glow overlay */}
+        {/* Subtle outer glow - very subtle */}
         <div 
-          className="absolute -inset-2 rounded-3xl opacity-30 blur-xl"
+          className="absolute -inset-[2px] rounded-2xl opacity-40 blur-[2px] -z-10"
           style={{
-            background: 'radial-gradient(ellipse at center, #F5A623 0%, transparent 70%)',
-            animation: 'pulse-glow 2s ease-in-out infinite',
+            background: 'conic-gradient(from var(--border-angle, 0deg), #F5A623 0%, transparent 20%, transparent 80%, #F5A623 100%)',
+            animation: 'border-rotate 4s linear infinite',
           }}
         />
-        <div className="relative backdrop-blur-2xl bg-black/50 border border-[#F5A623]/20 rounded-2xl p-8 shadow-[0_8px_32px_rgba(245,166,35,0.15),0_0_0_1px_rgba(245,166,35,0.1)]">
+        {/* Card content - solid dark background */}
+        <div className="relative backdrop-blur-xl bg-[#0a0a0a]/95 rounded-2xl p-8 shadow-2xl">
           {/* Badge */}
           <div className="flex justify-center mb-6">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#F5A623]/10 border border-[#F5A623]/30">
