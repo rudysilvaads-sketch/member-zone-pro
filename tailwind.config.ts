@@ -121,6 +121,10 @@ export default {
             borderColor: "hsl(var(--primary) / 0.7)",
           },
         },
+        "shine": {
+          "0%": { transform: "translateX(-100%) skewX(-15deg)" },
+          "100%": { transform: "translateX(200%) skewX(-15deg)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -130,6 +134,7 @@ export default {
         "slide-in-right": "slide-in-right 0.4s ease-out forwards",
         "glow-pulse": "glow-pulse 3s ease-in-out infinite",
         "border-glow": "border-glow 3s ease-in-out infinite",
+        "shine": "shine 1.5s ease-in-out",
       },
     },
   },

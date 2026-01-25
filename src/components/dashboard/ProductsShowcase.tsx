@@ -192,6 +192,10 @@ export function ProductsShowcase({ userRank, userPoints }: ProductsShowcaseProps
                           className="relative overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-sm transition-all duration-500 group-hover:border-[#BFFF00]/30 group-hover:shadow-[0_0_30px_rgba(191,255,0,0.1)] cursor-pointer"
                           onClick={() => handleCardClick(product)}
                         >
+                          {/* Animated shine effect */}
+                          <div className="absolute inset-0 z-20 opacity-0 group-hover:opacity-100 pointer-events-none overflow-hidden">
+                            <div className="absolute inset-0 -translate-x-full group-hover:animate-shine bg-gradient-to-r from-transparent via-white/20 to-transparent w-1/2" />
+                          </div>
                           {/* Featured badge */}
                           {product.featured && (
                             <div className="absolute right-2 top-2 z-10">
