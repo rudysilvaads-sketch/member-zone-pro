@@ -29,8 +29,8 @@ import {
   X
 } from 'lucide-react';
 import { collection, getDocs, doc, setDoc, updateDoc, deleteDoc } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
-import { db, storage } from '@/lib/firebase';
+import { db } from '@/lib/firebase';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Product, notifyNewProduct } from '@/lib/firebaseServices';
 import {
@@ -246,36 +246,34 @@ export function AdminProducts() {
     try {
       // Create unique filename
       const timestamp = Date.now();
-      const filename = `products/${timestamp}-${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
-      const storageRef = ref(storage, filename);
+      const fileExt = file.name.split('.').pop();
+      const filename = `${timestamp}-${Math.random().toString(36).substring(7)}.${fileExt}`;
 
-      // Upload file
-      await uploadBytes(storageRef, file);
+      // Upload to Supabase Storage
+      const { data, error: uploadError } = await supabase.storage
+        .from('product-images')
+        .upload(filename, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      // Get public URL
+      const { data: urlData } = supabase.storage
+        .from('product-images')
+        .getPublicUrl(filename);
       
-      // Get download URL
-      const downloadURL = await getDownloadURL(storageRef);
+      const downloadURL = urlData.publicUrl;
       
       setFormData(prev => ({ ...prev, image: downloadURL }));
       setImagePreview(downloadURL);
       toast.success('Imagem enviada com sucesso!');
     } catch (error: any) {
       console.error('Error uploading image:', error);
-      
-      // Check for Firebase Storage permission errors
-      if (error?.code === 'storage/unauthorized' || error?.message?.includes('permission')) {
-        toast.error('Sem permissão para upload. Configure as regras do Firebase Storage.');
-        
-        // Fallback: Convert to base64 data URL for preview
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          const base64 = reader.result as string;
-          setImagePreview(base64);
-          toast.info('Use uma URL externa para a imagem do produto.');
-        };
-        reader.readAsDataURL(file);
-      } else {
-        toast.error('Erro ao enviar imagem. Tente usar uma URL.');
-      }
+      toast.error(error?.message || 'Erro ao enviar imagem. Tente usar uma URL.');
     } finally {
       setUploading(false);
     }
@@ -556,19 +554,8 @@ export function AdminProducts() {
               />
             </div>
             
-            <div className="space-y-2">
+            <div className="space-y-3">
               <Label>Imagem do Produto</Label>
-              
-              {/* URL input as primary method */}
-              <Input
-                id="image"
-                value={formData.image}
-                onChange={(e) => {
-                  setFormData({ ...formData, image: e.target.value });
-                  setImagePreview(e.target.value || null);
-                }}
-                placeholder="Cole a URL da imagem (ex: https://...)"
-              />
               
               {/* Image preview */}
               {imagePreview && (
@@ -591,17 +578,61 @@ export function AdminProducts() {
                 </div>
               )}
               
-              {/* Placeholder when no image */}
+              {/* Upload area with drag & drop */}
               {!imagePreview && (
-                <div className="w-full aspect-video rounded-lg border border-dashed border-border bg-secondary/30 flex flex-col items-center justify-center">
-                  <ImageIcon className="h-8 w-8 text-muted-foreground/50 mb-2" />
-                  <p className="text-xs text-muted-foreground">Cole uma URL acima para ver o preview</p>
+                <div 
+                  className={`relative w-full aspect-video rounded-lg border-2 border-dashed bg-secondary/30 flex flex-col items-center justify-center cursor-pointer transition-all duration-200 ${
+                    isDragging 
+                      ? 'border-primary bg-primary/10 scale-[1.02]' 
+                      : 'border-border hover:border-primary/50'
+                  }`}
+                  onClick={() => fileInputRef.current?.click()}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                >
+                  {uploading ? (
+                    <>
+                      <Loader2 className="h-8 w-8 text-primary animate-spin mb-2" />
+                      <p className="text-sm text-muted-foreground">Enviando...</p>
+                    </>
+                  ) : isDragging ? (
+                    <>
+                      <Upload className="h-10 w-10 text-primary mb-2 animate-bounce" />
+                      <p className="text-sm font-medium text-primary">Solte a imagem aqui</p>
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="h-8 w-8 text-muted-foreground mb-2" />
+                      <p className="text-sm text-muted-foreground">Arraste uma imagem ou clique aqui</p>
+                      <p className="text-xs text-muted-foreground/60 mt-1">PNG, JPG, WebP até 5MB</p>
+                    </>
+                  )}
                 </div>
               )}
               
-              <p className="text-xs text-muted-foreground">
-                💡 Use imagens do Unsplash, Imgur ou qualquer URL pública
-              </p>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="hidden"
+              />
+              
+              {/* URL input as alternative */}
+              <div className="flex items-center gap-2">
+                <div className="flex-1 h-px bg-border" />
+                <span className="text-xs text-muted-foreground">ou cole uma URL</span>
+                <div className="flex-1 h-px bg-border" />
+              </div>
+              <Input
+                value={formData.image}
+                onChange={(e) => {
+                  setFormData({ ...formData, image: e.target.value });
+                  setImagePreview(e.target.value || null);
+                }}
+                placeholder="https://..."
+              />
             </div>
             
             <div className="space-y-2">
