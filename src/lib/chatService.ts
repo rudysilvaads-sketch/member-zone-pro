@@ -147,16 +147,19 @@ export const sendMessage = async (
   }
 };
 
-// Get unread count for a user in a conversation
+// Get unread count for a user in a conversation (simplified to avoid composite index)
 const getUnreadCount = async (conversationId: string, userId: string): Promise<number> => {
-  const messagesRef = collection(db, 'conversations', conversationId, 'messages');
-  const q = query(
-    messagesRef,
-    where('senderId', '!=', userId),
-    where('read', '==', false)
-  );
-  const snapshot = await getDocs(q);
-  return snapshot.size;
+  try {
+    const messagesRef = collection(db, 'conversations', conversationId, 'messages');
+    // Simple query without composite index requirement
+    const q = query(messagesRef, where('read', '==', false));
+    const snapshot = await getDocs(q);
+    // Filter client-side to exclude own messages
+    return snapshot.docs.filter(doc => doc.data().senderId !== userId).length;
+  } catch (error) {
+    console.error('Error getting unread count:', error);
+    return 0;
+  }
 };
 
 // Subscribe to messages in a conversation
@@ -176,16 +179,16 @@ export const subscribeToMessages = (
   });
 };
 
-// Subscribe to user's conversations
+// Subscribe to user's conversations (simplified - sort client-side to avoid composite index)
 export const subscribeToConversations = (
   userId: string,
   callback: (conversations: Conversation[]) => void
 ) => {
   const conversationsRef = collection(db, 'conversations');
+  // Simple query without orderBy to avoid composite index
   const q = query(
     conversationsRef,
     where('participants', 'array-contains', userId),
-    orderBy('lastMessageAt', 'desc'),
     limit(50)
   );
   
@@ -194,26 +197,34 @@ export const subscribeToConversations = (
       id: doc.id,
       ...doc.data(),
     })) as Conversation[];
+    
+    // Sort client-side by lastMessageAt
+    conversations.sort((a, b) => {
+      const timeA = a.lastMessageAt?.toMillis?.() || 0;
+      const timeB = b.lastMessageAt?.toMillis?.() || 0;
+      return timeB - timeA;
+    });
+    
     callback(conversations);
   });
 };
 
-// Mark messages as read
+// Mark messages as read (simplified to avoid composite index)
 export const markMessagesAsRead = async (
   conversationId: string,
   userId: string
 ) => {
   try {
     const messagesRef = collection(db, 'conversations', conversationId, 'messages');
-    const q = query(
-      messagesRef,
-      where('senderId', '!=', userId),
-      where('read', '==', false)
-    );
+    // Simple query - just get unread messages
+    const q = query(messagesRef, where('read', '==', false));
     
     const snapshot = await getDocs(q);
-    const updates = snapshot.docs.map(doc => 
-      updateDoc(doc.ref, { read: true })
+    // Filter client-side to only update messages from other users
+    const messagesToUpdate = snapshot.docs.filter(doc => doc.data().senderId !== userId);
+    
+    const updates = messagesToUpdate.map(msgDoc => 
+      updateDoc(msgDoc.ref, { read: true })
     );
     await Promise.all(updates);
     
