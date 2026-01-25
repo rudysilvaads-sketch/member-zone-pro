@@ -852,15 +852,27 @@ export const createNotification = async (
   notification: Omit<Notification, 'id' | 'read' | 'createdAt'>
 ): Promise<boolean> => {
   try {
-    // Don't create notification for own actions (skip for product notifications)
-    if (notification.type !== 'new_product' && notification.userId === notification.fromUserId) return false;
+    console.log('createNotification called with:', notification);
+    
+    // Don't create notification for own actions (skip for product and message notifications)
+    if (notification.type !== 'new_product' && notification.type !== 'message' && notification.userId === notification.fromUserId) {
+      console.log('Skipping self-notification');
+      return false;
+    }
+    
+    // For messages, still skip if sending to yourself
+    if (notification.type === 'message' && notification.userId === notification.fromUserId) {
+      console.log('Skipping self-message notification');
+      return false;
+    }
     
     const notificationsRef = collection(db, 'notifications');
-    await addDoc(notificationsRef, {
+    const docRef = await addDoc(notificationsRef, {
       ...notification,
       read: false,
       createdAt: serverTimestamp(),
     });
+    console.log('Notification created with ID:', docRef.id);
     return true;
   } catch (error) {
     console.error('Error creating notification:', error);
