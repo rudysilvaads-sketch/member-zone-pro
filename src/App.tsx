@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { GlobalChatWidget } from "@/components/GlobalChatWidget";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import AdminSetup from "./pages/AdminSetup";
@@ -32,6 +33,7 @@ const App = () => {
             <TooltipProvider>
               <Toaster />
               <Sonner />
+              <GlobalChatWidget />
               <Routes>
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/terms" element={<Terms />} />
