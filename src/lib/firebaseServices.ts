@@ -491,6 +491,8 @@ export const initializeDefaultData = async () => {
 
 // ============ COMMUNITY POSTS ============
 
+export type PostStatus = 'pending' | 'approved' | 'rejected';
+
 export interface Post {
   id: string;
   authorId: string;
@@ -505,6 +507,10 @@ export interface Post {
   commentsCount: number;
   createdAt: Timestamp;
   updatedAt?: Timestamp;
+  status: PostStatus; // Moderation status
+  moderatedBy?: string; // User ID of moderator
+  moderatedAt?: Timestamp;
+  rejectionReason?: string;
 }
 
 export interface Comment {
@@ -633,6 +639,7 @@ export const createPost = async (
       likes: [],
       commentsCount: 0,
       createdAt: serverTimestamp(),
+      status: 'pending', // All posts start as pending
     };
     
     if (imageUrl) {
@@ -648,11 +655,16 @@ export const createPost = async (
   }
 };
 
-// Get posts with pagination
+// Get approved posts only (for public feed)
 export const getPosts = async (limitCount: number = 20): Promise<Post[]> => {
   try {
     const postsRef = collection(db, 'posts');
-    const q = query(postsRef, orderBy('createdAt', 'desc'), limit(limitCount));
+    const q = query(
+      postsRef, 
+      where('status', '==', 'approved'),
+      orderBy('createdAt', 'desc'), 
+      limit(limitCount)
+    );
     const snapshot = await getDocs(q);
     
     return snapshot.docs.map(doc => ({
@@ -662,6 +674,83 @@ export const getPosts = async (limitCount: number = 20): Promise<Post[]> => {
   } catch (error) {
     console.error('Error fetching posts:', error);
     return [];
+  }
+};
+
+// Get user's own posts (regardless of status)
+export const getUserPosts = async (userId: string, limitCount: number = 20): Promise<Post[]> => {
+  try {
+    const postsRef = collection(db, 'posts');
+    const q = query(
+      postsRef, 
+      where('authorId', '==', userId),
+      orderBy('createdAt', 'desc'), 
+      limit(limitCount)
+    );
+    const snapshot = await getDocs(q);
+    
+    return snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+    })) as Post[];
+  } catch (error) {
+    console.error('Error fetching user posts:', error);
+    return [];
+  }
+};
+
+// Get pending posts for moderation
+export const getPendingPosts = async (limitCount: number = 50): Promise<Post[]> => {
+  try {
+    const postsRef = collection(db, 'posts');
+    const q = query(
+      postsRef, 
+      where('status', '==', 'pending'),
+      orderBy('createdAt', 'desc'), 
+      limit(limitCount)
+    );
+    const snapshot = await getDocs(q);
+    
+    return snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+    })) as Post[];
+  } catch (error) {
+    console.error('Error fetching pending posts:', error);
+    return [];
+  }
+};
+
+// Approve a post
+export const approvePost = async (postId: string, moderatorId: string): Promise<boolean> => {
+  try {
+    const postRef = doc(db, 'posts', postId);
+    await updateDoc(postRef, {
+      status: 'approved',
+      moderatedBy: moderatorId,
+      moderatedAt: serverTimestamp(),
+    });
+    return true;
+  } catch (error) {
+    console.error('Error approving post:', error);
+    return false;
+  }
+};
+
+// Reject a post
+export const rejectPost = async (postId: string, moderatorId: string, reason?: string): Promise<boolean> => {
+  try {
+    const postRef = doc(db, 'posts', postId);
+    await updateDoc(postRef, {
+      status: 'rejected',
+      moderatedBy: moderatorId,
+      moderatedAt: serverTimestamp(),
+      rejectionReason: reason || 'Conteúdo não aprovado',
+    });
+    return true;
+  } catch (error) {
+    console.error('Error rejecting post:', error);
+    return false;
   }
 };
 
@@ -834,10 +923,11 @@ export interface Notification {
   fromUserId: string;
   fromUserName: string;
   fromUserAvatar: string | null;
-  type: 'like' | 'comment' | 'new_product' | 'message';
+  type: 'like' | 'comment' | 'new_product' | 'message' | 'system' | 'post_approved' | 'post_rejected';
   postId?: string;
   postContent?: string; // first 50 chars of post or message content
   commentContent?: string; // for comment notifications
+  message?: string; // for system notifications
   // Product notification fields
   productId?: string;
   productName?: string;
@@ -854,8 +944,9 @@ export const createNotification = async (
   try {
     console.log('createNotification called with:', notification);
     
-    // Don't create notification for own actions (skip for product and message notifications)
-    if (notification.type !== 'new_product' && notification.type !== 'message' && notification.userId === notification.fromUserId) {
+    // Don't create notification for own actions (skip for product, message, and system notifications)
+    const skipSelfCheck = ['new_product', 'message', 'system', 'post_approved', 'post_rejected'];
+    if (!skipSelfCheck.includes(notification.type) && notification.userId === notification.fromUserId) {
       console.log('Skipping self-notification');
       return false;
     }

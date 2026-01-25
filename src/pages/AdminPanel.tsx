@@ -13,7 +13,8 @@ import {
   ArrowLeft,
   BarChart3,
   MessageSquare,
-  Key
+  Key,
+  FileCheck
 } from 'lucide-react';
 import { AdminStats } from '@/components/admin/AdminStats';
 import { AdminUsers } from '@/components/admin/AdminUsers';
@@ -21,6 +22,7 @@ import { AdminProducts } from '@/components/admin/AdminProducts';
 import { AdminMissions } from '@/components/admin/AdminMissions';
 import { AdminChats } from '@/components/admin/AdminChats';
 import { AdminAccessRequests } from '@/components/admin/AdminAccessRequests';
+import { AdminPostModeration } from '@/components/admin/AdminPostModeration';
 
 // Fallback admin emails (main check uses Firestore role)
 const ADMIN_EMAILS = ['rudysilvaads@gmail.com'];
@@ -111,10 +113,14 @@ export default function AdminPanel() {
       {/* Content */}
       <main className="container mx-auto px-6 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6 lg:w-auto lg:inline-grid">
+          <TabsList className="grid w-full grid-cols-7 lg:w-auto lg:inline-grid">
             <TabsTrigger value="stats" className="flex items-center gap-2">
               <BarChart3 className="h-4 w-4" />
               <span className="hidden sm:inline">Estatísticas</span>
+            </TabsTrigger>
+            <TabsTrigger value="posts" className="flex items-center gap-2">
+              <FileCheck className="h-4 w-4" />
+              <span className="hidden sm:inline">Posts</span>
             </TabsTrigger>
             <TabsTrigger value="users" className="flex items-center gap-2">
               <Users className="h-4 w-4" />
@@ -140,6 +146,10 @@ export default function AdminPanel() {
 
           <TabsContent value="stats">
             <AdminStats />
+          </TabsContent>
+
+          <TabsContent value="posts">
+            <AdminPostModeration />
           </TabsContent>
 
           <TabsContent value="users">
