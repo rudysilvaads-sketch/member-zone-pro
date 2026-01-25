@@ -189,12 +189,13 @@ const Products = () => {
     const trackStoreVisit = async () => {
       if (userProfile?.uid) {
         try {
-          const completed = await completeMission(userProfile.uid, 'visit-store', 1);
-          if (completed) {
+          const result = await completeMission(userProfile.uid, 'visit-store', 1);
+          if (result.completed && result.rewards) {
             toast.success(
               <div className="flex flex-col">
                 <span className="font-bold">🎯 Missão Completada!</span>
-                <span className="text-sm text-muted-foreground">Explorador: Visite a Vitrine</span>
+                <span className="text-sm text-muted-foreground">{result.rewards.title}</span>
+                <span className="text-xs text-primary">+{result.rewards.xp} XP | +{result.rewards.points} pts</span>
               </div>
             );
           }
