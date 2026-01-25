@@ -19,6 +19,7 @@ import {
 import { OnlineIndicator } from "./OnlineIndicator";
 import { usePresence } from "@/hooks/usePresence";
 import { useAudioRecorder, formatRecordingTime } from "@/hooks/useAudioRecorder";
+import { AudioMessagePlayer } from "./AudioMessagePlayer";
 
 interface ChatModalProps {
   open: boolean;
@@ -356,11 +357,9 @@ export const ChatModal = ({ open, onOpenChange, targetUser }: ChatModalProps) =>
                       )}
                     >
                       {message.audioUrl ? (
-                        <audio 
-                          controls 
+                        <AudioMessagePlayer 
                           src={message.audioUrl} 
-                          className="max-w-full h-10"
-                          preload="metadata"
+                          isOwn={isOwn}
                         />
                       ) : (
                         <p className="text-sm break-words">{message.content}</p>
