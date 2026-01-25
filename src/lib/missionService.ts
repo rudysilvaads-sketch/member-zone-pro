@@ -19,6 +19,14 @@ export const MISSION_REWARDS: Record<string, { xp: number; points: number; title
   'visit-store': { xp: 25, points: 15, title: 'Explorador' },
 };
 
+// Bonus for completing all daily missions
+export const ALL_MISSIONS_BONUS = {
+  xp: 100,
+  points: 50,
+  title: 'Dedicação Total',
+  description: 'Completou todas as missões do dia!',
+};
+
 export interface UserDailyMission {
   missionId: string;
   progress: number;
@@ -33,6 +41,7 @@ export interface UserMissionsDoc {
   missions: Record<string, UserDailyMission>;
   updatedAt: Timestamp;
   xpVerified?: boolean; // Flag to prevent duplicate reward grants
+  allMissionsBonusClaimed?: boolean; // Flag to track if bonus was claimed
 }
 
 // Get today's date string in YYYY-MM-DD format
@@ -252,7 +261,11 @@ export const completeMission = async (
   userId: string,
   missionId: string,
   requirement: number = 1
-): Promise<{ completed: boolean; rewards?: { xp: number; points: number; title: string } }> => {
+): Promise<{ 
+  completed: boolean; 
+  rewards?: { xp: number; points: number; title: string };
+  bonusAwarded?: { awarded: boolean; bonus?: typeof ALL_MISSIONS_BONUS } | null;
+}> => {
   try {
     const today = getTodayDateString();
     const missionDocRef = doc(db, 'users', userId, 'dailyMissions', today);
@@ -320,7 +333,10 @@ export const completeMission = async (
           console.log('Mission reward applied successfully');
         }
         
-        return { completed: true, rewards };
+        // Check if all missions are now completed and award bonus
+        const bonusResult = await checkAndAwardAllMissionsBonus(userId);
+        
+        return { completed: true, rewards, bonusAwarded: bonusResult };
       }
     }
     
@@ -328,5 +344,75 @@ export const completeMission = async (
   } catch (error) {
     console.error('Error completing mission:', error);
     return { completed: false };
+  }
+};
+
+// Check if all missions are completed and award bonus
+export const checkAndAwardAllMissionsBonus = async (
+  userId: string
+): Promise<{ awarded: boolean; bonus?: typeof ALL_MISSIONS_BONUS } | null> => {
+  try {
+    const today = getTodayDateString();
+    const missionDocRef = doc(db, 'users', userId, 'dailyMissions', today);
+    const missionDoc = await getDoc(missionDocRef);
+    
+    if (!missionDoc.exists()) return null;
+    
+    const data = missionDoc.data() as UserMissionsDoc;
+    
+    // Check if bonus already claimed
+    if (data.allMissionsBonusClaimed) {
+      return { awarded: false };
+    }
+    
+    // Check if all missions are completed
+    const missionIds = Object.keys(MISSION_REWARDS);
+    const allCompleted = missionIds.every(id => data.missions[id]?.completed);
+    
+    if (!allCompleted) {
+      return { awarded: false };
+    }
+    
+    // Award bonus
+    const userDocRef = doc(db, 'users', userId);
+    const userDoc = await getDoc(userDocRef);
+    
+    if (!userDoc.exists()) {
+      return { awarded: false };
+    }
+    
+    const userData = userDoc.data();
+    const currentXp = userData.xp || 0;
+    const currentPoints = userData.points || 0;
+    const newXp = currentXp + ALL_MISSIONS_BONUS.xp;
+    const newPoints = currentPoints + ALL_MISSIONS_BONUS.points;
+    const newLevel = calculateLevel(newXp);
+    
+    console.log('Awarding all missions bonus:', {
+      userId,
+      currentXp,
+      newXp,
+      currentPoints,
+      newPoints,
+      bonus: ALL_MISSIONS_BONUS
+    });
+    
+    await updateDoc(userDocRef, {
+      xp: newXp,
+      points: newPoints,
+      level: newLevel,
+    });
+    
+    // Mark bonus as claimed
+    await updateDoc(missionDocRef, {
+      allMissionsBonusClaimed: true,
+    });
+    
+    console.log('All missions bonus applied successfully');
+    
+    return { awarded: true, bonus: ALL_MISSIONS_BONUS };
+  } catch (error) {
+    console.error('Error checking/awarding all missions bonus:', error);
+    return null;
   }
 };

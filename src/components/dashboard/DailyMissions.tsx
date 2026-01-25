@@ -13,7 +13,8 @@ import {
   Gift,
   Loader2,
   ShoppingBag,
-  Users
+  Trophy,
+  Sparkles
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -21,7 +22,9 @@ import {
   getUserDailyMissions, 
   initializeUserDailyMissions, 
   verifyAndFixLoginReward,
-  MISSION_REWARDS
+  checkAndAwardAllMissionsBonus,
+  MISSION_REWARDS,
+  ALL_MISSIONS_BONUS
 } from '@/lib/missionService';
 
 interface DailyMission {
@@ -82,6 +85,7 @@ export function DailyMissions() {
   const [missions, setMissions] = useState<DailyMission[]>([]);
   const [timeUntilReset, setTimeUntilReset] = useState<string>('');
   const [loading, setLoading] = useState(true);
+  const [bonusClaimed, setBonusClaimed] = useState(false);
 
   // Load missions from Firebase
   const loadMissions = useCallback(async () => {
@@ -132,6 +136,23 @@ export function DailyMissions() {
       });
       
       setMissions(mergedMissions);
+      setBonusClaimed(userMissions?.allMissionsBonusClaimed ?? false);
+      
+      // Check if all missions are completed and bonus wasn't claimed yet
+      const allCompleted = mergedMissions.every(m => m.completed);
+      if (allCompleted && !userMissions?.allMissionsBonusClaimed) {
+        const bonusResult = await checkAndAwardAllMissionsBonus(user.uid);
+        if (bonusResult?.awarded) {
+          setBonusClaimed(true);
+          toast.success(
+            <div className="flex flex-col">
+              <span className="font-bold">🏆 Bônus Desbloqueado!</span>
+              <span className="text-sm text-muted-foreground">{ALL_MISSIONS_BONUS.title}</span>
+              <span className="text-xs text-primary">+{ALL_MISSIONS_BONUS.xp} XP | +{ALL_MISSIONS_BONUS.points} pts</span>
+            </div>
+          );
+        }
+      }
     } catch (error) {
       console.error('Error loading missions:', error);
       // Fallback to local state if Firebase fails
@@ -172,7 +193,8 @@ export function DailyMissions() {
   }, []);
 
   const completedCount = missions.filter(m => m.completed).length;
-  const totalXp = missions.reduce((sum, m) => sum + (m.claimed ? m.xpReward : 0), 0);
+  const allCompleted = completedCount === missions.length && missions.length > 0;
+  const totalXp = missions.reduce((sum, m) => sum + (m.claimed ? m.xpReward : 0), 0) + (bonusClaimed ? ALL_MISSIONS_BONUS.xp : 0);
 
   if (loading) {
     return (
@@ -291,6 +313,57 @@ export function DailyMissions() {
               </div>
             );
           })}
+        </div>
+
+        {/* All missions bonus */}
+        <div 
+          className={`flex items-center gap-4 p-4 rounded-lg border transition-all duration-300 ${
+            bonusClaimed 
+              ? 'bg-gradient-to-r from-[#BFFF00]/20 to-[#9ACD32]/20 border-[#BFFF00]/50 shadow-[0_0_20px_rgba(191,255,0,0.2)]' 
+              : allCompleted
+              ? 'bg-primary/10 border-primary/30 animate-pulse'
+              : 'bg-secondary/30 border-border/50 opacity-60'
+          }`}
+        >
+          <div className={`flex h-12 w-12 items-center justify-center rounded-lg ${
+            bonusClaimed 
+              ? 'bg-gradient-to-br from-[#BFFF00] to-[#9ACD32] shadow-[0_0_15px_rgba(191,255,0,0.4)]' 
+              : allCompleted
+              ? 'bg-gradient-gold shadow-glow-gold'
+              : 'bg-secondary'
+          }`}>
+            {bonusClaimed ? (
+              <Trophy className="h-6 w-6 text-[#0a0a0a]" />
+            ) : (
+              <Sparkles className={`h-6 w-6 ${allCompleted ? 'text-[#0a0a0a]' : 'text-muted-foreground'}`} />
+            )}
+          </div>
+          
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <p className={`font-medium ${bonusClaimed ? 'text-[#BFFF00]' : ''}`}>
+                {ALL_MISSIONS_BONUS.title}
+              </p>
+              {bonusClaimed && (
+                <Badge variant="outline" className="text-[10px] text-[#BFFF00] border-[#BFFF00]/30">
+                  <Trophy className="h-3 w-3 mr-1" />
+                  Conquistado!
+                </Badge>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {bonusClaimed 
+                ? 'Você completou todas as missões!' 
+                : `Complete todas as ${missions.length} missões para ganhar`}
+            </p>
+          </div>
+          
+          <div className="text-right">
+            <p className={`text-sm font-bold ${bonusClaimed ? 'text-[#BFFF00]' : 'text-primary'}`}>
+              +{ALL_MISSIONS_BONUS.xp} XP
+            </p>
+            <p className="text-xs text-muted-foreground">+{ALL_MISSIONS_BONUS.points} pts</p>
+          </div>
         </div>
       </CardContent>
     </Card>
