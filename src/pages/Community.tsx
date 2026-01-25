@@ -209,7 +209,9 @@ const Community = () => {
       
       const result = await createPost(userProfile, newPost, imageUrl, imagePath);
       if (result.success) {
-        toast.success('Post publicado!');
+        toast.success('Post enviado para aprovação! Você será notificado quando for aprovado.', {
+          duration: 5000,
+        });
         setNewPost("");
         removeImage();
         await fetchPosts();

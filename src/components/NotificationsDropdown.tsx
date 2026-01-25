@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Bell, Check, CheckCheck, Heart, MessageSquare, Trash2, X, ShoppingBag, Sparkles, Mail } from "lucide-react";
+import { Bell, Check, CheckCheck, Heart, MessageSquare, Trash2, X, ShoppingBag, Sparkles, Mail, CheckCircle, XCircle, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -81,6 +81,8 @@ export function NotificationsDropdown() {
       navigate('/products');
     } else if (notification.type === 'message') {
       // For messages, could open chat modal - for now go to community
+      navigate('/community');
+    } else if (notification.type === 'post_approved' || notification.type === 'post_rejected') {
       navigate('/community');
     } else {
       navigate('/community');
@@ -184,6 +186,20 @@ export function NotificationsDropdown() {
                           <ShoppingBag className="h-5 w-5 text-primary" />
                         )}
                       </div>
+                    ) : notification.type === 'post_approved' || notification.type === 'post_rejected' || notification.type === 'system' ? (
+                      <div className={cn(
+                        "h-10 w-10 rounded-full flex items-center justify-center",
+                        notification.type === 'post_approved' ? "bg-green-500/20" : 
+                        notification.type === 'post_rejected' ? "bg-destructive/20" : "bg-blue-500/20"
+                      )}>
+                        {notification.type === 'post_approved' ? (
+                          <CheckCircle className="h-5 w-5 text-green-500" />
+                        ) : notification.type === 'post_rejected' ? (
+                          <XCircle className="h-5 w-5 text-destructive" />
+                        ) : (
+                          <AlertCircle className="h-5 w-5 text-blue-500" />
+                        )}
+                      </div>
                     ) : (
                       <Avatar className="h-10 w-10">
                         <AvatarImage src={notification.fromUserAvatar || undefined} />
@@ -192,28 +208,30 @@ export function NotificationsDropdown() {
                         </AvatarFallback>
                       </Avatar>
                     )}
-                    <div
-                      className={cn(
-                        "absolute -bottom-1 -right-1 h-5 w-5 rounded-full flex items-center justify-center",
-                        notification.type === "like"
-                          ? "bg-destructive"
-                          : notification.type === "new_product"
-                            ? "bg-primary"
-                            : notification.type === "message"
-                              ? "bg-blue-500"
-                              : "bg-accent"
-                      )}
-                    >
-                      {notification.type === "like" ? (
-                        <Heart className="h-3 w-3 text-destructive-foreground fill-current" />
-                      ) : notification.type === "new_product" ? (
-                        <Sparkles className="h-3 w-3 text-primary-foreground" />
-                      ) : notification.type === "message" ? (
-                        <Mail className="h-3 w-3 text-white" />
-                      ) : (
-                        <MessageSquare className="h-3 w-3 text-accent-foreground" />
-                      )}
-                    </div>
+                    {notification.type !== 'post_approved' && notification.type !== 'post_rejected' && notification.type !== 'system' && (
+                      <div
+                        className={cn(
+                          "absolute -bottom-1 -right-1 h-5 w-5 rounded-full flex items-center justify-center",
+                          notification.type === "like"
+                            ? "bg-destructive"
+                            : notification.type === "new_product"
+                              ? "bg-primary"
+                              : notification.type === "message"
+                                ? "bg-blue-500"
+                                : "bg-accent"
+                        )}
+                      >
+                        {notification.type === "like" ? (
+                          <Heart className="h-3 w-3 text-destructive-foreground fill-current" />
+                        ) : notification.type === "new_product" ? (
+                          <Sparkles className="h-3 w-3 text-primary-foreground" />
+                        ) : notification.type === "message" ? (
+                          <Mail className="h-3 w-3 text-white" />
+                        ) : (
+                          <MessageSquare className="h-3 w-3 text-accent-foreground" />
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex-1 min-w-0">
@@ -228,6 +246,12 @@ export function NotificationsDropdown() {
                           <span className="font-semibold">{notification.fromUserName}</span>{" "}
                           te enviou uma mensagem
                         </>
+                      ) : notification.type === 'post_approved' ? (
+                        <span className="text-green-500">{notification.message}</span>
+                      ) : notification.type === 'post_rejected' ? (
+                        <span className="text-destructive">{notification.message}</span>
+                      ) : notification.type === 'system' ? (
+                        <span>{notification.message}</span>
                       ) : (
                         <>
                           <span className="font-semibold">{notification.fromUserName}</span>{" "}
@@ -242,7 +266,7 @@ export function NotificationsDropdown() {
                         🎁 {notification.productPrice.toLocaleString()} pontos
                       </p>
                     )}
-                    {notification.postContent && notification.type !== 'new_product' && (
+                    {notification.postContent && !['new_product', 'post_approved', 'post_rejected', 'system'].includes(notification.type) && (
                       <p className="text-xs text-muted-foreground truncate mt-0.5">
                         "{notification.postContent}"
                       </p>
