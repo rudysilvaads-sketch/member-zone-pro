@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Header } from "@/components/layout/Header";
@@ -11,7 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Settings as SettingsIcon, User, Bell, Shield, Palette, Save, Mail, Key, Trash2, LogOut, Sun, Moon, Monitor, Sparkles } from "lucide-react";
+import { Settings as SettingsIcon, User, Bell, Shield, Palette, Save, Mail, Key, Trash2, LogOut, Sun, Moon, Monitor, Sparkles, BellRing, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -19,6 +19,7 @@ import { useNavigate } from "react-router-dom";
 import { doc, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { AvatarSelector } from "@/components/settings/AvatarSelector";
+import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 
 const rankConfig: Record<string, { color: string; bg: string; label: string }> = {
   bronze: { color: "text-orange-400", bg: "bg-orange-500/20", label: "Bronze" },
@@ -36,13 +37,6 @@ const Settings = () => {
   
   // Form states
   const [displayName, setDisplayName] = useState(userProfile?.displayName || "");
-  const [notifications, setNotifications] = useState({
-    email: true,
-    push: true,
-    missions: true,
-    achievements: true,
-    ranking: false,
-  });
 
   const handleSaveProfile = async () => {
     if (!user) return;
@@ -205,80 +199,7 @@ const Settings = () => {
 
             {/* Notifications Tab */}
             <TabsContent value="notifications">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Preferências de Notificação</CardTitle>
-                  <CardDescription>
-                    Escolha como você quer ser notificado
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>Notificações por Email</Label>
-                      <p className="text-sm text-muted-foreground">
-                        Receba atualizações importantes por email
-                      </p>
-                    </div>
-                    <Switch 
-                      checked={notifications.email}
-                      onCheckedChange={(checked) => setNotifications(prev => ({ ...prev, email: checked }))}
-                    />
-                  </div>
-                  <Separator />
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>Notificações Push</Label>
-                      <p className="text-sm text-muted-foreground">
-                        Receba alertas no navegador
-                      </p>
-                    </div>
-                    <Switch 
-                      checked={notifications.push}
-                      onCheckedChange={(checked) => setNotifications(prev => ({ ...prev, push: checked }))}
-                    />
-                  </div>
-                  <Separator />
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>Missões Diárias</Label>
-                      <p className="text-sm text-muted-foreground">
-                        Lembrete de missões pendentes
-                      </p>
-                    </div>
-                    <Switch 
-                      checked={notifications.missions}
-                      onCheckedChange={(checked) => setNotifications(prev => ({ ...prev, missions: checked }))}
-                    />
-                  </div>
-                  <Separator />
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>Conquistas</Label>
-                      <p className="text-sm text-muted-foreground">
-                        Aviso ao desbloquear conquistas
-                      </p>
-                    </div>
-                    <Switch 
-                      checked={notifications.achievements}
-                      onCheckedChange={(checked) => setNotifications(prev => ({ ...prev, achievements: checked }))}
-                    />
-                  </div>
-                  <Separator />
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>Atualizações de Ranking</Label>
-                      <p className="text-sm text-muted-foreground">
-                        Notificar mudanças na sua posição
-                      </p>
-                    </div>
-                    <Switch 
-                      checked={notifications.ranking}
-                      onCheckedChange={(checked) => setNotifications(prev => ({ ...prev, ranking: checked }))}
-                    />
-                  </div>
-                </CardContent>
-              </Card>
+              <NotificationSettings />
             </TabsContent>
 
             {/* Security Tab */}
@@ -340,6 +261,110 @@ const Settings = () => {
   );
 };
 
+const NotificationSettings = () => {
+  const { 
+    requestNotificationPermission, 
+    notificationPermission,
+    isNotificationsSupported 
+  } = useUnreadMessages();
+  const [permissionState, setPermissionState] = useState(notificationPermission);
+  const [requesting, setRequesting] = useState(false);
+
+  const handleEnableNotifications = async () => {
+    setRequesting(true);
+    try {
+      const result = await requestNotificationPermission();
+      setPermissionState(result);
+      if (result === 'granted') {
+        toast.success('Notificações ativadas com sucesso!');
+      } else if (result === 'denied') {
+        toast.error('Permissão de notificações negada. Verifique as configurações do navegador.');
+      }
+    } catch (error) {
+      toast.error('Erro ao solicitar permissão');
+    } finally {
+      setRequesting(false);
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Preferências de Notificação</CardTitle>
+        <CardDescription>
+          Escolha como você quer ser notificado
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        {/* Browser Push Notifications */}
+        <div className="flex items-center justify-between p-4 rounded-lg border bg-muted/30">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-full bg-primary/10">
+              <BellRing className="h-5 w-5 text-primary" />
+            </div>
+            <div className="space-y-0.5">
+              <Label className="text-base font-medium">Notificações do Navegador</Label>
+              <p className="text-sm text-muted-foreground">
+                Receba alertas mesmo quando não estiver na página
+              </p>
+            </div>
+          </div>
+          {!isNotificationsSupported ? (
+            <Badge variant="secondary">Não suportado</Badge>
+          ) : permissionState === 'granted' ? (
+            <Badge className="bg-primary/20 text-primary hover:bg-primary/20">
+              <Check className="h-3 w-3 mr-1" />
+              Ativado
+            </Badge>
+          ) : permissionState === 'denied' ? (
+            <Badge variant="destructive">Bloqueado</Badge>
+          ) : (
+            <Button 
+              onClick={handleEnableNotifications} 
+              disabled={requesting}
+              size="sm"
+            >
+              {requesting ? 'Solicitando...' : 'Ativar'}
+            </Button>
+          )}
+        </div>
+
+        {permissionState === 'denied' && (
+          <p className="text-sm text-muted-foreground bg-destructive/10 p-3 rounded-lg">
+            As notificações foram bloqueadas. Para reativar, acesse as configurações do seu navegador e permita notificações para este site.
+          </p>
+        )}
+
+        <Separator />
+
+        <div className="space-y-4 opacity-50">
+          <p className="text-xs text-muted-foreground uppercase tracking-wide">Em breve</p>
+          
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label>Notificações por Email</Label>
+              <p className="text-sm text-muted-foreground">
+                Receba atualizações importantes por email
+              </p>
+            </div>
+            <Switch disabled checked={false} />
+          </div>
+          
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label>Missões Diárias</Label>
+              <p className="text-sm text-muted-foreground">
+                Lembrete de missões pendentes
+              </p>
+            </div>
+            <Switch disabled checked={false} />
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
 const AppearanceSettings = () => {
   const { theme, setTheme } = useTheme();
   
@@ -363,8 +388,8 @@ const AppearanceSettings = () => {
               )}
               onClick={() => setTheme('light')}
             >
-              <div className="w-10 h-10 rounded-lg bg-white border-2 flex items-center justify-center">
-                <Sun className="h-5 w-5 text-yellow-500" />
+              <div className="w-10 h-10 rounded-lg bg-background border-2 flex items-center justify-center">
+                <Sun className="h-5 w-5 text-primary" />
               </div>
               <span className="text-xs font-medium">Claro</span>
             </Button>
@@ -376,8 +401,8 @@ const AppearanceSettings = () => {
               )}
               onClick={() => setTheme('dark')}
             >
-              <div className="w-10 h-10 rounded-lg bg-slate-900 border-2 border-slate-700 flex items-center justify-center">
-                <Moon className="h-5 w-5 text-slate-300" />
+              <div className="w-10 h-10 rounded-lg bg-foreground/10 border-2 border-border flex items-center justify-center">
+                <Moon className="h-5 w-5 text-muted-foreground" />
               </div>
               <span className="text-xs font-medium">Escuro</span>
             </Button>
@@ -389,7 +414,7 @@ const AppearanceSettings = () => {
               )}
               onClick={() => setTheme('system')}
             >
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-white to-slate-900 border-2 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-background to-foreground/20 border-2 flex items-center justify-center">
                 <Monitor className="h-5 w-5 text-foreground" />
               </div>
               <span className="text-xs font-medium">Sistema</span>
