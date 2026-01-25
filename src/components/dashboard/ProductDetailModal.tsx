@@ -1,4 +1,6 @@
+import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Crown, Zap, Lock, Loader2, ShoppingBag } from "lucide-react";
@@ -32,11 +34,18 @@ export function ProductDetailModal({
   onPurchase,
   purchasing,
 }: ProductDetailModalProps) {
+  const [confirmOpen, setConfirmOpen] = useState(false);
+
   if (!product) return null;
 
   const hasAccess = canAccessProduct(userRank, product.requiredRank);
   const canAfford = userPoints >= product.price;
   const isAvailable = product.available && hasAccess;
+
+  const handleConfirmPurchase = () => {
+    setConfirmOpen(false);
+    onPurchase(product);
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -116,7 +125,7 @@ export function ProductDetailModal({
               size="lg"
               variant={isAvailable && canAfford ? "gold" : "secondary"}
               disabled={!isAvailable || !canAfford || purchasing}
-              onClick={() => onPurchase(product)}
+              onClick={() => setConfirmOpen(true)}
               className={`px-6 font-bold ${
                 isAvailable && canAfford 
                   ? 'shadow-[0_0_20px_rgba(191,255,0,0.3)]' 
@@ -151,6 +160,34 @@ export function ProductDetailModal({
           )}
         </div>
       </DialogContent>
+
+      {/* Confirmation Dialog */}
+      <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <AlertDialogContent className="bg-[#0a0a0a]/95 border-[#BFFF00]/20 backdrop-blur-xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-white">Confirmar Resgate</AlertDialogTitle>
+            <AlertDialogDescription className="text-white/60">
+              Você está prestes a resgatar <span className="text-[#BFFF00] font-semibold">{product.name}</span> por{" "}
+              <span className="text-[#BFFF00] font-bold">{product.price.toLocaleString()}</span> pontos.
+              <br /><br />
+              Após o resgate, seu saldo será de{" "}
+              <span className="font-semibold">{(userPoints - product.price).toLocaleString()}</span> pontos.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="bg-white/5 border-white/10 text-white hover:bg-white/10 hover:text-white">
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmPurchase}
+              className="bg-[#BFFF00] text-black hover:bg-[#BFFF00]/90 font-bold"
+            >
+              <ShoppingBag className="h-4 w-4 mr-2" />
+              Confirmar Resgate
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }
