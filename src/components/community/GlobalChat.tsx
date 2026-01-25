@@ -138,6 +138,12 @@ export const GlobalChat = ({ onUserClick }: GlobalChatProps) => {
 
   const handleSend = async (audioUrl?: string, imageUrl?: string) => {
     if ((!newMessage.trim() && !audioUrl && !imageUrl) || !userProfile || sending) return;
+    
+    // Check if chat is locked and user is not admin
+    if (chatSettings.isLocked && !isAdmin) {
+      toast.error('O chat está bloqueado por um administrador');
+      return;
+    }
 
     const content = newMessage;
     setNewMessage('');
@@ -153,7 +159,8 @@ export const GlobalChat = ({ onUserClick }: GlobalChatProps) => {
       userProfile.level || 1,
       content,
       audioUrl,
-      imageUrl
+      imageUrl,
+      isAdmin // Pass admin status to allow bypassing lock
     );
 
     if (!result.success) {
