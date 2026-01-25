@@ -430,6 +430,35 @@ export const initializeDefaultData = async () => {
       available: true,
       category: 'courses',
     },
+    
+    // FERRAMENTAS IA & CRIAÇÃO
+    {
+      name: 'Google VO3 Ultra',
+      description: '45.000 créditos para geração de vídeos com IA. Crie conteúdo profissional para seus canais!',
+      price: 5000,
+      image: 'https://images.unsplash.com/photo-1573804633927-bfcbcd909acd?w=400&h=400&fit=crop',
+      available: true,
+      category: 'benefits',
+      featured: true,
+    },
+    {
+      name: 'CapCut Pro 30 Dias',
+      description: 'Acesso completo ao CapCut Pro por 30 dias. Edite vídeos como um profissional!',
+      price: 2500,
+      image: 'https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?w=400&h=400&fit=crop',
+      available: true,
+      category: 'benefits',
+      featured: true,
+    },
+    {
+      name: 'ChatGPT Pro 30 Dias',
+      description: 'Acesso ao ChatGPT Pro por 30 dias. Use IA avançada para criar scripts e roteiros!',
+      price: 3500,
+      image: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=400&h=400&fit=crop',
+      available: true,
+      category: 'benefits',
+      featured: true,
+    },
   ];
   
   for (const product of products) {
