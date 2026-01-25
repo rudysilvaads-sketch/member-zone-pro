@@ -9,6 +9,7 @@ import {
   Timestamp,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { calculateLevel } from '@/lib/firebaseServices';
 
 // Mission rewards configuration
 export const MISSION_REWARDS: Record<string, { xp: number; points: number; title: string }> = {
@@ -95,13 +96,21 @@ export const initializeUserDailyMissions = async (
   
   await setDoc(missionDocRef, newDoc);
   
-  // Auto-award login reward
+  // Auto-award login reward and update level
   const loginReward = MISSION_REWARDS['daily-login'];
   if (loginReward) {
     const userDocRef = doc(db, 'users', userId);
+    
+    // First get current XP to calculate new level
+    const userDoc = await getDoc(userDocRef);
+    const currentXp = userDoc.exists() ? (userDoc.data().xp || 0) : 0;
+    const newXp = currentXp + loginReward.xp;
+    const newLevel = calculateLevel(newXp);
+    
     await updateDoc(userDocRef, {
       xp: increment(loginReward.xp),
       points: increment(loginReward.points),
+      level: newLevel,
     });
   }
   
@@ -193,14 +202,22 @@ export const completeMission = async (
       updatedAt: serverTimestamp(),
     });
     
-    // If completed, auto-award XP and points
+    // If completed, auto-award XP and points and update level
     if (completed) {
       const rewards = MISSION_REWARDS[missionId];
       if (rewards) {
         const userDocRef = doc(db, 'users', userId);
+        
+        // First get current XP to calculate new level
+        const userDoc = await getDoc(userDocRef);
+        const currentXp = userDoc.exists() ? (userDoc.data().xp || 0) : 0;
+        const newXp = currentXp + rewards.xp;
+        const newLevel = calculateLevel(newXp);
+        
         await updateDoc(userDocRef, {
           xp: increment(rewards.xp),
           points: increment(rewards.points),
+          level: newLevel,
         });
         return { completed: true, rewards };
       }
