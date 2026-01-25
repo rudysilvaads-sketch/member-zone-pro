@@ -9,7 +9,9 @@ import { ProductsShowcase } from "@/components/dashboard/ProductsShowcase";
 import { DailyMissions } from "@/components/dashboard/DailyMissions";
 import { LevelProgress } from "@/components/dashboard/LevelProgress";
 import { StreakCard } from "@/components/dashboard/StreakCard";
+import { LevelUpAnimation } from "@/components/dashboard/LevelUpAnimation";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLevelUpDetection } from "@/hooks/useLevelUpDetection";
 import { UserProfile } from "@/lib/firebaseServices";
 import { collection, query, orderBy, limit, onSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -19,6 +21,11 @@ const Index = () => {
   const [topUsers, setTopUsers] = useState<(UserProfile & { position: number })[]>([]);
   const [userRank, setUserRank] = useState<number | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  
+  // Level up detection
+  const { showLevelUp, previousLevel, newLevel, closeLevelUp } = useLevelUpDetection({
+    currentLevel: userProfile?.level,
+  });
 
   // Real-time listener for ranking updates
   useEffect(() => {
@@ -118,6 +125,15 @@ const Index = () => {
           </div>
         </main>
       </div>
+
+      {/* Level Up Animation */}
+      {showLevelUp && previousLevel !== null && newLevel !== null && (
+        <LevelUpAnimation
+          previousLevel={previousLevel}
+          newLevel={newLevel}
+          onClose={closeLevelUp}
+        />
+      )}
     </div>
   );
 };
