@@ -110,17 +110,33 @@ export default function Auth() {
         <LaCasaLogo size="xl" />
       </div>
       
-      {/* Glass Card with Animated Border */}
-      <div className="relative z-10 w-full max-w-md">
-        {/* Animated gradient border - orange theme */}
+      {/* Glass Card with Animated Glow Border */}
+      <div className="relative z-10 w-full max-w-md group">
+        {/* Outer glow effect */}
         <div 
-          className="absolute -inset-[1px] rounded-2xl"
+          className="absolute -inset-1 rounded-2xl opacity-75 blur-sm"
           style={{
-            background: 'conic-gradient(from var(--border-angle, 0deg), #F5A623 0%, transparent 25%, transparent 75%, #F5A623 100%)',
+            background: 'conic-gradient(from var(--border-angle, 0deg), #F5A623, #FFD700, #F5A623, transparent, #F5A623)',
             animation: 'border-rotate 3s linear infinite',
           }}
         />
-        <div className="relative backdrop-blur-2xl bg-black/40 border border-white/10 rounded-2xl p-8 shadow-[0_8px_32px_rgba(0,0,0,0.5)]">
+        {/* Inner animated border */}
+        <div 
+          className="absolute -inset-[1px] rounded-2xl"
+          style={{
+            background: 'conic-gradient(from var(--border-angle, 0deg), #F5A623 0%, #FFB347 15%, transparent 30%, transparent 70%, #FFB347 85%, #F5A623 100%)',
+            animation: 'border-rotate 3s linear infinite',
+          }}
+        />
+        {/* Pulse glow overlay */}
+        <div 
+          className="absolute -inset-2 rounded-3xl opacity-30 blur-xl"
+          style={{
+            background: 'radial-gradient(ellipse at center, #F5A623 0%, transparent 70%)',
+            animation: 'pulse-glow 2s ease-in-out infinite',
+          }}
+        />
+        <div className="relative backdrop-blur-2xl bg-black/50 border border-[#F5A623]/20 rounded-2xl p-8 shadow-[0_8px_32px_rgba(245,166,35,0.15),0_0_0_1px_rgba(245,166,35,0.1)]">
           {/* Badge */}
           <div className="flex justify-center mb-6">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#F5A623]/10 border border-[#F5A623]/30">
@@ -427,6 +443,17 @@ export default function Auth() {
         @keyframes border-rotate {
           to {
             --border-angle: 360deg;
+          }
+        }
+        
+        @keyframes pulse-glow {
+          0%, 100% {
+            opacity: 0.3;
+            transform: scale(1);
+          }
+          50% {
+            opacity: 0.5;
+            transform: scale(1.02);
           }
         }
       `}</style>
