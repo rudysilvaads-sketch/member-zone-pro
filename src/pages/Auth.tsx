@@ -125,27 +125,27 @@ export default function Auth() {
       
       {/* Glass Card with Animated Border */}
       <div className="relative z-10 w-full max-w-md">
-        {/* Outer glow effect */}
+        {/* Animated border wrapper - gradient as border */}
         <div 
-          className="absolute -inset-1 rounded-2xl opacity-50 blur-md -z-10"
+          className="absolute inset-0 rounded-2xl p-[2px]"
           style={{
-            background: 'conic-gradient(from var(--border-angle, 0deg), #F5A623 0%, transparent 25%, transparent 75%, #F5A623 100%)',
-            animation: 'border-rotate 4s linear infinite',
-          }}
-        />
-        {/* Animated border - only visible as outline */}
-        <div 
-          className="absolute inset-0 rounded-2xl overflow-hidden"
-          style={{
-            background: 'conic-gradient(from var(--border-angle, 0deg), #F5A623 0%, #FFB347 15%, #F5A623 30%, #FFB347 50%, #F5A623 70%, #FFB347 85%, #F5A623 100%)',
+            background: 'conic-gradient(from var(--border-angle, 0deg), #F5A623, #FFB347, #F5A623, #FFB347, #F5A623)',
             animation: 'border-rotate 4s linear infinite',
           }}
         >
-          {/* Inner cutout - covers the gradient except 2px border */}
-          <div className="absolute inset-[2px] rounded-[14px] bg-[#0a0a0a]" />
+          {/* Dark background to create border effect */}
+          <div className="w-full h-full rounded-[14px] bg-[#0a0a0a]" />
         </div>
-        {/* Card content - transparent glassmorphism ON TOP */}
-        <div className="relative backdrop-blur-2xl bg-white/5 rounded-2xl p-8 shadow-[0_8px_32px_rgba(0,0,0,0.3)]">
+        {/* Outer glow - subtle */}
+        <div 
+          className="absolute -inset-1 rounded-2xl opacity-40 blur-lg -z-10"
+          style={{
+            background: 'conic-gradient(from var(--border-angle, 0deg), #F5A623 0%, transparent 30%, transparent 70%, #F5A623 100%)',
+            animation: 'border-rotate 4s linear infinite',
+          }}
+        />
+        {/* Card content - glassmorphism */}
+        <div className="relative backdrop-blur-xl bg-black/50 rounded-2xl p-8 border border-white/5">
           {/* Badge */}
           <div className="flex justify-center mb-6">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#F5A623]/10 border border-[#F5A623]/30">
