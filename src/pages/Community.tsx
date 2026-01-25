@@ -806,11 +806,11 @@ const PostCard = ({ post, currentUserId, onLike, onDelete, onOpenComments, forma
               
               {/* Post Image */}
               {post.imageUrl && (
-                <div className="mt-3">
+                <div className="mt-3 max-w-md">
                   <img 
                     src={post.imageUrl} 
                     alt="Post" 
-                    className="max-h-80 w-full object-cover rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
+                    className="max-h-64 w-auto max-w-full object-contain rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
                     onClick={() => setImageExpanded(true)}
                   />
                 </div>
