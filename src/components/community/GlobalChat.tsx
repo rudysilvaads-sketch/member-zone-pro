@@ -10,7 +10,11 @@ import {
   Send, 
   Loader2, 
   Users,
-  Trash2
+  Trash2,
+  Mic,
+  Square,
+  X,
+  ImagePlus
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -23,6 +27,8 @@ import {
   sendGlobalMessage,
   deleteGlobalMessage 
 } from '@/lib/globalChatService';
+import { useAudioRecorder, formatRecordingTime } from '@/hooks/useAudioRecorder';
+import { AudioMessagePlayer } from '@/components/AudioMessagePlayer';
 
 const rankConfig: Record<string, { color: string; bg: string }> = {
   bronze: { color: "text-orange-400", bg: "bg-orange-500/20" },
@@ -43,8 +49,21 @@ export const GlobalChat = ({ onUserClick }: GlobalChatProps) => {
   const [newMessage, setNewMessage] = useState('');
   const [sending, setSending] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+
+  const { 
+    isRecording, 
+    recordingTime, 
+    startRecording, 
+    stopRecording, 
+    cancelRecording,
+    uploadAudio,
+    uploadImage
+  } = useAudioRecorder();
 
   // Subscribe to global chat
   useEffect(() => {
@@ -63,11 +82,13 @@ export const GlobalChat = ({ onUserClick }: GlobalChatProps) => {
     }
   }, [messages]);
 
-  const handleSend = async () => {
-    if (!newMessage.trim() || !userProfile || sending) return;
+  const handleSend = async (audioUrl?: string, imageUrl?: string) => {
+    if ((!newMessage.trim() && !audioUrl && !imageUrl) || !userProfile || sending) return;
 
     const content = newMessage;
     setNewMessage('');
+    setImagePreview(null);
+    setSelectedImage(null);
     setSending(true);
 
     const result = await sendGlobalMessage(
@@ -76,7 +97,9 @@ export const GlobalChat = ({ onUserClick }: GlobalChatProps) => {
       userProfile.photoURL,
       userProfile.rank || 'bronze',
       userProfile.level || 1,
-      content
+      content,
+      audioUrl,
+      imageUrl
     );
 
     if (!result.success) {
@@ -90,7 +113,89 @@ export const GlobalChat = ({ onUserClick }: GlobalChatProps) => {
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      handleSend();
+      if (imagePreview) {
+        handleSendImage();
+      } else {
+        handleSend();
+      }
+    }
+  };
+
+  const handleStartRecording = async () => {
+    try {
+      await startRecording();
+    } catch (error) {
+      console.error("Error starting recording:", error);
+      toast.error('Erro ao acessar microfone');
+    }
+  };
+
+  const handleStopRecording = async () => {
+    if (!userProfile) return;
+    
+    setSending(true);
+    try {
+      const audioBlob = await stopRecording();
+      if (audioBlob) {
+        const audioUrl = await uploadAudio(audioBlob, 'global-chat');
+        if (audioUrl) {
+          await handleSend(audioUrl, undefined);
+        }
+      }
+    } catch (error) {
+      console.error("Error sending audio:", error);
+      toast.error('Erro ao enviar áudio');
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast.error('Por favor, selecione uma imagem');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('A imagem deve ter no máximo 5MB');
+      return;
+    }
+
+    setSelectedImage(file);
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setImagePreview(e.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleSendImage = async () => {
+    if (!selectedImage || !userProfile) return;
+
+    setSending(true);
+    try {
+      const imageUrl = await uploadImage(selectedImage, 'global-chat');
+      if (imageUrl) {
+        await handleSend(undefined, imageUrl);
+      } else {
+        toast.error('Erro ao enviar imagem');
+      }
+    } catch (error) {
+      console.error("Error sending image:", error);
+      toast.error('Erro ao enviar imagem');
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const cancelImagePreview = () => {
+    setImagePreview(null);
+    setSelectedImage(null);
+    if (imageInputRef.current) {
+      imageInputRef.current.value = '';
     }
   };
 
@@ -224,7 +329,21 @@ export const GlobalChat = ({ onUserClick }: GlobalChatProps) => {
                           ? "bg-accent text-accent-foreground rounded-tr-sm" 
                           : "bg-muted rounded-tl-sm"
                       )}>
-                        {message.content}
+                        {message.imageUrl ? (
+                          <img 
+                            src={message.imageUrl} 
+                            alt="Imagem" 
+                            className="max-w-full max-h-48 rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
+                            onClick={() => window.open(message.imageUrl!, '_blank')}
+                          />
+                        ) : message.audioUrl ? (
+                          <AudioMessagePlayer 
+                            src={message.audioUrl} 
+                            isOwn={isOwn}
+                          />
+                        ) : (
+                          message.content
+                        )}
                       </div>
                     </div>
                   </div>
@@ -234,34 +353,133 @@ export const GlobalChat = ({ onUserClick }: GlobalChatProps) => {
             </div>
           )}
         </ScrollArea>
+
+        {/* Image Preview */}
+        {imagePreview && (
+          <div className="px-4 py-2 border-t border-border/50 bg-muted/30">
+            <div className="relative inline-block">
+              <img 
+                src={imagePreview} 
+                alt="Preview" 
+                className="max-h-24 rounded-md"
+              />
+              <Button
+                size="icon"
+                variant="destructive"
+                className="absolute -top-2 -right-2 h-5 w-5"
+                onClick={cancelImagePreview}
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Hidden image input */}
+        <input
+          ref={imageInputRef}
+          type="file"
+          accept="image/*,image/gif"
+          className="hidden"
+          onChange={handleImageSelect}
+        />
         
         {/* Input */}
         <div className="p-4 border-t border-border/50">
-          <div className="flex gap-2">
-            <Input
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              onKeyDown={handleKeyPress}
-              placeholder="Digite sua mensagem..."
-              maxLength={500}
-              disabled={!userProfile || sending}
-              className="flex-1"
-            />
-            <Button 
-              size="icon"
-              onClick={handleSend}
-              disabled={!newMessage.trim() || !userProfile || sending}
-            >
-              {sending ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
+          {isRecording ? (
+            <div className="flex gap-2">
+              <div className="flex-1 flex items-center gap-2 px-3 bg-destructive/10 rounded-md h-10">
+                <span className="animate-pulse text-destructive">●</span>
+                <span className="text-sm font-medium">{formatRecordingTime(recordingTime)}</span>
+              </div>
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={cancelRecording}
+                disabled={sending}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+              <Button
+                size="icon"
+                className="bg-destructive hover:bg-destructive/90"
+                onClick={handleStopRecording}
+                disabled={sending}
+              >
+                {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Square className="h-4 w-4" />}
+              </Button>
+            </div>
+          ) : imagePreview ? (
+            <div className="flex gap-2">
+              <Input
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                onKeyDown={handleKeyPress}
+                placeholder="Adicionar legenda..."
+                maxLength={500}
+                disabled={!userProfile || sending}
+                className="flex-1"
+              />
+              <Button 
+                size="icon"
+                onClick={handleSendImage}
+                disabled={!userProfile || sending}
+              >
+                {sending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Send className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={() => imageInputRef.current?.click()}
+                disabled={!userProfile || sending}
+              >
+                <ImagePlus className="h-4 w-4" />
+              </Button>
+              <Input
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                onKeyDown={handleKeyPress}
+                placeholder="Digite sua mensagem..."
+                maxLength={500}
+                disabled={!userProfile || sending}
+                className="flex-1"
+              />
+              {newMessage.trim() ? (
+                <Button 
+                  size="icon"
+                  onClick={() => handleSend()}
+                  disabled={!userProfile || sending}
+                >
+                  {sending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Send className="h-4 w-4" />
+                  )}
+                </Button>
               ) : (
-                <Send className="h-4 w-4" />
+                <Button
+                  size="icon"
+                  variant="outline"
+                  onClick={handleStartRecording}
+                  disabled={!userProfile || sending}
+                >
+                  <Mic className="h-4 w-4" />
+                </Button>
               )}
-            </Button>
-          </div>
-          <p className="text-[10px] text-muted-foreground mt-1 text-right">
-            {newMessage.length}/500
-          </p>
+            </div>
+          )}
+          {!isRecording && !imagePreview && (
+            <p className="text-[10px] text-muted-foreground mt-1 text-right">
+              {newMessage.length}/500
+            </p>
+          )}
         </div>
       </CardContent>
     </Card>
