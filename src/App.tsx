@@ -10,6 +10,7 @@ import { GlobalChatWidget } from "@/components/GlobalChatWidget";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
+import ResetPassword from "./pages/ResetPassword";
 import AdminSetup from "./pages/AdminSetup";
 import AdminPanel from "./pages/AdminPanel";
 import Ranking from "./pages/Ranking";
@@ -36,6 +37,7 @@ const App = () => {
               <Sonner />
               <Routes>
                 <Route path="/auth" element={<Auth />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/terms" element={<Terms />} />
                 <Route path="/privacy" element={<Privacy />} />
                 <Route path="/post/:postId" element={<SharedPost />} />
