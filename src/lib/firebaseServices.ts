@@ -655,22 +655,27 @@ export const createPost = async (
   }
 };
 
-// Get approved posts only (for public feed)
+// Get approved posts only (for public feed) - filters client-side to avoid index requirement
 export const getPosts = async (limitCount: number = 20): Promise<Post[]> => {
   try {
     const postsRef = collection(db, 'posts');
+    // Fetch all recent posts and filter client-side
     const q = query(
       postsRef, 
-      where('status', '==', 'approved'),
       orderBy('createdAt', 'desc'), 
-      limit(limitCount)
+      limit(100) // Get more to filter
     );
     const snapshot = await getDocs(q);
     
-    return snapshot.docs.map(doc => ({
+    const allPosts = snapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data(),
     })) as Post[];
+    
+    // Filter for approved posts only (status === 'approved' OR status is undefined for legacy posts)
+    const approvedPosts = allPosts.filter(post => post.status === 'approved' || !post.status);
+    
+    return approvedPosts.slice(0, limitCount);
   } catch (error) {
     console.error('Error fetching posts:', error);
     return [];
@@ -699,22 +704,30 @@ export const getUserPosts = async (userId: string, limitCount: number = 20): Pro
   }
 };
 
-// Get pending posts for moderation
+// Get pending posts for moderation (fetches all and filters client-side to avoid index requirement)
 export const getPendingPosts = async (limitCount: number = 50): Promise<Post[]> => {
   try {
     const postsRef = collection(db, 'posts');
+    // Fetch all recent posts and filter client-side to avoid needing a composite index
     const q = query(
       postsRef, 
-      where('status', '==', 'pending'),
       orderBy('createdAt', 'desc'), 
-      limit(limitCount)
+      limit(200) // Get more to filter
     );
     const snapshot = await getDocs(q);
     
-    return snapshot.docs.map(doc => ({
+    const allPosts = snapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data(),
     })) as Post[];
+    
+    // Filter for pending posts (status === 'pending' or status is undefined for legacy posts)
+    const pendingPosts = allPosts.filter(post => post.status === 'pending');
+    
+    console.log('Total posts fetched:', allPosts.length);
+    console.log('Pending posts found:', pendingPosts.length);
+    
+    return pendingPosts.slice(0, limitCount);
   } catch (error) {
     console.error('Error fetching pending posts:', error);
     return [];
