@@ -110,18 +110,19 @@ export function ProductsShowcase({ userRank, userPoints }: ProductsShowcaseProps
 
   return (
     <Card variant="gradient" className="animate-fade-in" style={{ animationDelay: "400ms" }}>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="flex items-center gap-2">
-          <ShoppingBag className="h-5 w-5 text-primary" />
-          Loja de Recompensas
+      <CardHeader className="flex flex-row items-center justify-between py-4">
+        <CardTitle className="flex items-center gap-2 text-base">
+          <ShoppingBag className="h-4 w-4 text-[#BFFF00]" />
+          <span className="text-white">Loja de</span>
+          <span className="text-[#BFFF00] italic">Recompensas</span>
         </CardTitle>
-        <a href="/products" className="text-sm text-primary hover:underline">
+        <a href="/products" className="text-xs text-[#BFFF00] hover:underline">
           Ver loja
         </a>
       </CardHeader>
-      <CardContent>
-        <div className="grid gap-4 md:grid-cols-3">
-          {products.map((product, index) => {
+      <CardContent className="pt-0">
+        <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+          {products.slice(0, 5).map((product, index) => {
             const hasAccess = canAccessProduct(userRank, product.requiredRank);
             const canAfford = userPoints >= product.price;
             const isAvailable = product.available && hasAccess;
@@ -129,46 +130,46 @@ export function ProductsShowcase({ userRank, userPoints }: ProductsShowcaseProps
             return (
               <div
                 key={product.id}
-                className="group relative overflow-hidden rounded-lg border border-border bg-secondary transition-all duration-300 hover:border-primary/50 hover:shadow-glow-gold animate-scale-in"
-                style={{ animationDelay: `${(index + 8) * 100}ms` }}
+                className="group relative overflow-hidden rounded-xl border border-white/10 bg-white/5 transition-all duration-300 hover:border-[#BFFF00]/30 hover:shadow-[0_0_20px_rgba(191,255,0,0.1)] animate-scale-in"
+                style={{ animationDelay: `${(index + 8) * 50}ms` }}
               >
                 {product.featured && (
-                  <div className="absolute left-2 top-2 z-10">
-                    <Badge variant="gold" className="flex items-center gap-1">
-                      <Sparkles className="h-3 w-3" />
+                  <div className="absolute left-1.5 top-1.5 z-10">
+                    <Badge variant="gold" className="text-[10px] px-1.5 py-0.5 flex items-center gap-0.5">
+                      <Sparkles className="h-2.5 w-2.5" />
                       Destaque
                     </Badge>
                   </div>
                 )}
                 {!hasAccess && (
-                  <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+                  <div className="absolute inset-0 z-10 flex items-center justify-center bg-[#0a0a0a]/80 backdrop-blur-sm">
                     <div className="text-center">
-                      <Lock className="mx-auto h-8 w-8 text-muted-foreground" />
-                      <p className="mt-2 text-sm font-medium">
+                      <Lock className="mx-auto h-5 w-5 text-white/30" />
+                      <p className="mt-1 text-xs font-medium text-white/50">
                         Requer {product.requiredRank}
                       </p>
                     </div>
                   </div>
                 )}
-                <div className="aspect-video overflow-hidden">
+                <div className="aspect-[4/3] overflow-hidden">
                   <img
                     src={product.image}
                     alt={product.name}
-                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
+                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                   />
                 </div>
-                <div className="p-4">
-                  <h3 className="font-semibold">{product.name}</h3>
-                  <p className="mt-1 text-sm text-muted-foreground line-clamp-2">
+                <div className="p-2.5">
+                  <h3 className="font-medium text-sm text-white truncate">{product.name}</h3>
+                  <p className="mt-0.5 text-xs text-white/50 line-clamp-1">
                     {product.description}
                   </p>
-                  <div className="mt-4 flex items-center justify-between">
+                  <div className="mt-2 flex items-center justify-between">
                     <div>
-                      <span className={`text-lg font-bold ${canAfford ? 'text-primary' : 'text-destructive'}`}>
+                      <span className={`text-sm font-bold ${canAfford ? 'text-[#BFFF00]' : 'text-red-400'}`}>
                         {product.price.toLocaleString()}
                       </span>
-                      <span className="ml-1 text-xs text-muted-foreground">
-                        pontos
+                      <span className="ml-0.5 text-[10px] text-white/40">
+                        pts
                       </span>
                     </div>
                     <Button
@@ -176,9 +177,10 @@ export function ProductsShowcase({ userRank, userPoints }: ProductsShowcaseProps
                       variant={isAvailable && canAfford ? "gold" : "secondary"}
                       disabled={!isAvailable || !canAfford || purchasingId === product.id}
                       onClick={() => handlePurchase(product)}
+                      className="h-6 text-[10px] px-2"
                     >
                       {purchasingId === product.id ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <Loader2 className="h-3 w-3 animate-spin" />
                       ) : !hasAccess ? (
                         "Bloqueado"
                       ) : !canAfford ? (
