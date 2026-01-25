@@ -18,6 +18,7 @@ import Settings from "./pages/Settings";
 import Profile from "./pages/Profile";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
+import SharedPost from "./pages/SharedPost";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -35,6 +36,7 @@ const App = () => {
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/terms" element={<Terms />} />
                 <Route path="/privacy" element={<Privacy />} />
+                <Route path="/post/:postId" element={<SharedPost />} />
                 <Route path="/admin/setup" element={<AdminSetup />} />
                 <Route 
                   path="/admin" 

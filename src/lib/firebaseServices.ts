@@ -665,6 +665,26 @@ export const getPosts = async (limitCount: number = 20): Promise<Post[]> => {
   }
 };
 
+// Get a single post by ID
+export const getPostById = async (postId: string): Promise<Post | null> => {
+  try {
+    const postRef = doc(db, 'posts', postId);
+    const postSnap = await getDoc(postRef);
+    
+    if (!postSnap.exists()) {
+      return null;
+    }
+    
+    return {
+      id: postSnap.id,
+      ...postSnap.data(),
+    } as Post;
+  } catch (error) {
+    console.error('Error fetching post:', error);
+    return null;
+  }
+};
+
 // Toggle like on a post
 export const toggleLikePost = async (
   postId: string, 
