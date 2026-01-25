@@ -120,13 +120,13 @@ export function MyRedemptions({ purchases, onRefresh }: MyRedemptionsProps) {
             >
               {/* Product Image */}
               {purchase.productImage && (
-                <div className="relative aspect-[3/2] overflow-hidden bg-black/50">
+                <div className="relative aspect-[3/4] overflow-hidden">
                   <img 
                     src={purchase.productImage} 
                     alt={purchase.productName}
-                    className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
-                  <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-[#0a0a0a] to-transparent" />
+                  <div className="absolute inset-x-0 bottom-0 h-1/4 bg-gradient-to-t from-[#0a0a0a] to-transparent" />
                   
                   {/* Status Badge */}
                   <Badge className={`absolute top-1 right-1 text-[8px] px-1 py-0 ${config.color}`}>
