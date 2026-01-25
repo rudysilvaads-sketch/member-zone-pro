@@ -2,10 +2,12 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { ShoppingBag, Lock, Sparkles, Loader2 } from "lucide-react";
 import { getProducts, purchaseProduct, Product } from "@/lib/firebaseServices";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import Autoplay from "embla-carousel-autoplay";
 
 interface ProductsShowcaseProps {
   userRank: string;
@@ -120,80 +122,99 @@ export function ProductsShowcase({ userRank, userPoints }: ProductsShowcaseProps
           Ver loja
         </a>
       </CardHeader>
-      <CardContent className="pt-0">
-        <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-          {products.slice(0, 5).map((product, index) => {
-            const hasAccess = canAccessProduct(userRank, product.requiredRank);
-            const canAfford = userPoints >= product.price;
-            const isAvailable = product.available && hasAccess;
-            
-            return (
-              <div
-                key={product.id}
-                className="group relative overflow-hidden rounded-xl border border-white/10 bg-white/5 transition-all duration-300 hover:border-[#BFFF00]/30 hover:shadow-[0_0_20px_rgba(191,255,0,0.1)] animate-scale-in"
-                style={{ animationDelay: `${(index + 8) * 50}ms` }}
-              >
-                {product.featured && (
-                  <div className="absolute left-1.5 top-1.5 z-10">
-                    <Badge variant="gold" className="text-[10px] px-1.5 py-0.5 flex items-center gap-0.5">
-                      <Sparkles className="h-2.5 w-2.5" />
-                      Destaque
-                    </Badge>
-                  </div>
-                )}
-                {!hasAccess && (
-                  <div className="absolute inset-0 z-10 flex items-center justify-center bg-[#0a0a0a]/80 backdrop-blur-sm">
-                    <div className="text-center">
-                      <Lock className="mx-auto h-5 w-5 text-white/30" />
-                      <p className="mt-1 text-xs font-medium text-white/50">
-                        Requer {product.requiredRank}
-                      </p>
-                    </div>
-                  </div>
-                )}
-                <div className="aspect-[4/3] overflow-hidden">
-                  <img
-                    src={product.image}
-                    alt={product.name}
-                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                  />
-                </div>
-                <div className="p-2.5">
-                  <h3 className="font-medium text-sm text-white truncate">{product.name}</h3>
-                  <p className="mt-0.5 text-xs text-white/50 line-clamp-1">
-                    {product.description}
-                  </p>
-                  <div className="mt-2 flex items-center justify-between">
-                    <div>
-                      <span className={`text-sm font-bold ${canAfford ? 'text-[#BFFF00]' : 'text-red-400'}`}>
-                        {product.price.toLocaleString()}
-                      </span>
-                      <span className="ml-0.5 text-[10px] text-white/40">
-                        pts
-                      </span>
-                    </div>
-                    <Button
-                      size="sm"
-                      variant={isAvailable && canAfford ? "gold" : "secondary"}
-                      disabled={!isAvailable || !canAfford || purchasingId === product.id}
-                      onClick={() => handlePurchase(product)}
-                      className="h-6 text-[10px] px-2"
+      <CardContent className="pt-0 px-2">
+        <div className="relative px-8">
+          <Carousel
+            opts={{
+              align: "start",
+              loop: true,
+            }}
+            plugins={[
+              Autoplay({
+                delay: 4000,
+                stopOnInteraction: false,
+                stopOnMouseEnter: true,
+              }),
+            ]}
+            className="w-full"
+          >
+            <CarouselContent className="-ml-2">
+              {products.map((product, index) => {
+                const hasAccess = canAccessProduct(userRank, product.requiredRank);
+                const canAfford = userPoints >= product.price;
+                const isAvailable = product.available && hasAccess;
+                
+                return (
+                  <CarouselItem key={product.id} className="pl-2 basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5">
+                    <div
+                      className="group relative overflow-hidden rounded-xl border border-white/10 bg-white/5 transition-all duration-300 hover:border-[#BFFF00]/30 hover:shadow-[0_0_20px_rgba(191,255,0,0.1)]"
                     >
-                      {purchasingId === product.id ? (
-                        <Loader2 className="h-3 w-3 animate-spin" />
-                      ) : !hasAccess ? (
-                        "Bloqueado"
-                      ) : !canAfford ? (
-                        "Sem pontos"
-                      ) : (
-                        "Resgatar"
+                      {product.featured && (
+                        <div className="absolute left-1.5 top-1.5 z-10">
+                          <Badge variant="gold" className="text-[10px] px-1.5 py-0.5 flex items-center gap-0.5">
+                            <Sparkles className="h-2.5 w-2.5" />
+                            Destaque
+                          </Badge>
+                        </div>
                       )}
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+                      {!hasAccess && (
+                        <div className="absolute inset-0 z-10 flex items-center justify-center bg-[#0a0a0a]/80 backdrop-blur-sm">
+                          <div className="text-center">
+                            <Lock className="mx-auto h-5 w-5 text-white/30" />
+                            <p className="mt-1 text-xs font-medium text-white/50">
+                              Requer {product.requiredRank}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                      <div className="aspect-[4/3] overflow-hidden">
+                        <img
+                          src={product.image}
+                          alt={product.name}
+                          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        />
+                      </div>
+                      <div className="p-2.5">
+                        <h3 className="font-medium text-sm text-white truncate">{product.name}</h3>
+                        <p className="mt-0.5 text-xs text-white/50 line-clamp-1">
+                          {product.description}
+                        </p>
+                        <div className="mt-2 flex items-center justify-between">
+                          <div>
+                            <span className={`text-sm font-bold ${canAfford ? 'text-[#BFFF00]' : 'text-red-400'}`}>
+                              {product.price.toLocaleString()}
+                            </span>
+                            <span className="ml-0.5 text-[10px] text-white/40">
+                              pts
+                            </span>
+                          </div>
+                          <Button
+                            size="sm"
+                            variant={isAvailable && canAfford ? "gold" : "secondary"}
+                            disabled={!isAvailable || !canAfford || purchasingId === product.id}
+                            onClick={() => handlePurchase(product)}
+                            className="h-6 text-[10px] px-2"
+                          >
+                            {purchasingId === product.id ? (
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                            ) : !hasAccess ? (
+                              "Bloqueado"
+                            ) : !canAfford ? (
+                              "Sem pontos"
+                            ) : (
+                              "Resgatar"
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </CarouselItem>
+                );
+              })}
+            </CarouselContent>
+            <CarouselPrevious className="left-0 bg-[#0a0a0a]/80 border-white/10 text-white hover:bg-[#BFFF00]/20 hover:text-[#BFFF00] hover:border-[#BFFF00]/30" />
+            <CarouselNext className="right-0 bg-[#0a0a0a]/80 border-white/10 text-white hover:bg-[#BFFF00]/20 hover:text-[#BFFF00] hover:border-[#BFFF00]/30" />
+          </Carousel>
         </div>
       </CardContent>
     </Card>
