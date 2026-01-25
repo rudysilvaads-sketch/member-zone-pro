@@ -177,7 +177,7 @@ export function ProductsShowcase({ userRank, userPoints }: ProductsShowcaseProps
               className="w-full"
             >
               <CarouselContent className="-ml-3">
-                {products.slice(0, 6).map((product, index) => {
+                {products.map((product, index) => {
                   const hasAccess = canAccessProduct(userRank, product.requiredRank);
                   const canAfford = userPoints >= product.price;
                   const isAvailable = product.available && hasAccess;
