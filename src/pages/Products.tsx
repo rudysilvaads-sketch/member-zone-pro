@@ -576,41 +576,20 @@ const FeaturedProductCard = ({ product, canPurchase, isPurchased, onSelect, form
     >
       {/* Hero Banner Container */}
       <div className="relative aspect-[21/7] md:aspect-[4/1] rounded-2xl overflow-hidden bg-[#0a0a0a] border border-white/10 group-hover:border-[#BFFF00]/30 transition-all duration-500 shadow-2xl">
-        {/* Featured Image (custom) or Default Background */}
-        {product.featuredImage ? (
-          <img 
-            src={product.featuredImage} 
-            alt={product.name}
-            className={cn(
-              "absolute inset-0 w-full h-full object-cover transition-all duration-700",
-              "group-hover:scale-105",
-              (isUnavailable || (!canPurchase.allowed && !isPurchased)) && "opacity-50"
-            )}
-          />
-        ) : (
-          <>
-            {/* Premium Background Image */}
-            <img 
-              src={featuredHeroBg} 
-              alt="Background"
-              className="absolute inset-0 w-full h-full object-cover"
-            />
-            {/* Product Image Overlay */}
-            <img 
-              src={product.image} 
-              alt={product.name}
-              className={cn(
-                "absolute right-0 top-0 h-full w-1/2 object-contain object-right transition-all duration-700",
-                "group-hover:scale-105",
-                (isUnavailable || (!canPurchase.allowed && !isPurchased)) && "opacity-50"
-              )}
-            />
-          </>
-        )}
+        {/* Featured Image - Full Cover */}
+        <img 
+          src={product.featuredImage || featuredHeroBg} 
+          alt={product.name}
+          className={cn(
+            "absolute inset-0 w-full h-full object-cover transition-all duration-700",
+            "group-hover:scale-105",
+            (isUnavailable || (!canPurchase.allowed && !isPurchased)) && "opacity-50"
+          )}
+        />
         
         {/* Gradient Overlays */}
-        <div className="absolute inset-0 bg-gradient-to-r from-[#0a0a0a] via-[#0a0a0a]/60 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a]/80 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#0a0a0a]/90 via-[#0a0a0a]/40 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a]/60 via-transparent to-transparent" />
         
         {/* Content - Left Side */}
         <div className="absolute inset-0 p-6 md:p-8 flex flex-col justify-between">
