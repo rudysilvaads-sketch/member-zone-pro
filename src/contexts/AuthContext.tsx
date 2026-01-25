@@ -14,6 +14,7 @@ import { auth, db } from '@/lib/firebase';
 import { calculateLevel } from '@/lib/firebaseServices';
 import { getStreakBonus } from '@/components/dashboard/StreakCard';
 import { getUserByReferralCode, processReferral, getUserReferralCode } from '@/lib/referralService';
+import { checkAndUnlockAchievements } from '@/lib/achievementService';
 
 interface UserProfile {
   uid: string;
@@ -193,6 +194,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           lastActiveDate: today,
           streakDays: newStreak,
         });
+        
+        // Check streak achievements
+        const updatedUserData = {
+          ...userData,
+          streakDays: newStreak,
+          achievements: userData.achievements || [],
+        };
+        
+        // Use setTimeout to avoid blocking auth flow
+        setTimeout(() => {
+          checkAndUnlockAchievements(result.user.uid, updatedUserData as any);
+        }, 1000);
       }
     }
   };
