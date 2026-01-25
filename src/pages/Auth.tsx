@@ -112,24 +112,27 @@ export default function Auth() {
       
       {/* Glass Card with Animated Border */}
       <div className="relative z-10 w-full max-w-md">
-        {/* Animated border - thin line only */}
+        {/* Animated border container */}
         <div 
-          className="absolute -inset-[1px] rounded-2xl"
+          className="absolute inset-0 rounded-2xl p-[2px]"
           style={{
-            background: 'conic-gradient(from var(--border-angle, 0deg), #F5A623 0%, #FFB347 10%, transparent 25%, transparent 75%, #FFB347 90%, #F5A623 100%)',
+            background: 'conic-gradient(from var(--border-angle, 0deg), #F5A623 0%, #FFB347 15%, transparent 30%, transparent 70%, #FFB347 85%, #F5A623 100%)',
+            animation: 'border-rotate 4s linear infinite',
+          }}
+        >
+          {/* Inner mask to create border effect */}
+          <div className="absolute inset-[2px] rounded-[14px] bg-[#0a0a0a]" />
+        </div>
+        {/* Outer glow effect */}
+        <div 
+          className="absolute -inset-1 rounded-2xl opacity-50 blur-md -z-10"
+          style={{
+            background: 'conic-gradient(from var(--border-angle, 0deg), #F5A623 0%, transparent 25%, transparent 75%, #F5A623 100%)',
             animation: 'border-rotate 4s linear infinite',
           }}
         />
-        {/* Subtle outer glow - very subtle */}
-        <div 
-          className="absolute -inset-[2px] rounded-2xl opacity-40 blur-[2px] -z-10"
-          style={{
-            background: 'conic-gradient(from var(--border-angle, 0deg), #F5A623 0%, transparent 20%, transparent 80%, #F5A623 100%)',
-            animation: 'border-rotate 4s linear infinite',
-          }}
-        />
-        {/* Card content - solid dark background */}
-        <div className="relative backdrop-blur-xl bg-[#0a0a0a]/95 rounded-2xl p-8 shadow-2xl">
+        {/* Card content - transparent glassmorphism */}
+        <div className="relative backdrop-blur-2xl bg-black/40 rounded-2xl p-8 shadow-[0_8px_32px_rgba(0,0,0,0.5)] border border-white/5">
           {/* Badge */}
           <div className="flex justify-center mb-6">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#F5A623]/10 border border-[#F5A623]/30">
