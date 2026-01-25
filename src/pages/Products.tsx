@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, Lock, CheckCircle, Coins, Package, Sparkles, Crown, Gem, ShoppingBag, User, Gift, BookOpen, Box, Play, Wrench, Star, ChevronRight, Key } from "lucide-react";
+import { Search, Lock, CheckCircle, Coins, Package, Sparkles, Crown, Gem, ShoppingBag, User, Gift, BookOpen, Box, Play, Wrench, Star, ChevronRight, Key, Flame } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getProducts, purchaseProduct, getUserPurchases, Product, Purchase, ProductCategory } from "@/lib/firebaseServices";
 import { useAuth } from "@/contexts/AuthContext";
@@ -72,6 +72,7 @@ const Products = () => {
       available: true,
       category: 'items',
       featured: true,
+      stock: 15,
     },
     {
       id: 'sample-2',
@@ -81,6 +82,7 @@ const Products = () => {
       image: 'https://images.unsplash.com/photo-1611532736597-de2d4265fba3?w=600&h=400&fit=crop',
       available: true,
       category: 'items',
+      stock: 5,
     },
     {
       id: 'sample-3',
@@ -101,6 +103,7 @@ const Products = () => {
       available: true,
       category: 'items',
       featured: true,
+      stock: 3,
     },
     {
       id: 'sample-5',
@@ -622,6 +625,12 @@ const FeaturedProductCard = ({ product, canPurchase, isPurchased, onSelect, form
               <Star className="h-3 w-3 mr-1 fill-current" />
               EM DESTAQUE
             </Badge>
+            {product.stock !== undefined && product.stock > 0 && product.stock <= 10 && !isPurchased && (
+              <Badge className="bg-red-500 text-white text-[10px] md:text-xs px-2.5 py-1 h-6 md:h-7 font-bold rounded-md shadow-lg animate-pulse">
+                <Flame className="h-3 w-3 mr-1" />
+                {product.stock} RESTANTES
+              </Badge>
+            )}
             {isPurchased && (
               <Badge className="bg-[#BFFF00]/90 text-black text-[10px] md:text-xs px-2.5 py-1 h-6 md:h-7 font-bold rounded-md">
                 <CheckCircle className="h-3 w-3 mr-1" />
@@ -740,14 +749,15 @@ const ProductCard = ({ product, canPurchase, isPurchased, onSelect, formatName, 
         <div className="absolute top-3 left-3 right-3 flex items-start justify-between gap-2">
           {/* Left Side Badges */}
           <div className="flex flex-wrap gap-1.5">
+            {product.stock !== undefined && product.stock > 0 && product.stock <= 10 && !isPurchased && (
+              <Badge className="bg-destructive text-destructive-foreground text-[10px] px-2 py-0.5 h-5 font-semibold shadow-lg animate-pulse">
+                <Flame className="h-2.5 w-2.5 mr-1" />
+                {product.stock} restantes
+              </Badge>
+            )}
             {product.requiredRank && (
               <Badge className="bg-accent text-accent-foreground text-[10px] px-2 py-0.5 h-5 font-semibold shadow-lg">
                 VIP
-              </Badge>
-            )}
-            {!isPurchased && canPurchase.allowed && !isUnavailable && (
-              <Badge className="bg-primary text-primary-foreground text-[10px] px-2 py-0.5 h-5 font-semibold shadow-lg">
-                NOVO
               </Badge>
             )}
           </div>
