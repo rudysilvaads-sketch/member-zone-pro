@@ -177,13 +177,13 @@ export function ProductsShowcase({ userRank, userPoints }: ProductsShowcaseProps
               className="w-full"
             >
               <CarouselContent className="-ml-3">
-                {products.slice(0, 5).map((product, index) => {
+                {products.slice(0, 6).map((product, index) => {
                   const hasAccess = canAccessProduct(userRank, product.requiredRank);
                   const canAfford = userPoints >= product.price;
                   const isAvailable = product.available && hasAccess;
                   
                   return (
-                    <CarouselItem key={product.id} className="pl-3 basis-[85%] sm:basis-[45%] lg:basis-[16%]">
+                    <CarouselItem key={product.id} className="pl-3 basis-[85%] sm:basis-[45%] md:basis-[30%] lg:basis-[22%] xl:basis-[18%]">
                       <div className="group relative">
                         {/* Card glow on hover */}
                         <div className="absolute -inset-0.5 bg-gradient-to-r from-[#BFFF00]/0 via-[#BFFF00]/20 to-[#BFFF00]/0 rounded-2xl opacity-0 group-hover:opacity-100 blur-sm transition-opacity duration-500" />
