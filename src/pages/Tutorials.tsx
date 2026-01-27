@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Header } from "@/components/layout/Header";
 import { Card, CardContent } from "@/components/ui/card";
@@ -19,11 +19,12 @@ import {
   Trash2, Edit2, Loader2, BookOpen, Video, Clock, X,
   ExternalLink, CheckCircle2, Trophy, Target, Timer,
   Settings, ArrowUp, ArrowDown, Eye, EyeOff, BarChart3,
-  Users, Copy, RefreshCw, Download, FileDown, Image
+  Users, Copy, RefreshCw, Download, FileDown, Image, Upload
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import {
   TutorialTopic,
   TutorialLesson,
@@ -82,6 +83,80 @@ const Tutorials = () => {
   const [newDownloadFile, setNewDownloadFile] = useState({ name: '', url: '', size: '' });
   const [saving, setSaving] = useState(false);
   const [reordering, setReordering] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Helper function to format file size
+  const formatFileSize = (bytes: number): string => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  // Upload file to Supabase Storage
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    
+    // Validate file size (max 50MB)
+    const maxSize = 50 * 1024 * 1024;
+    if (file.size > maxSize) {
+      toast.error('Arquivo muito grande. Máximo: 50MB');
+      return;
+    }
+    
+    setUploading(true);
+    try {
+      // Generate unique filename
+      const timestamp = Date.now();
+      const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+      const filePath = `downloads/${timestamp}_${sanitizedName}`;
+      
+      // Upload to Supabase Storage
+      const { data, error } = await supabase.storage
+        .from('tutorial-files')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+      
+      if (error) {
+        console.error('Upload error:', error);
+        toast.error('Erro ao fazer upload: ' + error.message);
+        return;
+      }
+      
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('tutorial-files')
+        .getPublicUrl(filePath);
+      
+      // Add to download files list
+      const newFile: DownloadFile = {
+        name: file.name,
+        url: publicUrl,
+        size: formatFileSize(file.size),
+      };
+      
+      setLessonForm({
+        ...lessonForm,
+        downloadFiles: [...lessonForm.downloadFiles, newFile]
+      });
+      
+      toast.success('Arquivo enviado com sucesso!');
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast.error('Erro ao fazer upload do arquivo');
+    } finally {
+      setUploading(false);
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
   
   // Check admin access
   const isAdmin = user && (
@@ -1141,7 +1216,47 @@ const Tutorials = () => {
                   </div>
                 )}
                 
-                {/* Add new file */}
+                {/* Upload file directly */}
+                <div className="space-y-3">
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileUpload}
+                    className="hidden"
+                    accept="*/*"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full border-dashed border-[#F5A623]/30 hover:border-[#F5A623]/50 hover:bg-[#F5A623]/5"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading}
+                  >
+                    {uploading ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Enviando...
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="h-4 w-4 mr-2" />
+                        Fazer Upload de Arquivo
+                      </>
+                    )}
+                  </Button>
+                  <p className="text-xs text-white/40 text-center">Máximo: 50MB por arquivo</p>
+                </div>
+                
+                {/* Or add external URL */}
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t border-white/10" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-[#1a1a1a] px-2 text-white/40">ou adicionar URL externa</span>
+                  </div>
+                </div>
+                
                 <div className="space-y-2 p-3 bg-white/5 rounded-md">
                   <Input
                     value={newDownloadFile.name}
