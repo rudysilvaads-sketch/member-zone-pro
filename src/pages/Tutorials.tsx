@@ -17,7 +17,9 @@ import {
 import { 
   GraduationCap, Play, ChevronDown, ChevronRight, Plus, 
   Trash2, Edit2, Loader2, BookOpen, Video, Clock, X,
-  ExternalLink, CheckCircle2, Trophy, Target, Timer
+  ExternalLink, CheckCircle2, Trophy, Target, Timer,
+  Settings, ArrowUp, ArrowDown, Eye, EyeOff, BarChart3,
+  Users, Copy, RefreshCw
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
@@ -61,6 +63,7 @@ const Tutorials = () => {
   // Admin dialogs
   const [showTopicDialog, setShowTopicDialog] = useState(false);
   const [showLessonDialog, setShowLessonDialog] = useState(false);
+  const [showAdminPanel, setShowAdminPanel] = useState(false);
   const [editingTopic, setEditingTopic] = useState<TutorialTopic | null>(null);
   const [editingLesson, setEditingLesson] = useState<TutorialLesson | null>(null);
   const [selectedTopicId, setSelectedTopicId] = useState<string | null>(null);
@@ -69,6 +72,7 @@ const Tutorials = () => {
   const [topicForm, setTopicForm] = useState({ title: '', description: '', thumbnailUrl: '' });
   const [lessonForm, setLessonForm] = useState({ title: '', description: '', youtubeUrl: '', duration: '' });
   const [saving, setSaving] = useState(false);
+  const [reordering, setReordering] = useState(false);
   
   // Check admin access
   const isAdmin = user && (
@@ -362,6 +366,73 @@ const Tutorials = () => {
     }
   };
 
+  // Admin: Move topic up/down
+  const handleMoveTopicUp = async (topic: TutorialTopic, index: number) => {
+    if (index === 0) return;
+    setReordering(true);
+    
+    const prevTopic = topics[index - 1];
+    
+    await Promise.all([
+      updateTopic(topic.id, { order: topic.order - 1 }),
+      updateTopic(prevTopic.id, { order: prevTopic.order + 1 }),
+    ]);
+    
+    setReordering(false);
+    toast.success('Ordem atualizada');
+  };
+
+  const handleMoveTopicDown = async (topic: TutorialTopic, index: number) => {
+    if (index >= topics.length - 1) return;
+    setReordering(true);
+    
+    const nextTopic = topics[index + 1];
+    
+    await Promise.all([
+      updateTopic(topic.id, { order: topic.order + 1 }),
+      updateTopic(nextTopic.id, { order: nextTopic.order - 1 }),
+    ]);
+    
+    setReordering(false);
+    toast.success('Ordem atualizada');
+  };
+
+  // Admin: Duplicate topic
+  const handleDuplicateTopic = async (topic: TutorialTopic) => {
+    if (!user) return;
+    
+    setSaving(true);
+    const result = await createTopic(
+      `${topic.title} (Cópia)`,
+      topic.description,
+      user.uid,
+      topic.thumbnailUrl
+    );
+    
+    if (result.success) {
+      toast.success('Tópico duplicado! Agora adicione as aulas.');
+    } else {
+      toast.error('Erro ao duplicar');
+    }
+    setSaving(false);
+  };
+
+  // Admin stats
+  const getAdminStats = () => {
+    const publishedTopics = topics.filter(t => t.isPublished).length;
+    const draftTopics = topics.filter(t => !t.isPublished).length;
+    const totalLessonsInAllTopics = topics.reduce((sum, t) => sum + (t.lessonsCount || 0), 0);
+    
+    return {
+      publishedTopics,
+      draftTopics,
+      totalLessonsInAllTopics,
+      totalTopics: topics.length,
+    };
+  };
+
+  const adminStats = getAdminStats();
+
   const getTopicProgress = (topicId: string) => {
     const lessons = lessonsMap[topicId] || [];
     if (lessons.length === 0) return 0;
@@ -436,10 +507,20 @@ const Tutorials = () => {
             </div>
             
             {hasAdminAccess && (
-              <Button onClick={() => openTopicDialog()} className="gap-2">
-                <Plus className="h-4 w-4" />
-                Novo Tópico
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowAdminPanel(true)} 
+                  className="gap-2"
+                >
+                  <Settings className="h-4 w-4" />
+                  Painel Admin
+                </Button>
+                <Button onClick={() => openTopicDialog()} className="gap-2">
+                  <Plus className="h-4 w-4" />
+                  Novo Tópico
+                </Button>
+              </div>
             )}
           </div>
 
@@ -954,6 +1035,236 @@ const Tutorials = () => {
             <Button onClick={handleSaveLesson} disabled={saving}>
               {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               {editingLesson ? 'Salvar' : 'Criar'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Admin Panel Dialog */}
+      <Dialog open={showAdminPanel} onOpenChange={setShowAdminPanel}>
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Settings className="h-5 w-5 text-[#F5A623]" />
+              Painel de Administração - Tutoriais
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-6 py-4">
+            {/* Admin Stats */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <Card className="bg-[#F5A623]/10 border-[#F5A623]/20">
+                <CardContent className="p-4 text-center">
+                  <BarChart3 className="h-6 w-6 mx-auto mb-2 text-[#F5A623]" />
+                  <p className="text-2xl font-bold text-white">{adminStats.totalTopics}</p>
+                  <p className="text-xs text-white/50">Total Tópicos</p>
+                </CardContent>
+              </Card>
+              <Card className="bg-green-500/10 border-green-500/20">
+                <CardContent className="p-4 text-center">
+                  <Eye className="h-6 w-6 mx-auto mb-2 text-green-400" />
+                  <p className="text-2xl font-bold text-white">{adminStats.publishedTopics}</p>
+                  <p className="text-xs text-white/50">Publicados</p>
+                </CardContent>
+              </Card>
+              <Card className="bg-yellow-500/10 border-yellow-500/20">
+                <CardContent className="p-4 text-center">
+                  <EyeOff className="h-6 w-6 mx-auto mb-2 text-yellow-400" />
+                  <p className="text-2xl font-bold text-white">{adminStats.draftTopics}</p>
+                  <p className="text-xs text-white/50">Rascunhos</p>
+                </CardContent>
+              </Card>
+              <Card className="bg-purple-500/10 border-purple-500/20">
+                <CardContent className="p-4 text-center">
+                  <Video className="h-6 w-6 mx-auto mb-2 text-purple-400" />
+                  <p className="text-2xl font-bold text-white">{adminStats.totalLessonsInAllTopics}</p>
+                  <p className="text-xs text-white/50">Total Aulas</p>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Topics Management */}
+            <div>
+              <h3 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                <BookOpen className="h-5 w-5 text-[#F5A623]" />
+                Gerenciar Tópicos
+              </h3>
+              
+              <div className="space-y-2">
+                {topics.length === 0 ? (
+                  <p className="text-white/50 text-center py-4">Nenhum tópico criado ainda</p>
+                ) : (
+                  topics.map((topic, index) => (
+                    <div 
+                      key={topic.id} 
+                      className={cn(
+                        "flex items-center gap-3 p-3 rounded-lg border",
+                        topic.isPublished 
+                          ? "bg-green-500/5 border-green-500/20" 
+                          : "bg-yellow-500/5 border-yellow-500/20"
+                      )}
+                    >
+                      {/* Order controls */}
+                      <div className="flex flex-col gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6"
+                          disabled={index === 0 || reordering}
+                          onClick={() => handleMoveTopicUp(topic, index)}
+                        >
+                          <ArrowUp className="h-3 w-3" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6"
+                          disabled={index >= topics.length - 1 || reordering}
+                          onClick={() => handleMoveTopicDown(topic, index)}
+                        >
+                          <ArrowDown className="h-3 w-3" />
+                        </Button>
+                      </div>
+
+                      {/* Topic info */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-white truncate">{topic.title}</span>
+                          <Badge 
+                            variant="outline" 
+                            className={cn(
+                              "text-[10px]",
+                              topic.isPublished 
+                                ? "text-green-400 border-green-400/30" 
+                                : "text-yellow-400 border-yellow-400/30"
+                            )}
+                          >
+                            {topic.isPublished ? 'Publicado' : 'Rascunho'}
+                          </Badge>
+                        </div>
+                        <p className="text-xs text-white/50">
+                          {topic.lessonsCount} aula{topic.lessonsCount !== 1 ? 's' : ''} • Ordem: {topic.order + 1}
+                        </p>
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => handleTogglePublish(topic)}
+                          title={topic.isPublished ? 'Despublicar' : 'Publicar'}
+                        >
+                          {topic.isPublished ? (
+                            <EyeOff className="h-4 w-4 text-yellow-400" />
+                          ) : (
+                            <Eye className="h-4 w-4 text-green-400" />
+                          )}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => handleDuplicateTopic(topic)}
+                          title="Duplicar tópico"
+                        >
+                          <Copy className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => {
+                            setShowAdminPanel(false);
+                            openTopicDialog(topic);
+                          }}
+                          title="Editar"
+                        >
+                          <Edit2 className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-red-400 hover:text-red-300"
+                          onClick={() => handleDeleteTopic(topic.id)}
+                          title="Excluir"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            {/* Quick Actions */}
+            <div>
+              <h3 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                <RefreshCw className="h-5 w-5 text-[#F5A623]" />
+                Ações Rápidas
+              </h3>
+              
+              <div className="grid grid-cols-2 gap-3">
+                <Button 
+                  variant="outline" 
+                  className="gap-2"
+                  onClick={() => {
+                    setShowAdminPanel(false);
+                    openTopicDialog();
+                  }}
+                >
+                  <Plus className="h-4 w-4" />
+                  Criar Novo Tópico
+                </Button>
+                
+                <Button 
+                  variant="outline" 
+                  className="gap-2"
+                  onClick={async () => {
+                    // Publish all drafts
+                    const drafts = topics.filter(t => !t.isPublished);
+                    if (drafts.length === 0) {
+                      toast.info('Nenhum rascunho para publicar');
+                      return;
+                    }
+                    
+                    for (const topic of drafts) {
+                      await updateTopic(topic.id, { isPublished: true });
+                    }
+                    
+                    toast.success(`${drafts.length} tópico(s) publicado(s)!`);
+                  }}
+                >
+                  <Eye className="h-4 w-4" />
+                  Publicar Todos Rascunhos
+                </Button>
+              </div>
+            </div>
+
+            {/* XP Info */}
+            <div className="p-4 rounded-lg bg-[#F5A623]/10 border border-[#F5A623]/20">
+              <h4 className="font-medium text-[#F5A623] mb-2 flex items-center gap-2">
+                <Trophy className="h-4 w-4" />
+                Sistema de XP - Tutoriais
+              </h4>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <p className="text-white/70">Por aula concluída:</p>
+                  <p className="font-bold text-white">+{TUTORIAL_XP_REWARDS.COMPLETE_LESSON} XP, +{TUTORIAL_XP_REWARDS.POINTS_PER_LESSON} pts</p>
+                </div>
+                <div>
+                  <p className="text-white/70">Por tópico completo:</p>
+                  <p className="font-bold text-white">+{TUTORIAL_XP_REWARDS.COMPLETE_TOPIC} XP bônus, +{TUTORIAL_XP_REWARDS.POINTS_PER_TOPIC} pts</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowAdminPanel(false)}>
+              Fechar
             </Button>
           </DialogFooter>
         </DialogContent>
