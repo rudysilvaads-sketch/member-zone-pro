@@ -13,7 +13,8 @@ import {
   Shield,
   Menu,
   X,
-  GraduationCap
+  GraduationCap,
+  HelpCircle
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -39,6 +40,7 @@ const navItems: NavItem[] = [
   { icon: GraduationCap, label: "Tutoriais", href: "/tutorials" },
   { icon: ShoppingBag, label: "Produtos", href: "/products" },
   { icon: Users, label: "Comunidade", href: "/community" },
+  { icon: HelpCircle, label: "Suporte", href: "/support" },
   { icon: Settings, label: "Configurações", href: "/settings" },
   { icon: Shield, label: "Admin", href: "/admin", adminOnly: true },
 ];
