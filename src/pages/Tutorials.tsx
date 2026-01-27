@@ -19,7 +19,7 @@ import {
   Trash2, Edit2, Loader2, BookOpen, Video, Clock, X,
   ExternalLink, CheckCircle2, Trophy, Target, Timer,
   Settings, ArrowUp, ArrowDown, Eye, EyeOff, BarChart3,
-  Users, Copy, RefreshCw
+  Users, Copy, RefreshCw, Download, FileDown, Image
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
@@ -27,6 +27,7 @@ import { toast } from "sonner";
 import {
   TutorialTopic,
   TutorialLesson,
+  DownloadFile,
   subscribeToTopics,
   subscribeToLessons,
   createTopic,
@@ -70,7 +71,15 @@ const Tutorials = () => {
   
   // Form states
   const [topicForm, setTopicForm] = useState({ title: '', description: '', thumbnailUrl: '' });
-  const [lessonForm, setLessonForm] = useState({ title: '', description: '', youtubeUrl: '', duration: '' });
+  const [lessonForm, setLessonForm] = useState({ 
+    title: '', 
+    description: '', 
+    youtubeUrl: '', 
+    duration: '',
+    thumbnailUrl: '',
+    downloadFiles: [] as DownloadFile[]
+  });
+  const [newDownloadFile, setNewDownloadFile] = useState({ name: '', url: '', size: '' });
   const [saving, setSaving] = useState(false);
   const [reordering, setReordering] = useState(false);
   
@@ -240,11 +249,21 @@ const Tutorials = () => {
         description: lesson.description,
         youtubeUrl: lesson.youtubeUrl,
         duration: lesson.duration || '',
+        thumbnailUrl: lesson.thumbnailUrl || '',
+        downloadFiles: lesson.downloadFiles || [],
       });
     } else {
       setEditingLesson(null);
-      setLessonForm({ title: '', description: '', youtubeUrl: '', duration: '' });
+      setLessonForm({ 
+        title: '', 
+        description: '', 
+        youtubeUrl: '', 
+        duration: '',
+        thumbnailUrl: '',
+        downloadFiles: []
+      });
     }
+    setNewDownloadFile({ name: '', url: '', size: '' });
     setShowLessonDialog(true);
   };
 
@@ -307,6 +326,8 @@ const Tutorials = () => {
           description: lessonForm.description,
           youtubeUrl: lessonForm.youtubeUrl,
           duration: lessonForm.duration || undefined,
+          thumbnailUrl: lessonForm.thumbnailUrl || undefined,
+          downloadFiles: lessonForm.downloadFiles.length > 0 ? lessonForm.downloadFiles : undefined,
         });
         if (success) {
           toast.success('Aula atualizada!');
@@ -320,7 +341,9 @@ const Tutorials = () => {
           lessonForm.title,
           lessonForm.description,
           lessonForm.youtubeUrl,
-          lessonForm.duration || undefined
+          lessonForm.duration || undefined,
+          lessonForm.thumbnailUrl || undefined,
+          lessonForm.downloadFiles.length > 0 ? lessonForm.downloadFiles : undefined
         );
         if (result.success) {
           toast.success('Aula criada!');
@@ -757,12 +780,20 @@ const Tutorials = () => {
                                           )}>
                                             {lesson.title}
                                           </p>
-                                          {lesson.duration && (
-                                            <p className="text-[10px] text-white/40 flex items-center gap-1">
-                                              <Clock className="h-2.5 w-2.5" />
-                                              {lesson.duration}
-                                            </p>
-                                          )}
+                                          <div className="flex items-center gap-2">
+                                            {lesson.duration && (
+                                              <p className="text-[10px] text-white/40 flex items-center gap-1">
+                                                <Clock className="h-2.5 w-2.5" />
+                                                {lesson.duration}
+                                              </p>
+                                            )}
+                                            {lesson.downloadFiles && lesson.downloadFiles.length > 0 && (
+                                              <p className="text-[10px] text-[#F5A623]/70 flex items-center gap-1">
+                                                <Download className="h-2.5 w-2.5" />
+                                                {lesson.downloadFiles.length}
+                                              </p>
+                                            )}
+                                          </div>
                                         </div>
                                         
                                         {hasAdminAccess && (
@@ -887,6 +918,40 @@ const Tutorials = () => {
                         </div>
                       </div>
                       
+                      {/* Download Files */}
+                      {currentLesson.downloadFiles && currentLesson.downloadFiles.length > 0 && (
+                        <div className="mt-6 pt-4 border-t border-white/10">
+                          <h4 className="text-sm font-medium text-white mb-3 flex items-center gap-2">
+                            <FileDown className="h-4 w-4 text-[#F5A623]" />
+                            Materiais para Download
+                          </h4>
+                          <div className="grid gap-2">
+                            {currentLesson.downloadFiles.map((file, index) => (
+                              <a
+                                key={index}
+                                href={file.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-3 p-3 bg-white/5 hover:bg-white/10 rounded-lg transition-colors group"
+                              >
+                                <div className="h-10 w-10 rounded-lg bg-[#F5A623]/20 flex items-center justify-center">
+                                  <Download className="h-5 w-5 text-[#F5A623]" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-medium text-white group-hover:text-[#F5A623] transition-colors truncate">
+                                    {file.name}
+                                  </p>
+                                  {file.size && (
+                                    <p className="text-xs text-white/40">{file.size}</p>
+                                  )}
+                                </div>
+                                <ExternalLink className="h-4 w-4 text-white/40 group-hover:text-[#F5A623]" />
+                              </a>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      
                       {/* Navigation */}
                       <div className="flex items-center justify-between mt-6 pt-4 border-t border-white/10">
                         <Button
@@ -983,50 +1048,147 @@ const Tutorials = () => {
             </DialogTitle>
           </DialogHeader>
           
-          <div className="space-y-4 py-4">
-            <div>
-              <label className="text-sm font-medium text-white mb-1 block">Título *</label>
-              <Input
-                value={lessonForm.title}
-                onChange={(e) => setLessonForm({ ...lessonForm, title: e.target.value })}
-                placeholder="Ex: Como criar seu primeiro projeto"
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium text-white mb-1 block">URL do YouTube *</label>
-              <Input
-                value={lessonForm.youtubeUrl}
-                onChange={(e) => setLessonForm({ ...lessonForm, youtubeUrl: e.target.value })}
-                placeholder="https://youtube.com/watch?v=..."
-              />
-              {lessonForm.youtubeUrl && extractYoutubeId(lessonForm.youtubeUrl) && (
-                <div className="mt-2">
-                  <img
-                    src={getYoutubeThumbnail(extractYoutubeId(lessonForm.youtubeUrl)!, 'medium')}
-                    alt="Preview"
-                    className="rounded-md max-h-24"
+          <ScrollArea className="max-h-[60vh]">
+            <div className="space-y-4 py-4 pr-4">
+              <div>
+                <label className="text-sm font-medium text-white mb-1 block">Título *</label>
+                <Input
+                  value={lessonForm.title}
+                  onChange={(e) => setLessonForm({ ...lessonForm, title: e.target.value })}
+                  placeholder="Ex: Como criar seu primeiro projeto"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-white mb-1 block">URL do YouTube *</label>
+                <Input
+                  value={lessonForm.youtubeUrl}
+                  onChange={(e) => setLessonForm({ ...lessonForm, youtubeUrl: e.target.value })}
+                  placeholder="https://youtube.com/watch?v=..."
+                />
+                {lessonForm.youtubeUrl && extractYoutubeId(lessonForm.youtubeUrl) && (
+                  <div className="mt-2">
+                    <img
+                      src={lessonForm.thumbnailUrl || getYoutubeThumbnail(extractYoutubeId(lessonForm.youtubeUrl)!, 'medium')}
+                      alt="Preview"
+                      className="rounded-md max-h-24"
+                    />
+                  </div>
+                )}
+              </div>
+              
+              {/* Custom Thumbnail */}
+              <div>
+                <label className="text-sm font-medium text-white mb-1 flex items-center gap-2">
+                  <Image className="h-4 w-4 text-[#F5A623]" />
+                  Capa Personalizada (opcional)
+                </label>
+                <Input
+                  value={lessonForm.thumbnailUrl}
+                  onChange={(e) => setLessonForm({ ...lessonForm, thumbnailUrl: e.target.value })}
+                  placeholder="https://... (deixe vazio para usar thumbnail do YouTube)"
+                />
+                <p className="text-xs text-white/40 mt-1">Sobrescreve a thumbnail automática do YouTube</p>
+              </div>
+              
+              <div>
+                <label className="text-sm font-medium text-white mb-1 block">Descrição</label>
+                <Textarea
+                  value={lessonForm.description}
+                  onChange={(e) => setLessonForm({ ...lessonForm, description: e.target.value })}
+                  placeholder="O que será ensinado nesta aula..."
+                  rows={3}
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-white mb-1 block">Duração (opcional)</label>
+                <Input
+                  value={lessonForm.duration}
+                  onChange={(e) => setLessonForm({ ...lessonForm, duration: e.target.value })}
+                  placeholder="Ex: 15:30"
+                />
+              </div>
+              
+              {/* Download Files Section */}
+              <div className="border-t border-white/10 pt-4">
+                <label className="text-sm font-medium text-white mb-3 flex items-center gap-2">
+                  <FileDown className="h-4 w-4 text-[#F5A623]" />
+                  Arquivos para Download
+                </label>
+                
+                {/* Existing files */}
+                {lessonForm.downloadFiles.length > 0 && (
+                  <div className="space-y-2 mb-4">
+                    {lessonForm.downloadFiles.map((file, index) => (
+                      <div key={index} className="flex items-center gap-2 p-2 bg-white/5 rounded-md">
+                        <Download className="h-4 w-4 text-[#F5A623]" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm text-white truncate">{file.name}</p>
+                          {file.size && <p className="text-xs text-white/40">{file.size}</p>}
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6 text-red-400"
+                          onClick={() => {
+                            const updated = lessonForm.downloadFiles.filter((_, i) => i !== index);
+                            setLessonForm({ ...lessonForm, downloadFiles: updated });
+                          }}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                
+                {/* Add new file */}
+                <div className="space-y-2 p-3 bg-white/5 rounded-md">
+                  <Input
+                    value={newDownloadFile.name}
+                    onChange={(e) => setNewDownloadFile({ ...newDownloadFile, name: e.target.value })}
+                    placeholder="Nome do arquivo (ex: Material de Apoio.pdf)"
+                    className="text-sm"
                   />
+                  <Input
+                    value={newDownloadFile.url}
+                    onChange={(e) => setNewDownloadFile({ ...newDownloadFile, url: e.target.value })}
+                    placeholder="URL do arquivo (link direto para download)"
+                    className="text-sm"
+                  />
+                  <div className="flex gap-2">
+                    <Input
+                      value={newDownloadFile.size}
+                      onChange={(e) => setNewDownloadFile({ ...newDownloadFile, size: e.target.value })}
+                      placeholder="Tamanho (ex: 2.5 MB)"
+                      className="text-sm flex-1"
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        if (newDownloadFile.name.trim() && newDownloadFile.url.trim()) {
+                          setLessonForm({
+                            ...lessonForm,
+                            downloadFiles: [...lessonForm.downloadFiles, {
+                              name: newDownloadFile.name.trim(),
+                              url: newDownloadFile.url.trim(),
+                              size: newDownloadFile.size.trim() || undefined,
+                            }]
+                          });
+                          setNewDownloadFile({ name: '', url: '', size: '' });
+                        } else {
+                          toast.error('Nome e URL são obrigatórios');
+                        }
+                      }}
+                    >
+                      <Plus className="h-4 w-4 mr-1" />
+                      Adicionar
+                    </Button>
+                  </div>
                 </div>
-              )}
+              </div>
             </div>
-            <div>
-              <label className="text-sm font-medium text-white mb-1 block">Descrição</label>
-              <Textarea
-                value={lessonForm.description}
-                onChange={(e) => setLessonForm({ ...lessonForm, description: e.target.value })}
-                placeholder="O que será ensinado nesta aula..."
-                rows={3}
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium text-white mb-1 block">Duração (opcional)</label>
-              <Input
-                value={lessonForm.duration}
-                onChange={(e) => setLessonForm({ ...lessonForm, duration: e.target.value })}
-                placeholder="Ex: 15:30"
-              />
-            </div>
-          </div>
+          </ScrollArea>
           
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowLessonDialog(false)}>

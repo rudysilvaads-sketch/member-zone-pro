@@ -28,6 +28,12 @@ export const TUTORIAL_XP_REWARDS = {
 
 // ============= Types =============
 
+export interface DownloadFile {
+  name: string;
+  url: string;
+  size?: string; // e.g., "2.5 MB"
+}
+
 export interface TutorialLesson {
   id: string;
   topicId: string;
@@ -35,6 +41,8 @@ export interface TutorialLesson {
   description: string;
   youtubeUrl: string;
   youtubeId: string; // Extracted from URL
+  thumbnailUrl?: string; // Custom thumbnail URL (overrides YouTube thumbnail)
+  downloadFiles?: DownloadFile[]; // Files available for download
   duration?: string; // e.g., "15:30"
   order: number;
   createdAt: Timestamp;
@@ -266,7 +274,9 @@ export const createLesson = async (
   title: string,
   description: string,
   youtubeUrl: string,
-  duration?: string
+  duration?: string,
+  thumbnailUrl?: string,
+  downloadFiles?: DownloadFile[]
 ): Promise<{ success: boolean; lessonId?: string; error?: string }> => {
   try {
     const youtubeId = extractYoutubeId(youtubeUrl);
@@ -282,13 +292,15 @@ export const createLesson = async (
     const snapshot = await getDocs(q);
     const order = snapshot.size;
     
-    const lessonData = {
+    const lessonData: any = {
       topicId,
       title: title.trim(),
       description: description.trim(),
       youtubeUrl: youtubeUrl.trim(),
       youtubeId,
       duration: duration?.trim() || null,
+      thumbnailUrl: thumbnailUrl?.trim() || null,
+      downloadFiles: downloadFiles && downloadFiles.length > 0 ? downloadFiles : null,
       order,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
@@ -318,7 +330,7 @@ export const createLesson = async (
  */
 export const updateLesson = async (
   lessonId: string,
-  updates: Partial<Pick<TutorialLesson, 'title' | 'description' | 'youtubeUrl' | 'duration' | 'order'>>
+  updates: Partial<Pick<TutorialLesson, 'title' | 'description' | 'youtubeUrl' | 'duration' | 'order' | 'thumbnailUrl' | 'downloadFiles'>>
 ): Promise<boolean> => {
   try {
     const lessonRef = doc(db, 'tutorial_lessons', lessonId);
