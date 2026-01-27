@@ -23,6 +23,7 @@ import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import SharedPost from "./pages/SharedPost";
 import Tutorials from "./pages/Tutorials";
+import Support from "./pages/Support";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -100,6 +101,14 @@ const App = () => {
                   } 
                 />
                 <Route 
+                  path="/support" 
+                  element={
+                    <ProtectedRoute>
+                      <Support />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route
                   path="/settings" 
                   element={
                     <ProtectedRoute>

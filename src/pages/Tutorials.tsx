@@ -45,6 +45,7 @@ import {
   TUTORIAL_XP_REWARDS,
 } from "@/lib/tutorialsService";
 import { completeMission } from "@/lib/missionService";
+import TutorialReviews from "@/components/tutorials/TutorialReviews";
 
 // Admin emails list
 const ADMIN_EMAILS = ['rudysilvaads@gmail.com'];
@@ -1090,6 +1091,14 @@ const Tutorials = () => {
                       </div>
                     </CardContent>
                   </Card>
+                  
+                  {/* Reviews Section */}
+                  {currentTopic && (
+                    <TutorialReviews 
+                      topicId={currentTopic.id} 
+                      topicTitle={currentTopic.title} 
+                    />
+                  )}
                 </div>
               ) : (
                 <Card variant="gradient" className="h-[500px] flex items-center justify-center">
