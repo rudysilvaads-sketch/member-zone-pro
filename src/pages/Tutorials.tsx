@@ -84,7 +84,9 @@ const Tutorials = () => {
   const [saving, setSaving] = useState(false);
   const [reordering, setReordering] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const dropZoneRef = useRef<HTMLDivElement>(null);
   
   // Helper function to format file size
   const formatFileSize = (bytes: number): string => {
@@ -95,11 +97,8 @@ const Tutorials = () => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  // Upload file to Supabase Storage
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    
+  // Core upload function
+  const uploadFile = async (file: File) => {
     // Validate file size (max 50MB)
     const maxSize = 50 * 1024 * 1024;
     if (file.size > maxSize) {
@@ -140,10 +139,10 @@ const Tutorials = () => {
         size: formatFileSize(file.size),
       };
       
-      setLessonForm({
-        ...lessonForm,
-        downloadFiles: [...lessonForm.downloadFiles, newFile]
-      });
+      setLessonForm(prev => ({
+        ...prev,
+        downloadFiles: [...prev.downloadFiles, newFile]
+      }));
       
       toast.success('Arquivo enviado com sucesso!');
     } catch (error) {
@@ -151,10 +150,55 @@ const Tutorials = () => {
       toast.error('Erro ao fazer upload do arquivo');
     } finally {
       setUploading(false);
-      // Reset file input
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
+    }
+  };
+
+  // Upload file from input
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    
+    await uploadFile(file);
+    
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  // Drag and drop handlers
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Only set dragging to false if leaving the drop zone entirely
+    if (dropZoneRef.current && !dropZoneRef.current.contains(e.relatedTarget as Node)) {
+      setIsDragging(false);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    
+    const files = e.dataTransfer.files;
+    if (files.length === 0) return;
+    
+    // Upload all dropped files
+    for (let i = 0; i < files.length; i++) {
+      await uploadFile(files[i]);
     }
   };
   
@@ -1216,35 +1260,62 @@ const Tutorials = () => {
                   </div>
                 )}
                 
-                {/* Upload file directly */}
-                <div className="space-y-3">
+                {/* Upload file directly - Drag and Drop Zone */}
+                <div 
+                  ref={dropZoneRef}
+                  className={cn(
+                    "relative rounded-lg border-2 border-dashed transition-all duration-200",
+                    isDragging 
+                      ? "border-[#F5A623] bg-[#F5A623]/10" 
+                      : "border-white/20 hover:border-[#F5A623]/50"
+                  )}
+                  onDragEnter={handleDragEnter}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                >
                   <input
                     type="file"
                     ref={fileInputRef}
                     onChange={handleFileUpload}
                     className="hidden"
                     accept="*/*"
+                    multiple
                   />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full border-dashed border-[#F5A623]/30 hover:border-[#F5A623]/50 hover:bg-[#F5A623]/5"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={uploading}
+                  
+                  <div 
+                    className={cn(
+                      "flex flex-col items-center justify-center p-6 cursor-pointer",
+                      isDragging && "pointer-events-none"
+                    )}
+                    onClick={() => !uploading && fileInputRef.current?.click()}
                   >
                     {uploading ? (
                       <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Enviando...
+                        <Loader2 className="h-8 w-8 mb-3 animate-spin text-[#F5A623]" />
+                        <p className="text-sm font-medium text-white">Enviando arquivo...</p>
+                        <p className="text-xs text-white/40 mt-1">Aguarde o upload concluir</p>
+                      </>
+                    ) : isDragging ? (
+                      <>
+                        <Upload className="h-8 w-8 mb-3 text-[#F5A623] animate-bounce" />
+                        <p className="text-sm font-medium text-[#F5A623]">Solte o arquivo aqui!</p>
                       </>
                     ) : (
                       <>
-                        <Upload className="h-4 w-4 mr-2" />
-                        Fazer Upload de Arquivo
+                        <div className="h-12 w-12 rounded-full bg-[#F5A623]/10 flex items-center justify-center mb-3">
+                          <Upload className="h-6 w-6 text-[#F5A623]" />
+                        </div>
+                        <p className="text-sm font-medium text-white">
+                          Arraste e solte arquivos aqui
+                        </p>
+                        <p className="text-xs text-white/40 mt-1">
+                          ou <span className="text-[#F5A623] underline">clique para selecionar</span>
+                        </p>
+                        <p className="text-xs text-white/30 mt-2">Máximo: 50MB por arquivo</p>
                       </>
                     )}
-                  </Button>
-                  <p className="text-xs text-white/40 text-center">Máximo: 50MB por arquivo</p>
+                  </div>
                 </div>
                 
                 {/* Or add external URL */}
