@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Progress } from "@/components/ui/progress";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { 
   Collapsible,
@@ -438,15 +439,30 @@ const Tutorials = () => {
                                           </Badge>
                                         )}
                                       </div>
-                                      <div className="flex items-center gap-2 mt-1">
-                                        <span className="text-xs text-white/50">
-                                          {topic.lessonsCount} aula{topic.lessonsCount !== 1 ? 's' : ''}
-                                        </span>
-                                        {progress > 0 && (
-                                          <Badge className="text-[10px] bg-green-500/20 text-green-400">
+                                      {/* Progress bar */}
+                                      <div className="mt-2 space-y-1">
+                                        <div className="flex items-center justify-between">
+                                          <span className="text-xs text-white/50">
+                                            {topic.lessonsCount} aula{topic.lessonsCount !== 1 ? 's' : ''}
+                                          </span>
+                                          <span className={cn(
+                                            "text-xs font-medium",
+                                            progress === 100 ? "text-green-400" : progress > 0 ? "text-[#F5A623]" : "text-white/40"
+                                          )}>
                                             {progress}%
-                                          </Badge>
-                                        )}
+                                          </span>
+                                        </div>
+                                        <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-white/10">
+                                          <div 
+                                            className={cn(
+                                              "h-full transition-all duration-500",
+                                              progress === 100 
+                                                ? "bg-gradient-to-r from-green-500 to-green-400" 
+                                                : "bg-gradient-to-r from-[#F5A623] to-[#E8920D]"
+                                            )}
+                                            style={{ width: `${progress}%` }}
+                                          />
+                                        </div>
                                       </div>
                                     </div>
                                     
