@@ -17,6 +17,7 @@ export const MISSION_REWARDS: Record<string, { xp: number; points: number; title
   'engage-community': { xp: 75, points: 35, title: 'Membro Ativo' },
   'share-progress': { xp: 50, points: 25, title: 'Compartilhador' },
   'visit-store': { xp: 25, points: 15, title: 'Explorador' },
+  'watch-tutorial': { xp: 60, points: 30, title: 'Estudante' },
 };
 
 // Bonus for completing all daily missions

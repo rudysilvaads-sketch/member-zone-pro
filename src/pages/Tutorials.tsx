@@ -36,7 +36,11 @@ import {
   getYoutubeThumbnail,
   getYoutubeEmbedUrl,
   extractYoutubeId,
+  awardLessonXp,
+  awardTopicCompletionXp,
+  TUTORIAL_XP_REWARDS,
 } from "@/lib/tutorialsService";
+import { completeMission } from "@/lib/missionService";
 
 // Admin emails list
 const ADMIN_EMAILS = ['rudysilvaads@gmail.com'];
@@ -133,12 +137,15 @@ const Tutorials = () => {
     setCurrentTopic(topic);
   };
 
-  const markAsCompleted = (lessonId: string) => {
-    if (!user) return;
+  const markAsCompleted = async (lessonId: string) => {
+    if (!user || !currentTopic) return;
     
+    const isAlreadyCompleted = completedLessons.has(lessonId);
+    
+    // Toggle completion state
     setCompletedLessons(prev => {
       const next = new Set(prev);
-      if (next.has(lessonId)) {
+      if (isAlreadyCompleted) {
         next.delete(lessonId);
       } else {
         next.add(lessonId);
@@ -147,8 +154,38 @@ const Tutorials = () => {
       return next;
     });
     
-    if (!completedLessons.has(lessonId)) {
-      toast.success('Aula marcada como concluída! 🎉');
+    // If marking as completed (not uncompleting), award XP
+    if (!isAlreadyCompleted) {
+      // Award lesson XP
+      const lessonReward = await awardLessonXp(user.uid);
+      
+      if (lessonReward.success) {
+        toast.success(`Aula concluída! +${lessonReward.xp} XP 🎉`);
+      }
+      
+      // Complete the watch-tutorial daily mission
+      const missionResult = await completeMission(user.uid, 'watch-tutorial');
+      if (missionResult.completed && missionResult.rewards) {
+        toast.success(`🎯 Missão Completada: ${missionResult.rewards.title} (+${missionResult.rewards.xp} XP)`);
+      }
+      
+      // Check if entire topic is now completed
+      const topicLessons = lessonsMap[currentTopic.id] || [];
+      const updatedCompleted = new Set(completedLessons);
+      updatedCompleted.add(lessonId);
+      
+      const allTopicLessonsCompleted = topicLessons.every(l => updatedCompleted.has(l.id));
+      
+      if (allTopicLessonsCompleted && topicLessons.length > 0) {
+        // Award topic completion bonus
+        const topicReward = await awardTopicCompletionXp(user.uid, currentTopic.title);
+        
+        if (topicReward.success) {
+          toast.success(`🎓 Tópico "${currentTopic.title}" concluído! +${topicReward.xp} XP bônus!`, {
+            duration: 5000,
+          });
+        }
+      }
     }
   };
 

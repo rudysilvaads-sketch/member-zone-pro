@@ -14,7 +14,8 @@ import {
   Loader2,
   ShoppingBag,
   Trophy,
-  Sparkles
+  Sparkles,
+  GraduationCap
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -76,6 +77,15 @@ const missionConfigs: Omit<DailyMission, 'progress' | 'completed' | 'claimed'>[]
     xpReward: 25,
     pointsReward: 15,
     icon: ShoppingBag,
+    requirement: 1,
+  },
+  {
+    id: 'watch-tutorial',
+    title: 'Estudante',
+    description: 'Complete uma aula nos Tutoriais',
+    xpReward: 60,
+    pointsReward: 30,
+    icon: GraduationCap,
     requirement: 1,
   },
 ];
