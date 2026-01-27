@@ -17,7 +17,7 @@ import {
 import { 
   GraduationCap, Play, ChevronDown, ChevronRight, Plus, 
   Trash2, Edit2, Loader2, BookOpen, Video, Clock, X,
-  ExternalLink, CheckCircle2
+  ExternalLink, CheckCircle2, Trophy, Target, Timer
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
@@ -332,6 +332,41 @@ const Tutorials = () => {
     return Math.round((completed / lessons.length) * 100);
   };
 
+  // Calculate overall stats
+  const getOverallStats = () => {
+    const allLessons = Object.values(lessonsMap).flat();
+    const totalLessons = allLessons.length;
+    const completedCount = allLessons.filter(l => completedLessons.has(l.id)).length;
+    const overallProgress = totalLessons > 0 ? Math.round((completedCount / totalLessons) * 100) : 0;
+    
+    // Calculate estimated time remaining (assuming 10 min average per lesson)
+    const remainingLessons = totalLessons - completedCount;
+    const avgMinutesPerLesson = 10;
+    const totalMinutesRemaining = remainingLessons * avgMinutesPerLesson;
+    
+    let timeRemaining: string;
+    if (totalMinutesRemaining === 0) {
+      timeRemaining = 'Concluído!';
+    } else if (totalMinutesRemaining < 60) {
+      timeRemaining = `${totalMinutesRemaining} min`;
+    } else {
+      const hours = Math.floor(totalMinutesRemaining / 60);
+      const mins = totalMinutesRemaining % 60;
+      timeRemaining = mins > 0 ? `${hours}h ${mins}min` : `${hours}h`;
+    }
+    
+    return {
+      totalLessons,
+      completedCount,
+      overallProgress,
+      timeRemaining,
+      topicsCompleted: topics.filter(t => getTopicProgress(t.id) === 100).length,
+      totalTopics: topics.length,
+    };
+  };
+
+  const stats = getOverallStats();
+
   if (loading) {
     return (
       <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
@@ -370,6 +405,89 @@ const Tutorials = () => {
               </Button>
             )}
           </div>
+
+          {/* Progress Summary Card */}
+          {stats.totalLessons > 0 && (
+            <Card variant="gradient" className="mb-6 overflow-hidden">
+              <CardContent className="p-0">
+                <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-white/10">
+                  {/* Overall Progress */}
+                  <div className="p-4 md:p-6">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="h-10 w-10 rounded-lg bg-[#F5A623]/20 flex items-center justify-center">
+                        <Target className="h-5 w-5 text-[#F5A623]" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-white/50 uppercase tracking-wider">Progresso Geral</p>
+                        <p className="text-2xl font-bold text-white">{stats.overallProgress}%</p>
+                      </div>
+                    </div>
+                    <div className="relative h-2 w-full overflow-hidden rounded-full bg-white/10">
+                      <div 
+                        className={cn(
+                          "h-full transition-all duration-700",
+                          stats.overallProgress === 100 
+                            ? "bg-gradient-to-r from-green-500 to-green-400" 
+                            : "bg-gradient-to-r from-[#F5A623] to-[#E8920D]"
+                        )}
+                        style={{ width: `${stats.overallProgress}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Completed Lessons */}
+                  <div className="p-4 md:p-6">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-lg bg-green-500/20 flex items-center justify-center">
+                        <CheckCircle2 className="h-5 w-5 text-green-400" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-white/50 uppercase tracking-wider">Aulas Concluídas</p>
+                        <p className="text-2xl font-bold text-white">
+                          {stats.completedCount}
+                          <span className="text-sm font-normal text-white/50">/{stats.totalLessons}</span>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Topics Completed */}
+                  <div className="p-4 md:p-6">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-lg bg-purple-500/20 flex items-center justify-center">
+                        <Trophy className="h-5 w-5 text-purple-400" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-white/50 uppercase tracking-wider">Tópicos Completos</p>
+                        <p className="text-2xl font-bold text-white">
+                          {stats.topicsCompleted}
+                          <span className="text-sm font-normal text-white/50">/{stats.totalTopics}</span>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Time Remaining */}
+                  <div className="p-4 md:p-6">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                        <Timer className="h-5 w-5 text-blue-400" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-white/50 uppercase tracking-wider">Tempo Restante</p>
+                        <p className={cn(
+                          "text-2xl font-bold",
+                          stats.overallProgress === 100 ? "text-green-400" : "text-white"
+                        )}>
+                          {stats.timeRemaining}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           <div className="grid gap-6 lg:grid-cols-3">
             {/* Topics List */}
