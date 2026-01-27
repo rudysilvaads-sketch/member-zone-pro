@@ -11,9 +11,20 @@ import {
   updateDoc,
   doc,
   getDoc,
-  where
+  where,
+  increment
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { calculateLevel } from '@/lib/firebaseServices';
+
+// ============= XP Rewards Configuration =============
+
+export const TUTORIAL_XP_REWARDS = {
+  COMPLETE_LESSON: 15,
+  COMPLETE_TOPIC: 100,
+  POINTS_PER_LESSON: 5,
+  POINTS_PER_TOPIC: 25,
+};
 
 // ============= Types =============
 
@@ -427,5 +438,108 @@ export const getAllTopicsWithLessons = async (publishedOnly: boolean = true): Pr
   } catch (error) {
     console.error('Error getting all topics with lessons:', error);
     return [];
+  }
+};
+
+// ============= XP Reward Functions =============
+
+/**
+ * Award XP and points to user for completing a lesson
+ */
+export const awardLessonXp = async (
+  userId: string
+): Promise<{ success: boolean; xp: number; points: number }> => {
+  try {
+    const userRef = doc(db, 'users', userId);
+    const userSnap = await getDoc(userRef);
+    
+    if (!userSnap.exists()) {
+      return { success: false, xp: 0, points: 0 };
+    }
+    
+    const userData = userSnap.data();
+    const currentXp = userData.xp || 0;
+    const newXp = currentXp + TUTORIAL_XP_REWARDS.COMPLETE_LESSON;
+    const newLevel = calculateLevel(newXp);
+    
+    await updateDoc(userRef, {
+      xp: increment(TUTORIAL_XP_REWARDS.COMPLETE_LESSON),
+      points: increment(TUTORIAL_XP_REWARDS.POINTS_PER_LESSON),
+      level: newLevel,
+    });
+    
+    console.log('Awarded lesson XP:', {
+      userId,
+      xp: TUTORIAL_XP_REWARDS.COMPLETE_LESSON,
+      points: TUTORIAL_XP_REWARDS.POINTS_PER_LESSON,
+    });
+    
+    return { 
+      success: true, 
+      xp: TUTORIAL_XP_REWARDS.COMPLETE_LESSON, 
+      points: TUTORIAL_XP_REWARDS.POINTS_PER_LESSON 
+    };
+  } catch (error) {
+    console.error('Error awarding lesson XP:', error);
+    return { success: false, xp: 0, points: 0 };
+  }
+};
+
+/**
+ * Award bonus XP and points for completing an entire topic
+ */
+export const awardTopicCompletionXp = async (
+  userId: string,
+  topicTitle: string
+): Promise<{ success: boolean; xp: number; points: number }> => {
+  try {
+    const userRef = doc(db, 'users', userId);
+    const userSnap = await getDoc(userRef);
+    
+    if (!userSnap.exists()) {
+      return { success: false, xp: 0, points: 0 };
+    }
+    
+    const userData = userSnap.data();
+    const currentXp = userData.xp || 0;
+    const newXp = currentXp + TUTORIAL_XP_REWARDS.COMPLETE_TOPIC;
+    const newLevel = calculateLevel(newXp);
+    
+    await updateDoc(userRef, {
+      xp: increment(TUTORIAL_XP_REWARDS.COMPLETE_TOPIC),
+      points: increment(TUTORIAL_XP_REWARDS.POINTS_PER_TOPIC),
+      level: newLevel,
+    });
+    
+    // Create notification for topic completion
+    try {
+      const notificationsRef = collection(db, 'notifications');
+      await addDoc(notificationsRef, {
+        userId,
+        type: 'topic_completed',
+        title: 'Tópico Concluído! 🎓',
+        message: `Parabéns! Você completou o tópico "${topicTitle}" e ganhou +${TUTORIAL_XP_REWARDS.COMPLETE_TOPIC} XP!`,
+        read: false,
+        createdAt: serverTimestamp(),
+      });
+    } catch (notifError) {
+      console.error('Error creating topic completion notification:', notifError);
+    }
+    
+    console.log('Awarded topic completion XP:', {
+      userId,
+      topicTitle,
+      xp: TUTORIAL_XP_REWARDS.COMPLETE_TOPIC,
+      points: TUTORIAL_XP_REWARDS.POINTS_PER_TOPIC,
+    });
+    
+    return { 
+      success: true, 
+      xp: TUTORIAL_XP_REWARDS.COMPLETE_TOPIC, 
+      points: TUTORIAL_XP_REWARDS.POINTS_PER_TOPIC 
+    };
+  } catch (error) {
+    console.error('Error awarding topic completion XP:', error);
+    return { success: false, xp: 0, points: 0 };
   }
 };
