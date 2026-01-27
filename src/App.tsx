@@ -22,6 +22,7 @@ import Profile from "./pages/Profile";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import SharedPost from "./pages/SharedPost";
+import Tutorials from "./pages/Tutorials";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -87,6 +88,14 @@ const App = () => {
                   element={
                     <ProtectedRoute>
                       <Community />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/tutorials" 
+                  element={
+                    <ProtectedRoute>
+                      <Tutorials />
                     </ProtectedRoute>
                   } 
                 />

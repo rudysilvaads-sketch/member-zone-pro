@@ -12,7 +12,8 @@ import {
   LogOut,
   Shield,
   Menu,
-  X
+  X,
+  GraduationCap
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -35,6 +36,7 @@ const navItems: NavItem[] = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/" },
   { icon: Trophy, label: "Ranking", href: "/ranking" },
   { icon: Award, label: "Conquistas", href: "/achievements" },
+  { icon: GraduationCap, label: "Tutoriais", href: "/tutorials" },
   { icon: ShoppingBag, label: "Produtos", href: "/products" },
   { icon: Users, label: "Comunidade", href: "/community" },
   { icon: Settings, label: "Configurações", href: "/settings" },
