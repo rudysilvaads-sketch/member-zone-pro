@@ -128,31 +128,36 @@ export const subscribeToTools = (
   limitCount: number = 50
 ) => {
   const toolsRef = collection(db, 'tools');
-  let q;
   
-  if (category) {
-    q = query(
-      toolsRef, 
-      where('status', '==', 'approved'),
-      where('category', '==', category),
-      orderBy('createdAt', 'desc'), 
-      limit(limitCount)
-    );
-  } else {
-    q = query(
-      toolsRef, 
-      where('status', '==', 'approved'),
-      orderBy('createdAt', 'desc'), 
-      limit(limitCount)
-    );
-  }
+  // Use simple query first to avoid index requirement issues
+  // Filter by status and optionally by category client-side if index is missing
+  const q = query(
+    toolsRef, 
+    orderBy('createdAt', 'desc'), 
+    limit(limitCount * 2) // Fetch more to account for filtering
+  );
   
   return onSnapshot(q, (snapshot) => {
-    const tools = snapshot.docs.map(doc => ({
+    let tools = snapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data(),
     })) as Tool[];
+    
+    // Filter approved tools client-side
+    tools = tools.filter(tool => tool.status === 'approved');
+    
+    // Filter by category if specified
+    if (category) {
+      tools = tools.filter(tool => tool.category === category);
+    }
+    
+    // Limit to requested count
+    tools = tools.slice(0, limitCount);
+    
     callback(tools);
+  }, (error) => {
+    console.error('Error subscribing to tools:', error);
+    callback([]);
   });
 };
 
