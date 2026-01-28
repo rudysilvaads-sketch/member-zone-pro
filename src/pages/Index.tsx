@@ -72,7 +72,7 @@ const Index = () => {
     <div className="min-h-screen bg-[#0a0a0a]">
       <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
       
-      <div className={`transition-all duration-300 md:${sidebarCollapsed ? 'pl-20' : 'pl-64'}`}>
+      <div className={`transition-all duration-300 ${sidebarCollapsed ? 'md:pl-20' : 'md:pl-64'}`}>
         <Header />
         
         <main className="p-3 sm:p-4 md:p-6 pt-16 md:pt-6">
