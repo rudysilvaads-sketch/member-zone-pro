@@ -620,14 +620,32 @@ export const deletePostImage = async (path: string): Promise<boolean> => {
   }
 };
 
+// Check if user is admin
+export const isUserAdmin = async (userId: string): Promise<boolean> => {
+  try {
+    const userRef = doc(db, 'users', userId);
+    const userSnap = await getDoc(userRef);
+    if (userSnap.exists()) {
+      return userSnap.data().isAdmin === true;
+    }
+    return false;
+  } catch (error) {
+    console.error('Error checking admin status:', error);
+    return false;
+  }
+};
+
 // Create a new post
 export const createPost = async (
   user: { uid: string; displayName: string; photoURL: string | null; rank: string; level?: number },
   content: string,
   imageUrl?: string | null,
   imagePath?: string | null
-): Promise<{ success: boolean; postId?: string; error?: string }> => {
+): Promise<{ success: boolean; postId?: string; error?: string; autoApproved?: boolean }> => {
   try {
+    // Check if user is admin - auto-approve their posts
+    const userIsAdmin = await isUserAdmin(user.uid);
+    
     const postsRef = collection(db, 'posts');
     const postData: Record<string, any> = {
       authorId: user.uid,
@@ -639,7 +657,7 @@ export const createPost = async (
       likes: [],
       commentsCount: 0,
       createdAt: serverTimestamp(),
-      status: 'pending', // All posts start as pending
+      status: userIsAdmin ? 'approved' : 'pending', // Auto-approve admin posts
     };
     
     if (imageUrl) {
@@ -648,7 +666,7 @@ export const createPost = async (
     }
     
     const docRef = await addDoc(postsRef, postData);
-    return { success: true, postId: docRef.id };
+    return { success: true, postId: docRef.id, autoApproved: userIsAdmin };
   } catch (error) {
     console.error('Error creating post:', error);
     return { success: false, error: 'Erro ao criar post' };
