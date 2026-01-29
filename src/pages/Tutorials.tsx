@@ -1404,7 +1404,7 @@ const Tutorials = () => {
 
       {/* Admin Panel Dialog */}
       <Dialog open={showAdminPanel} onOpenChange={setShowAdminPanel}>
-        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto w-[95vw]">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Settings className="h-5 w-5 text-[#F5A623]" />
@@ -1414,7 +1414,7 @@ const Tutorials = () => {
           
           <div className="space-y-6 py-4">
             {/* Admin Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
               <Card className="bg-[#F5A623]/10 border-[#F5A623]/20">
                 <CardContent className="p-4 text-center">
                   <BarChart3 className="h-6 w-6 mx-auto mb-2 text-[#F5A623]" />
@@ -1460,57 +1460,60 @@ const Tutorials = () => {
                     <div 
                       key={topic.id} 
                       className={cn(
-                        "flex items-center gap-3 p-3 rounded-lg border",
+                        "flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 p-3 rounded-lg border",
                         topic.isPublished 
                           ? "bg-green-500/5 border-green-500/20" 
                           : "bg-yellow-500/5 border-yellow-500/20"
                       )}
                     >
-                      {/* Order controls */}
-                      <div className="flex flex-col gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-6 w-6"
-                          disabled={index === 0 || reordering}
-                          onClick={() => handleMoveTopicUp(topic, index)}
-                        >
-                          <ArrowUp className="h-3 w-3" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-6 w-6"
-                          disabled={index >= topics.length - 1 || reordering}
-                          onClick={() => handleMoveTopicDown(topic, index)}
-                        >
-                          <ArrowDown className="h-3 w-3" />
-                        </Button>
-                      </div>
-
-                      {/* Topic info */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium text-white truncate">{topic.title}</span>
-                          <Badge 
-                            variant="outline" 
-                            className={cn(
-                              "text-[10px]",
-                              topic.isPublished 
-                                ? "text-green-400 border-green-400/30" 
-                                : "text-yellow-400 border-yellow-400/30"
-                            )}
+                      {/* Top row: order controls + info */}
+                      <div className="flex items-start gap-2 sm:gap-3 flex-1 min-w-0">
+                        {/* Order controls */}
+                        <div className="flex flex-col gap-1 shrink-0">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6"
+                            disabled={index === 0 || reordering}
+                            onClick={() => handleMoveTopicUp(topic, index)}
                           >
-                            {topic.isPublished ? 'Publicado' : 'Rascunho'}
-                          </Badge>
+                            <ArrowUp className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6"
+                            disabled={index >= topics.length - 1 || reordering}
+                            onClick={() => handleMoveTopicDown(topic, index)}
+                          >
+                            <ArrowDown className="h-3 w-3" />
+                          </Button>
                         </div>
-                        <p className="text-xs text-white/50">
-                          {topic.lessonsCount} aula{topic.lessonsCount !== 1 ? 's' : ''} • Ordem: {topic.order + 1}
-                        </p>
+
+                        {/* Topic info */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="font-medium text-white whitespace-normal break-words leading-snug">{topic.title}</span>
+                            <Badge 
+                              variant="outline" 
+                              className={cn(
+                                "text-[10px] shrink-0",
+                                topic.isPublished 
+                                  ? "text-green-400 border-green-400/30" 
+                                  : "text-yellow-400 border-yellow-400/30"
+                              )}
+                            >
+                              {topic.isPublished ? 'Publicado' : 'Rascunho'}
+                            </Badge>
+                          </div>
+                          <p className="text-xs text-white/50 mt-1">
+                            {topic.lessonsCount} aula{topic.lessonsCount !== 1 ? 's' : ''} • Ordem: {topic.order + 1}
+                          </p>
+                        </div>
                       </div>
 
                       {/* Actions */}
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-1 shrink-0 self-end sm:self-center">
                         <Button
                           variant="ghost"
                           size="icon"
