@@ -387,20 +387,20 @@ export const subscribeToLessons = (
   callback: (lessons: TutorialLesson[]) => void
 ) => {
   const lessonsRef = collection(db, 'tutorial_lessons');
-  
-  // Use simple query to avoid composite index requirement
-  // Filter by topicId and sort client-side
-  const q = query(lessonsRef, orderBy('order', 'asc'));
-  
-  return onSnapshot(q, (snapshot) => {
-    let lessons = snapshot.docs.map(docSnap => {
+
+  // IMPORTANT: avoid composite index requirements by not mixing where + orderBy.
+  // We subscribe to the whole collection and filter/sort client-side.
+  // This matches the project's index-avoidance strategy.
+  return onSnapshot(lessonsRef, (snapshot) => {
+    let lessons = snapshot.docs.map((docSnap) => {
       const data = docSnap.data() as Omit<TutorialLesson, 'id'>;
       return { id: docSnap.id, ...data } as TutorialLesson;
     });
-    
-    // Filter by topicId client-side
-    lessons = lessons.filter(lesson => lesson.topicId === topicId);
-    
+
+    lessons = lessons
+      .filter((lesson) => lesson.topicId === topicId)
+      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
     callback(lessons);
   }, (error) => {
     console.error('Error subscribing to lessons:', error);
@@ -413,18 +413,15 @@ export const subscribeToLessons = (
  */
 export const getLessons = async (topicId: string): Promise<TutorialLesson[]> => {
   const lessonsRef = collection(db, 'tutorial_lessons');
-  
-  // Use simple query to avoid composite index requirement
-  const q = query(lessonsRef, orderBy('order', 'asc'));
-  const snapshot = await getDocs(q);
-  
-  // Filter by topicId client-side
+
+  const snapshot = await getDocs(lessonsRef);
   return snapshot.docs
-    .map(docSnap => {
+    .map((docSnap) => {
       const data = docSnap.data() as Omit<TutorialLesson, 'id'>;
       return { id: docSnap.id, ...data } as TutorialLesson;
     })
-    .filter(lesson => lesson.topicId === topicId);
+    .filter((lesson) => lesson.topicId === topicId)
+    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 };
 
 /**
