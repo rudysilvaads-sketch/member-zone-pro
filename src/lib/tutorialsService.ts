@@ -294,6 +294,8 @@ export const createLesson = async (
     
     const lessonData: any = {
       topicId,
+      // Back-compat in case any screen/service reads `topic_id`
+      topic_id: topicId,
       title: title.trim(),
       description: description.trim(),
       youtubeUrl: youtubeUrl.trim(),
@@ -398,8 +400,15 @@ export const subscribeToLessons = (
     });
 
     lessons = lessons
-      .filter((lesson) => lesson.topicId === topicId)
+      .filter((lesson) => {
+        const anyLesson = lesson as any;
+        const rawTopicId = anyLesson.topicId ?? anyLesson.topic_id;
+        return String(rawTopicId ?? '') === String(topicId);
+      })
       .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
+    // Debug aid for diagnosing “created but not listed” issues.
+    console.log('[tutorials] lessons for topic', topicId, lessons.length);
 
     callback(lessons);
   }, (error) => {
@@ -420,7 +429,11 @@ export const getLessons = async (topicId: string): Promise<TutorialLesson[]> => 
       const data = docSnap.data() as Omit<TutorialLesson, 'id'>;
       return { id: docSnap.id, ...data } as TutorialLesson;
     })
-    .filter((lesson) => lesson.topicId === topicId)
+    .filter((lesson) => {
+      const anyLesson = lesson as any;
+      const rawTopicId = anyLesson.topicId ?? anyLesson.topic_id;
+      return String(rawTopicId ?? '') === String(topicId);
+    })
     .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 };
 
