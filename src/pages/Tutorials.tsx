@@ -630,10 +630,15 @@ const Tutorials = () => {
     <div className="min-h-screen bg-[#0a0a0a]">
       <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
       
-      <div className={`transition-all duration-300 ${sidebarCollapsed ? 'pl-20' : 'pl-64'}`}>
+      <div
+        className={cn(
+          "transition-all duration-300 pl-0",
+          sidebarCollapsed ? "md:pl-20" : "md:pl-64",
+        )}
+      >
         <Header />
         
-        <main className="p-6">
+        <main className="p-4 md:p-6 max-w-full overflow-x-hidden">
           {/* Header */}
           <div className="mb-8 flex items-start justify-between">
             <div>
