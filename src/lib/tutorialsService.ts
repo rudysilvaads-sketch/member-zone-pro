@@ -195,21 +195,30 @@ export const subscribeToTopics = (
   publishedOnly: boolean = true
 ) => {
   const topicsRef = collection(db, 'tutorial_topics');
-  let q;
-  
-  if (publishedOnly) {
-    q = query(topicsRef, where('isPublished', '==', true), orderBy('order', 'asc'));
-  } else {
-    q = query(topicsRef, orderBy('order', 'asc'));
-  }
-  
-  return onSnapshot(q, (snapshot) => {
-    const topics = snapshot.docs.map(docSnap => {
-      const data = docSnap.data() as Omit<TutorialTopic, 'id'>;
-      return { id: docSnap.id, ...data } as TutorialTopic;
-    });
-    callback(topics);
-  });
+
+  // IMPORTANT: avoid composite index requirements by not mixing where + orderBy.
+  // Subscribe to the whole collection and filter/sort client-side.
+  return onSnapshot(
+    topicsRef,
+    (snapshot) => {
+      let topics = snapshot.docs.map((docSnap) => {
+        const data = docSnap.data() as Omit<TutorialTopic, 'id'>;
+        return { id: docSnap.id, ...data } as TutorialTopic;
+      });
+
+      if (publishedOnly) {
+        topics = topics.filter((t) => (t as any).isPublished === true);
+      }
+
+      topics = topics.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
+      callback(topics);
+    },
+    (error) => {
+      console.error('Error subscribing to topics:', error);
+      callback([]);
+    }
+  );
 };
 
 /**
@@ -217,22 +226,24 @@ export const subscribeToTopics = (
  */
 export const getTopics = async (publishedOnly: boolean = true): Promise<TutorialTopic[]> => {
   const topicsRef = collection(db, 'tutorial_topics');
-  let q;
-  
-  if (publishedOnly) {
-    q = query(topicsRef, where('isPublished', '==', true), orderBy('order', 'asc'));
-  } else {
-    q = query(topicsRef, orderBy('order', 'asc'));
-  }
-  
-  const snapshot = await getDocs(q);
-  return snapshot.docs.map(docSnap => {
+
+  // IMPORTANT: avoid composite index requirements by not mixing where + orderBy.
+  // Fetch everything and filter/sort client-side.
+  const snapshot = await getDocs(topicsRef);
+  let topics = snapshot.docs.map((docSnap) => {
     const data = docSnap.data() as Omit<TutorialTopic, 'id'>;
     return {
       id: docSnap.id,
       ...data,
     } as TutorialTopic;
   });
+
+  if (publishedOnly) {
+    topics = topics.filter((t) => (t as any).isPublished === true);
+  }
+
+  topics = topics.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+  return topics;
 };
 
 /**
