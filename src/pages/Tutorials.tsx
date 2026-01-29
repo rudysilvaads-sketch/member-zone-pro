@@ -814,7 +814,7 @@ const Tutorials = () => {
                                     
                                     <div className="flex-1 min-w-0">
                                       <div className="flex items-center gap-2">
-                                        <span className="font-medium text-white truncate">
+                                        <span className="font-medium text-white whitespace-normal break-words leading-snug line-clamp-2">
                                           {topic.title}
                                         </span>
                                         {!topic.isPublished && hasAdminAccess && (
@@ -900,7 +900,7 @@ const Tutorials = () => {
                                         
                                         <div className="flex-1 min-w-0">
                                           <p className={cn(
-                                            "text-sm truncate",
+                                            "text-sm whitespace-normal break-words leading-snug line-clamp-2",
                                             currentLesson?.id === lesson.id ? "text-[#F5A623]" : "text-white/80"
                                           )}>
                                             {lesson.title}
