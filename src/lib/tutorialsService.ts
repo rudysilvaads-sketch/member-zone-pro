@@ -387,14 +387,24 @@ export const subscribeToLessons = (
   callback: (lessons: TutorialLesson[]) => void
 ) => {
   const lessonsRef = collection(db, 'tutorial_lessons');
-  const q = query(lessonsRef, where('topicId', '==', topicId), orderBy('order', 'asc'));
+  
+  // Use simple query to avoid composite index requirement
+  // Filter by topicId and sort client-side
+  const q = query(lessonsRef, orderBy('order', 'asc'));
   
   return onSnapshot(q, (snapshot) => {
-    const lessons = snapshot.docs.map(docSnap => {
+    let lessons = snapshot.docs.map(docSnap => {
       const data = docSnap.data() as Omit<TutorialLesson, 'id'>;
       return { id: docSnap.id, ...data } as TutorialLesson;
     });
+    
+    // Filter by topicId client-side
+    lessons = lessons.filter(lesson => lesson.topicId === topicId);
+    
     callback(lessons);
+  }, (error) => {
+    console.error('Error subscribing to lessons:', error);
+    callback([]);
   });
 };
 
@@ -403,13 +413,18 @@ export const subscribeToLessons = (
  */
 export const getLessons = async (topicId: string): Promise<TutorialLesson[]> => {
   const lessonsRef = collection(db, 'tutorial_lessons');
-  const q = query(lessonsRef, where('topicId', '==', topicId), orderBy('order', 'asc'));
+  
+  // Use simple query to avoid composite index requirement
+  const q = query(lessonsRef, orderBy('order', 'asc'));
   const snapshot = await getDocs(q);
   
-  return snapshot.docs.map(docSnap => {
-    const data = docSnap.data() as Omit<TutorialLesson, 'id'>;
-    return { id: docSnap.id, ...data } as TutorialLesson;
-  });
+  // Filter by topicId client-side
+  return snapshot.docs
+    .map(docSnap => {
+      const data = docSnap.data() as Omit<TutorialLesson, 'id'>;
+      return { id: docSnap.id, ...data } as TutorialLesson;
+    })
+    .filter(lesson => lesson.topicId === topicId);
 };
 
 /**
