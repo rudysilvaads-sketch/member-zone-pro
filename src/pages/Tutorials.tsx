@@ -229,15 +229,14 @@ const Tutorials = () => {
 
   // Subscribe to lessons for expanded topics
   useEffect(() => {
+    // Create subscriptions for all expanded topics
     const unsubscribes: (() => void)[] = [];
     
     expandedTopics.forEach(topicId => {
-      if (!lessonsMap[topicId]) {
-        const unsubscribe = subscribeToLessons(topicId, (lessons) => {
-          setLessonsMap(prev => ({ ...prev, [topicId]: lessons }));
-        });
-        unsubscribes.push(unsubscribe);
-      }
+      const unsubscribe = subscribeToLessons(topicId, (lessons) => {
+        setLessonsMap(prev => ({ ...prev, [topicId]: lessons }));
+      });
+      unsubscribes.push(unsubscribe);
     });
     
     return () => unsubscribes.forEach(unsub => unsub());
@@ -468,6 +467,12 @@ const Tutorials = () => {
         if (result.success) {
           toast.success('Aula criada!');
           setShowLessonDialog(false);
+          // Force expand topic to trigger realtime subscription refresh
+          setExpandedTopics(prev => {
+            const next = new Set(prev);
+            next.add(selectedTopicId);
+            return next;
+          });
         } else {
           toast.error(result.error);
         }
