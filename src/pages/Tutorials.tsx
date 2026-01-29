@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Progress } from "@/components/ui/progress";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Collapsible,
   CollapsibleContent,
@@ -44,8 +45,10 @@ import {
   awardTopicCompletionXp,
   TUTORIAL_XP_REWARDS,
 } from "@/lib/tutorialsService";
+import { recordLessonView, markLessonCompleted } from "@/lib/tutorialViewsService";
 import { completeMission } from "@/lib/missionService";
 import TutorialReviews from "@/components/tutorials/TutorialReviews";
+import AdminTutorialViews from "@/components/admin/AdminTutorialViews";
 
 // Admin emails list
 const ADMIN_EMAILS = ['rudysilvaads@gmail.com'];
@@ -264,9 +267,23 @@ const Tutorials = () => {
     });
   };
 
-  const playLesson = (lesson: TutorialLesson, topic: TutorialTopic) => {
+  const playLesson = async (lesson: TutorialLesson, topic: TutorialTopic) => {
     setCurrentLesson(lesson);
     setCurrentTopic(topic);
+    
+    // Record view if user is logged in
+    if (user) {
+      await recordLessonView(
+        lesson.id,
+        lesson.title,
+        topic.id,
+        topic.title,
+        user.uid,
+        userProfile?.displayName || user.displayName || user.email || 'Usuário',
+        user.email || '',
+        (userProfile as any)?.photoURL || (userProfile as any)?.avatarUrl
+      );
+    }
   };
 
   const markAsCompleted = async (lessonId: string) => {
@@ -283,6 +300,12 @@ const Tutorials = () => {
         next.add(lessonId);
       }
       localStorage.setItem(`completedLessons_${user.uid}`, JSON.stringify([...next]));
+      
+      // Mark lesson completed in the views tracking
+      if (!isAlreadyCompleted) {
+        markLessonCompleted(lessonId, user.uid);
+      }
+      
       return next;
     });
     
@@ -1417,38 +1440,50 @@ const Tutorials = () => {
             </DialogTitle>
           </DialogHeader>
           
-          <div className="space-y-6 py-4">
-            {/* Admin Stats */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
-              <Card className="bg-[#F5A623]/10 border-[#F5A623]/20">
-                <CardContent className="p-4 text-center">
-                  <BarChart3 className="h-6 w-6 mx-auto mb-2 text-[#F5A623]" />
-                  <p className="text-2xl font-bold text-white">{adminStats.totalTopics}</p>
-                  <p className="text-xs text-white/50">Total Tópicos</p>
-                </CardContent>
-              </Card>
-              <Card className="bg-green-500/10 border-green-500/20">
-                <CardContent className="p-4 text-center">
-                  <Eye className="h-6 w-6 mx-auto mb-2 text-green-400" />
-                  <p className="text-2xl font-bold text-white">{adminStats.publishedTopics}</p>
-                  <p className="text-xs text-white/50">Publicados</p>
-                </CardContent>
-              </Card>
-              <Card className="bg-yellow-500/10 border-yellow-500/20">
-                <CardContent className="p-4 text-center">
-                  <EyeOff className="h-6 w-6 mx-auto mb-2 text-yellow-400" />
-                  <p className="text-2xl font-bold text-white">{adminStats.draftTopics}</p>
-                  <p className="text-xs text-white/50">Rascunhos</p>
-                </CardContent>
-              </Card>
-              <Card className="bg-purple-500/10 border-purple-500/20">
-                <CardContent className="p-4 text-center">
-                  <Video className="h-6 w-6 mx-auto mb-2 text-purple-400" />
-                  <p className="text-2xl font-bold text-white">{adminStats.totalLessonsInAllTopics}</p>
-                  <p className="text-xs text-white/50">Total Aulas</p>
-                </CardContent>
-              </Card>
-            </div>
+          <Tabs defaultValue="content" className="w-full">
+            <TabsList className="grid w-full grid-cols-2 mb-4">
+              <TabsTrigger value="content" className="gap-2">
+                <BookOpen className="h-4 w-4" />
+                Conteúdo
+              </TabsTrigger>
+              <TabsTrigger value="views" className="gap-2">
+                <Eye className="h-4 w-4" />
+                Visualizações
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="content" className="space-y-6">
+              {/* Admin Stats */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
+                <Card className="bg-[#F5A623]/10 border-[#F5A623]/20">
+                  <CardContent className="p-4 text-center">
+                    <BarChart3 className="h-6 w-6 mx-auto mb-2 text-[#F5A623]" />
+                    <p className="text-2xl font-bold text-white">{adminStats.totalTopics}</p>
+                    <p className="text-xs text-white/50">Total Tópicos</p>
+                  </CardContent>
+                </Card>
+                <Card className="bg-green-500/10 border-green-500/20">
+                  <CardContent className="p-4 text-center">
+                    <Eye className="h-6 w-6 mx-auto mb-2 text-green-400" />
+                    <p className="text-2xl font-bold text-white">{adminStats.publishedTopics}</p>
+                    <p className="text-xs text-white/50">Publicados</p>
+                  </CardContent>
+                </Card>
+                <Card className="bg-yellow-500/10 border-yellow-500/20">
+                  <CardContent className="p-4 text-center">
+                    <EyeOff className="h-6 w-6 mx-auto mb-2 text-yellow-400" />
+                    <p className="text-2xl font-bold text-white">{adminStats.draftTopics}</p>
+                    <p className="text-xs text-white/50">Rascunhos</p>
+                  </CardContent>
+                </Card>
+                <Card className="bg-purple-500/10 border-purple-500/20">
+                  <CardContent className="p-4 text-center">
+                    <Video className="h-6 w-6 mx-auto mb-2 text-purple-400" />
+                    <p className="text-2xl font-bold text-white">{adminStats.totalLessonsInAllTopics}</p>
+                    <p className="text-xs text-white/50">Total Aulas</p>
+                  </CardContent>
+                </Card>
+              </div>
 
             {/* Topics Management */}
             <div>
@@ -1630,7 +1665,12 @@ const Tutorials = () => {
                 </div>
               </div>
             </div>
-          </div>
+            </TabsContent>
+            
+            <TabsContent value="views">
+              <AdminTutorialViews />
+            </TabsContent>
+          </Tabs>
           
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowAdminPanel(false)}>
