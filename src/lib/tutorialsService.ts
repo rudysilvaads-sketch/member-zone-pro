@@ -131,7 +131,7 @@ export const createTopic = async (
       thumbnailUrl: thumbnailUrl || null,
       lessonsCount: 0,
       order,
-      isPublished: false,
+      isPublished: true, // Auto-publish for community visibility
       createdBy,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
